@@ -1,5 +1,5 @@
 from pdfrw import PdfReader, PdfWriter
-import fitz, yaml, json, re
+import fitz, yaml
 from pypdf import PdfReader, PdfWriter
 from pypdf.constants import UserAccessPermissions
 from pathlib import Path
@@ -71,4 +71,5 @@ def encrypte_file(f_path: str, write_path: str):
     )
     with open(write_path, "wb") as f:
         writer.write(f)
+
 
