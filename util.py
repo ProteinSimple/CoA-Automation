@@ -1,9 +1,10 @@
-from pdfrw import PdfReader, PdfWriter, PageMerge
-import fitz, yaml, csv
+from pdfrw import PdfReader, PdfWriter
+import fitz, yaml, json, re
 from pypdf import PdfReader, PdfWriter
 from pypdf.constants import UserAccessPermissions
 from pathlib import Path
 from datetime import datetime
+import pandas as pd
 
 month_map = { 1: "JAN", 2: "FEB", 3: "MAR", 4: "APR",
               5: "MAY", 6: "JUN", 7: "JUL", 8: "AUG",
@@ -19,6 +20,17 @@ def exec_c(com: str) -> str:
 
 def get_filename():
     return "testOutput"    
+
+def create_mapping(config, info, trav_data) -> pd.DataFrame:
+    prod_code = pd.read_excel(config['prod_code'])
+    mapping = pd.read_csv(Path(config['mapping_dir']) / Path(info['mapping']), encoding='cp1252')
+    mapping['LotNumber'] = trav_data['lot_num']
+    mapping['FileName'] = info['FileName']
+    
+    # check that the mappingis correct
+
+    return mapping
+
 
 def fill_fields(dir_path: Path, info, fill_data):
     template_path = dir_path / Path(info['template'])
