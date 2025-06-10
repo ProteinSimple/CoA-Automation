@@ -30,3 +30,4 @@ prod:
     "extract": false
   def_mapping_columns: "res/mapping_columns.json"
 
+test:
