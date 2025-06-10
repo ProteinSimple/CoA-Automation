@@ -1,11 +1,8 @@
-import os, yaml
+import yaml
 from argparse import ArgumentParser
-from util import fill_fields, encrypte_file, get_filename, create_mapping
+from util import populate_CoA, output_CoA_mapping, output_CoA_pdf, get_filename, create_mapping
 from checks import assertions
 from pathlib import Path
-import json
-import pandas as pd
-import re
 
 
 data = {
@@ -18,8 +15,8 @@ data = {
 def run_checks(**kwargs):
     for f in assertions:
         if not f(**kwargs):
-            return False
-    return True
+            return False, f
+    return True, None
 
 def main():
     parser = ArgumentParser(" CoA creation program ", description=" This program uses pre-made templates alongside data from travelers to create CoA pdf")
@@ -29,37 +26,23 @@ def main():
 
     args = parser.parse_args()
     dirc = args.model
-    rm = args.run_mode
-    config = yaml.safe_load(open(f"config.yaml", mode='r'))[rm]
-    
+    run_mode = args.run_mode
+    config = yaml.safe_load(open(f"config.yaml", mode='r'))[run_mode]
+    info = config['models'][dirc]
+    info['FileName'] = get_filename()
 
     # Create the given CoAs using the provided data from MOPHO
-    info = config['models'][dirc]
-    path = fill_fields(Path(config['model_dir']) / Path(dirc), info, data)
-    info['FileName'] = get_filename()
-    
-
+    path = populate_CoA(Path(config['model_dir']) / Path(dirc), info, data)
+    info['TempFile'] = path
     mapping = create_mapping(config, info, data)
-    if not run_checks(config=config, info=info, data=data, mapping=mapping): 
-        exit(1)
+    res, f = run_checks(config=config, info=info, data=data, mapping=mapping) 
+    if res == False:
+        print("Unsuccesful checks: the following check failed :", f.__name__) 
         return
     
     # Output the data
-    for dir in config['pdf_output_dir']:
-        dir_p = Path(dir)
-        if (not os.path.exists(dir_p)):
-            os.makedirs(dir_p)
-        # mapping.to_csv(dir_p / Path(info['FileName']))
-        encrypte_file(path, dir_p / Path(info['FileName']).with_suffix('.csv'))
-    
-    for dir in config['pdf_output_dir']:
-        dir_p = Path(dir)
-        if (not os.path.exists(dir_p)):
-            os.makedirs(dir_p)
-        mapping.to_csv(dir_p / Path(info['FileName']).with_suffix('.csv'), index=False)
-    
-    os.remove(path)
+    output_CoA_pdf(config, info)
+    output_CoA_mapping(config, info, mapping)
 
-    
-
-main()
+if __name__ == "__main__":    
+    main()
