@@ -1,0 +1,8 @@
+QWidget {
+            
+    background-color: white;
+    min-width: 600px;
+    max-width: 1200px;
+    min-height: 400px;
+    max-height: 1200px;   
+}
