@@ -22,7 +22,6 @@ def get_filename():
     return "testOutput"    
 
 def create_mapping(config, info, trav_data) -> pd.DataFrame:
-    prod_code = pd.read_excel(config['prod_code'])
     mapping = pd.read_csv(Path(config['mapping_dir']) / Path(info['mapping']), encoding='cp1252')
     mapping['LotNumber'] = trav_data['lot_num']
     mapping['FileName'] = info['FileName']

@@ -80,6 +80,12 @@ def check_prodcode_matching(**kwargs):
     return True
 
 
+"""
+    List of all of the checks that the program will import and use.
+    Add the name of the function associated with your check (don't call the function)
+    to the following list.
+    DON'T CHANGE THE NAME OF THE LIST
+"""
 assertions = [
     check_columns,
     check_prodcode_matching
