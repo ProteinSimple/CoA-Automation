@@ -35,7 +35,6 @@ def check_columns(**kwargs) -> bool:
             - config object
             - mapping pandas DF
     """    
-    
     if 'config' not in kwargs:
         raise KeyError(" Function didn't get the required argument: 'config'")
     if 'mapping' not in kwargs:
