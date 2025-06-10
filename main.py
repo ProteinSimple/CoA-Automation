@@ -1,7 +1,12 @@
 import os, yaml
 from argparse import ArgumentParser
 from util import fill_fields, encrypte_file, get_filename, create_mapping
+from checks import assertions
 from pathlib import Path
+import json
+import pandas as pd
+import re
+
 
 data = {
     "ref_num" : "6350527431",
@@ -10,6 +15,12 @@ data = {
     "lot_num" : "242206PJ-A"
 }
 
+def run_checks(**kwargs):
+    for f in assertions:
+        if not f(**kwargs):
+            return False
+    return True
+
 def main():
     parser = ArgumentParser(" CoA creation program ", description=" This program uses pre-made templates alongside data from travelers to create CoA pdf")
     parser.add_argument('--run-mode', type=str, default='prod')
@@ -17,12 +28,11 @@ def main():
     parser.add_argument('--verbose', action='store_true')
 
     args = parser.parse_args()
-    config = None
     dirc = args.model
     rm = args.run_mode
-    with open(f"config.yaml", mode='r') as f:
-        config = yaml.safe_load(f)[rm]
+    config = yaml.safe_load(open(f"config.yaml", mode='r'))[rm]
     
+
     # Create the given CoAs using the provided data from MOPHO
     info = config['models'][dirc]
     path = fill_fields(Path(config['model_dir']) / Path(dirc), info, data)
@@ -30,7 +40,10 @@ def main():
     
 
     mapping = create_mapping(config, info, data)
-
+    if not run_checks(config=config, info=info, data=data, mapping=mapping): 
+        exit(1)
+        return
+    
     # Output the data
     for dir in config['pdf_output_dir']:
         dir_p = Path(dir)
