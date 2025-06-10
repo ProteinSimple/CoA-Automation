@@ -1,11 +1,8 @@
-import os, yaml
+import os, yaml, sys
 from argparse import ArgumentParser
 from util import fill_fields, encrypte_file, get_filename, create_mapping
 from checks import assertions
 from pathlib import Path
-import json
-import pandas as pd
-import re
 
 
 data = {
@@ -14,6 +11,8 @@ data = {
     "exp_date" : "31/05/2026",
     "lot_num" : "242206PJ-A"
 }
+
+
 
 def run_checks(**kwargs):
     for f in assertions:
@@ -40,7 +39,8 @@ def main():
     
 
     mapping = create_mapping(config, info, data)
-    if not run_checks(config=config, info=info, data=data, mapping=mapping): 
+    if not run_checks(config=config, info=info, data=data, mapping=mapping):
+        print(" Unsuccesful checks") 
         exit(1)
         return
     
@@ -49,14 +49,23 @@ def main():
         dir_p = Path(dir)
         if (not os.path.exists(dir_p)):
             os.makedirs(dir_p)
-        # mapping.to_csv(dir_p / Path(info['FileName']))
-        encrypte_file(path, dir_p / Path(info['FileName']).with_suffix('.csv'))
+        try:
+            encrypte_file(path, dir_p / Path(info['FileName']).with_suffix('.pdf'), config['file_perm'])
+        except PermissionError as p:
+            print("While trying to write to listed path the follwing error occured", file=sys.stderr)
+            print(f"Path: {dir}", file=sys.stderr)
+            print(str(p), file=sys.stderr)
     
-    for dir in config['pdf_output_dir']:
+    for dir in config['mapping_output_dir']:
         dir_p = Path(dir)
         if (not os.path.exists(dir_p)):
             os.makedirs(dir_p)
-        mapping.to_csv(dir_p / Path(info['FileName']).with_suffix('.csv'), index=False)
+        try:
+            mapping.to_csv(dir_p / Path(info['FileName']).with_suffix('.csv'), index=False)
+        except Exception as e:
+            print("While trying to write to listed path the follwing error occured", file=sys.stderr)
+            print(f"Path: {dir}", file=sys.stderr)
+            print(str(p), file=sys.stderr)
     
     os.remove(path)
 
