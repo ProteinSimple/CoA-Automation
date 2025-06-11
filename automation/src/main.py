@@ -1,6 +1,6 @@
 import yaml
 from argparse import ArgumentParser
-from util import populate_CoA, output_CoA_mapping, output_CoA_pdf, get_filename, create_mapping
+from util import populate_CoA, output_CoA_mapping, output_CoA_pdf, get_filename, create_mapping, Pathcr
 from checks import assertions
 from pathlib import Path
 
@@ -23,11 +23,12 @@ def main():
     parser.add_argument('--run-mode', type=str, default='prod')
     parser.add_argument('--model', type=str, required=True) 
     parser.add_argument('--verbose', action='store_true')
+    parser.add_argument('--config', type=str, default="config.yaml")
 
     args = parser.parse_args()
     dirc = args.model
     run_mode = args.run_mode
-    config = yaml.safe_load(open(f"config.yaml", mode='r'))[run_mode]
+    config = yaml.safe_load(open(Pathcr(args.config).as_path(), mode='r'))[run_mode]
     info = config['models'][dirc]
     info['FileName'] = get_filename()
 
