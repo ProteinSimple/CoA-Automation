@@ -169,7 +169,7 @@ def output_CoA_pdf(config, info, rm_input: bool = True):
          PDFUtilError
     """
     for dir in config['pdf_output_dir']:
-        dir_p = Pathcr(dir).as_path()
+        dir_p = Path(dir)
         if (not os.path.exists(dir_p)):
             os.makedirs(dir_p)
         try:

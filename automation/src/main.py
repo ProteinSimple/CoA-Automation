@@ -1,9 +1,9 @@
 import yaml
 from argparse import ArgumentParser
 from util import populate_CoA, output_CoA_mapping, output_CoA_pdf, get_filename, create_mapping, Pathcr
+from terminal import model_menu
 from checks import assertions
 from pathlib import Path
-
 
 data = {
     "ref_num" : "6350527431",
@@ -18,19 +18,22 @@ def run_checks(**kwargs):
             return False, f
     return True, None
 
+
 def main():
     parser = ArgumentParser(" CoA creation program ", description=" This program uses pre-made templates alongside data from travelers to create CoA pdf")
     parser.add_argument('--run-mode', type=str, default='prod')
-    parser.add_argument('--model', type=str, required=True) 
+    parser.add_argument('--model', type=str) 
     parser.add_argument('--verbose', action='store_true')
     parser.add_argument('--config', type=str, default="config.yaml")
 
     args = parser.parse_args()
-    dirc = args.model
     run_mode = args.run_mode
     config = yaml.safe_load(open(Pathcr(args.config).as_path(), mode='r'))[run_mode]
+    if (args.model is None): args.model = model_menu(config)
+    dirc = args.model
     info = config['models'][dirc]
     info['FileName'] = get_filename()
+
 
     # Create the given CoAs using the provided data from MOPHO
     path = populate_CoA(Path(config['model_dir']) / Path(dirc), info, data)
@@ -44,6 +47,8 @@ def main():
     # Output the data
     output_CoA_pdf(config, info)
     output_CoA_mapping(config, info, mapping)
+
+    print("CoA and mapping files created succesfully !")
 
 if __name__ == "__main__":    
     main()
