@@ -1,4 +1,4 @@
-import fitz, yaml, os
+import fitz, yaml, os, sys
 from pypdf import PdfReader, PdfWriter
 from pypdf.constants import UserAccessPermissions
 from pathlib import Path
@@ -9,6 +9,8 @@ MONTH_MAP = { 1: "JAN", 2: "FEB", 3: "MAR", 4: "APR",
               5: "MAY", 6: "JUN", 7: "JUL", 8: "AUG",
               9: "SEP", 10: "OCT", 11: "NOV", 12: "DEC" 
             }
+
+
 
 PERM_MAP = {
     "print": UserAccessPermissions.PRINT,
@@ -25,6 +27,27 @@ class UtilError(Exception):
     """Custom exception for PDF processing errors"""
     pass
 
+class Pathcr:
+
+    def __init__(self, p):
+        self.path = Path(p)
+    def __str__(self):
+        return str(self.get_p())
+    
+    def __truediv__(self, p2):
+        return Pathcr(self.path / str(p2))
+
+    def get_p(self):
+        if hasattr(sys, "_MEIPASS"):
+            return os.path.join(sys._MEIPASS, str(self.path))
+        return os.path.abspath(Path(__file__).parent / self.path)
+
+    def as_path(self):
+        return Path(self.get_p())
+
+    def __repr__(self):
+        return f"Pathcr({str(self)})"
+    
 def exec_c(command: str) -> str:
     commands = {
         "TIME": lambda: datetime.now().strftime("%d/%m/%Y"),
@@ -37,47 +60,99 @@ def exec_c(command: str) -> str:
 def get_filename():
     return "testOutput"    
 
-def create_mapping(config, info, trav_data) -> pd.DataFrame:
+def create_mapping(config, info, traveler_data) -> pd.DataFrame:
     """ Creates mapping using information from traveler
 
     Args:
         config: Configuraiton dict
         info: Information dict
-        trav_data: Traveler's Data dict
+        traveler_data: Traveler's Data dict
     Return val:
         Pandas DataFrame
     Exceptions:
         PDFUtilError
     """
     try:
-        mapping = pd.read_csv(Path(config['mapping_dir']) / Path(info['mapping']), encoding='cp1252')
-        mapping['LotNumber'] = trav_data['lot_num']
+        mapping_path: Pathcr = Pathcr(config['mapping_dir']) / info['mapping']
+        mapping = pd.read_csv(mapping_path.get_p(), encoding='cp1252')
+        mapping['LotNumber'] = traveler_data['lot_num']
         mapping['FileName'] = info['FileName']
 
         return mapping
     except Exception as e:
         raise UtilError("Failed to create CoA mapping: " + str(e))
 
+def predict_mapping(x: str, ys: list[str]):
+    """ TODO: This function is incomplete
+    """
 
-def populate_CoA(dir_path: Path, info: dict, trav_data: dict, write_path: Path | str = None) -> Path:
+    return ""
+
+def generate_field_map_from_pdf(config, info, model):
+    
+    """
+        Extracts form fields from a PDF template and generates a `fields.yaml` file 
+        that maps each field name to a predicted value. Additionally, creates a 
+        visual preview PDF where each field is filled with its own name for reference.
+
+    Args:
+        - config (dict): Configuration dictionary containing `model_dir` and other settings.
+        - info (dict): Dictionary containing metadata such as the template filename.
+        - model (str): Name of the model directory where the PDF template and output files reside.
+
+    Return val:
+        - str: The filename of the generated `fields.yaml`.
+
+    Exceptions:
+        - UtilError: If the PDF cannot be opened or the YAML file cannot be generated.
+        
+    Notes:
+        - The output PDF (`filled.pdf`) will have all form fields filled with their own names
+        to help users identify field positions visually.
+        - The YAML file maps each field name to a predicted target field. Placeholder predictions
+        are currently used (TODO).
+    """
+
+    dir_path = Path(config['model_dir']) / Path(model)
+    template_path = (Pathcr(dir_path) / info['template']).as_path()
+    field_path = (Pathcr(dir_path) / 'fields.yaml').as_path()
+    save_path = (Pathcr(dir_path) / "filled.pdf").as_path()
+
+    try:
+        doc = fitz.open(template_path)
+        yaml_obj = {"fields" : {}}
+        for page in doc:
+            for field in page.widgets():
+                field.field_value = field.field_name
+                yaml_obj["fields"][field.field_name] = predict_mapping(field.field_name, [])   # TODO !!!
+                field.update()
+        doc.save(save_path)
+        yaml.safe_dump(yaml_obj, open(field_path, mode="w+"))
+        return field_path.name
+    except Exception as e:        
+        raise UtilError("Failed to initilize template and fields.yaml!: " + str(e))
+
+
+def fill_CoA_template(config: dict, info: dict, trav_data: dict, model: str, write_path: Path | str = None) -> Path:
     """ Using the given template and fields yaml file in the directory, creates a new CoA, either in the
         specified path or in the same directory, and fills the fields given the appropriate command.
         for specs on commands see : exec_c
 
-        Args:
-            dir_path: Path to the Directory containing the fields.yaml and PDF template
-            info: Information dict
-            fill_data: Data of traveler
-            write_path: Output path
-        Returns:
-            Path to the output file
-        Exceptions:
-            PDFUtilError
+    Args:
+        - dir_path: Path to the Directory containing the fields.yaml and PDF template
+        - info: Information dict
+        - fill_data: Data of traveler
+        - write_path: Output path
+    Returns:
+        - Path to the output file
+    Exceptions:
+        - PDFUtilError
     """
     # Paths used throughout the function
-    template_path = dir_path / Path(info['template'])
-    field_path = dir_path / Path(info['fields'])
-    save_path = write_path if write_path is not None else dir_path / Path("temp.pdf")
+    dir_path = Path(config['model_dir']) / Path(model)
+    template_path = (Pathcr(dir_path) / info['template']).as_path()
+    field_path = (Pathcr(dir_path) / info['fields']).as_path()
+    save_path = Pathcr(write_path).as_path() if write_path is not None else (Pathcr(dir_path) / "temp.pdf").as_path()
 
     try:
         doc = fitz.open(template_path)
@@ -103,51 +178,15 @@ def populate_CoA(dir_path: Path, info: dict, trav_data: dict, write_path: Path |
     except Exception as e:
         raise UtilError("Failed to populating CoA: " + str(e))
 
-def fill_fields(dir_path: Path, info, fill_data):
-    """ Writes the given file to specified path, with the given permissions
-
-        Args:
-            f_path: Input file
-            write_path: output path
-            permissions: permsissions dictionary
-        Exceptions:
-            PDFUtilError
-    """
-
-    template_path = dir_path / Path(info['template'])
-    field_path = dir_path / Path(info['fields'])
-    save_path = dir_path / Path("temp.pdf")
-
-    doc = fitz.open(template_path)
-    fields = yaml.safe_load(open(field_path))
-    dates = set(fields['dates'])
-    
-    page = next(iter(doc))
-    for name, key in fields['fields'].items():
-        for field in page.widgets():
-            if (field.field_name == name):
-                fn: str = field.field_name
-                val = exec_c(key[2:]) if key.startswith("@!") else fill_data[key]
-                if fn in dates: 
-                    parts = val.split('/')
-                    field.field_value = parts[0] + MONTH_MAP[int(parts[1])] + parts[2]
-                else:
-                    field.field_value = val
-
-            field.update()
-    
-    doc.save(save_path)
-    return save_path
-
-def encrypte_PDF_file(f_path: str, write_path: str, permissions: dict):
+def encrypt_pdf_file(f_path: str, write_path: str, permissions: dict):
     """ Writes the given file to specified path, with the given permissions
 
     Args:
-        f_path: Input file
-        write_path: output path
-        permissions: permsissions dictionary
+        - f_path: Input file
+        - write_path: output path
+        - permissions: permsissions dictionary
     Exceptions:
-        PDFUtilError
+        - PDFUtilError
     """
     file_perm = 0
     for perm, flag in PERM_MAP.items():
@@ -186,7 +225,7 @@ def output_CoA_pdf(config, info, rm_input: bool = True):
         if (not os.path.exists(dir_p)):
             os.makedirs(dir_p)
         try:
-            encrypte_PDF_file(info['TempFile'], dir_p / Path(info['FileName']).with_suffix('.pdf'), config['file_perm'])
+            encrypt_pdf_file(info['TempFile'], (dir_p / info['FileName']).with_suffix('.pdf'), config['file_perm'])
         except Exception as e:
             raise UtilError("Failed to output CoA PDF file: " + str(e))
     
