@@ -44,7 +44,7 @@ def main():
         info['TempFile'] = path
 
         mapping = create_mapping(config, info, data)
-        res, f = run_checks(config, info, data, mapping) 
+        res, f = run_checks(config=config, info=info, data=data, mapping=mapping) 
         if res == False:
             print("Unsuccesful checks: the following check failed :", f.__name__) 
             return
