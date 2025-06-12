@@ -194,3 +194,4 @@ cython_debug/
 .cursorindexingignore
 my_env
 output
+launch.json
