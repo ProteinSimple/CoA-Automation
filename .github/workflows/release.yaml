@@ -31,6 +31,7 @@ jobs:
           mkdir dist_package
           move dist\main dist_package\
           powershell Compress-Archive -Path dist_package\* -DestinationPath Coa_Auto.zip
+          move Coa_Auto.zip $env:GITHUB_WORKSPACE\Coa_Auto.zip
 
       - name: Upload Release
         uses: softprops/action-gh-release@v2
