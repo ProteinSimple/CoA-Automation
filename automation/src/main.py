@@ -1,8 +1,8 @@
 import yaml
 from argparse import ArgumentParser
-from util import populate_CoA, output_CoA_mapping, output_CoA_pdf, get_filename, create_mapping, Pathcr
-from terminal import model_menu
-from checks import assertions
+from util import fill_CoA_template, output_CoA_mapping, output_CoA_pdf, get_filename, create_mapping, Pathcr, generate_field_map_from_pdf
+from terminal import model_menu, select_file, CoatActions
+from checks import run_checks
 from pathlib import Path
 
 data = {
@@ -12,43 +12,70 @@ data = {
     "lot_num" : "242206PJ-A"
 }
 
-def run_checks(**kwargs):
-    for f in assertions:
-        if not f(**kwargs):
-            return False, f
-    return True, None
-
-
 def main():
     parser = ArgumentParser(" CoA creation program ", description=" This program uses pre-made templates alongside data from travelers to create CoA pdf")
-    parser.add_argument('--run-mode', type=str, default='prod')
-    parser.add_argument('--model', type=str) 
-    parser.add_argument('--verbose', action='store_true')
-    parser.add_argument('--config', type=str, default="config.yaml")
+    parser.add_argument('action', type=str, help= 
+                        """Action for the tool as mentioned below. not case sensetive
+                        COA: coa and mapping creation action. uses information from args, config.yaml and files inside of 
+                             inside of the model directory to
+                        INIT: initilizing new cartridge type. Template pdf should be place in res/model/*model name* 
+                        CHECK: NotImplemented""")
+    parser.add_argument('--run-mode', type=str, default='prod',  help="Run mode")
+    parser.add_argument('--model', type=str, help="Model number of cartridge")  
+    parser.add_argument('--verbose', action='store_true' ,help="Print comments as process goes on")
+    parser.add_argument('--config', type=str, default="config.yaml", help="YAML file containing information for running the program")
 
+ 
+    # Arg Init
     args = parser.parse_args()
+    action = CoatActions.map(args.action.lower())
     run_mode = args.run_mode
     config = yaml.safe_load(open(Pathcr(args.config).as_path(), mode='r'))[run_mode]
-    if (args.model is None): args.model = model_menu(config)
-    dirc = args.model
-    info = config['models'][dirc]
+    model = args.model if args.model is not None else model_menu(config)
+    info = config['models'].get(model, None)
     info['FileName'] = get_filename()
 
 
-    # Create the given CoAs using the provided data from MOPHO
-    path = populate_CoA(Path(config['model_dir']) / Path(dirc), info, data)
-    info['TempFile'] = path
-    mapping = create_mapping(config, info, data)
-    res, f = run_checks(config=config, info=info, data=data, mapping=mapping) 
-    if res == False:
-        print("Unsuccesful checks: the following check failed :", f.__name__) 
-        return
-    
-    # Output the data
-    output_CoA_pdf(config, info)
-    output_CoA_mapping(config, info, mapping)
 
-    print("CoA and mapping files created succesfully !")
+    # Take Action
+    if action == CoatActions.COA:
+        # Create the given CoAs using the provided data from MOPHO
+        path = fill_CoA_template(config, info, data, model)
+        info['TempFile'] = path
+
+        mapping = create_mapping(config, info, data)
+        res, f = run_checks(config, info, data, mapping) 
+        if res == False:
+            print("Unsuccesful checks: the following check failed :", f.__name__) 
+            return
+        # Output the data
+        output_CoA_pdf(config, info)
+        output_CoA_mapping(config, info, mapping)
+        print("CoA and mapping files created succesfully !")
+
+    if action == CoatActions.INIT:
+        # Get the name of template file
+        dir_path = Path(config['model_dir']) / Path(model)
+        template_name = select_file(Pathcr(dir_path).as_path(), r"\.pdf$")
+        config['models'][model] = {}
+        config['models'][model]['template'] = template_name
+        # Get the name of the mapping file
+        mapping_dir = Pathcr(config['mapping_dir']).as_path()
+        mapping_name = select_file(mapping_dir, r"\.csv$")
+        config['models'][model]['mapping'] = mapping_name
+        # Fill fields with their names and print to it to a new file
+        info = config['models'][model]
+        fields_name = generate_field_map_from_pdf(config, info, model)
+        config['models'][model]['fields'] = fields_name
+
+        # Output
+        read = yaml.safe_load(open(Pathcr(args.config).as_path(), mode='r'))
+        read[run_mode] = config
+        yaml.safe_dump(read, open(Pathcr(args.config).as_path(), mode='w+'))
+        
+    
+    if action == CoatActions.CHECK:
+        raise NotImplemented("CoA Automation: CHECK action is not implemented yet!")
 
 if __name__ == "__main__":    
     main()

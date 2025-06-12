@@ -28,6 +28,15 @@ from util import Pathcr
 """
 
 
+
+def run_checks(**kwargs):
+    """ Helper function from main"""
+    for f in ASSERTIONS:
+        if not f(**kwargs):
+            return False, f
+    return True, None
+
+
 def check_columns(**kwargs) -> bool:
 
     """
@@ -86,7 +95,7 @@ def check_prodcode_matching(**kwargs):
     to the following list.
     DON'T CHANGE THE NAME OF THE LIST
 """
-assertions = [
+ASSERTIONS = [
     check_columns,
     check_prodcode_matching
 ]
