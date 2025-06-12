@@ -1,0 +1,40 @@
+name: Build and Release CL Tool (windows)
+
+on:
+  push:
+    tags:
+      - 'v*'  # Only run on version tags like v0.1.0, v1.2.3
+
+jobs:
+  build:
+    runs-on: windows-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install pyinstaller
+          pip install -r automation/pyREQ.txt
+
+      - name: Build using PyInstaller
+        run: |
+          cd automation
+          pyinstaller .\main.spec -y --clean
+          mkdir dist_package
+          move dist\main dist_package\
+          powershell Compress-Archive -Path dist_package\* -DestinationPath Coa_Auto.zip
+
+      - name: Upload Release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: Coa_Auto.zip
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
