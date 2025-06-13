@@ -21,7 +21,7 @@ prod:
       template: 046-317 CofA_Maurice-CE-SDS_Cartridge_090-100_revE.pdf
     SDS+:
       fields: fields.yaml
-      mapping: coa_mapping_template.csv
+      mapping: coa_TurboCE-SDS_mapping_template.csv
       template: Q51-0003_CofA_090-157_Maurice-CE-SDS_PLUS_Cartridge_RevD.pdf
     cIEF 200:
       fields: fields.yaml

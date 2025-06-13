@@ -32,22 +32,19 @@ def main():
     run_mode = args.run_mode
     config = yaml.safe_load(open(Pathcr(args.config).as_path(), mode='r'))[run_mode]
     model = args.model if args.model is not None else model_menu(config)
-    info = config['models'].get(model, None)
-    info['FileName'] = get_filename()
-
-
 
     # Take Action
     if action == CoatActions.COA:
         # Create the given CoAs using the provided data from MOPHO
+        info = config['models'].get(model, None)
+        if info is None:
+            raise ValueError("Given model configuration is not setup. use 'init' action to setup the model")
+        info['FileName'] = get_filename()
         path = fill_CoA_template(config, info, data, model)
         info['TempFile'] = path
 
         mapping = create_mapping(config, info, data)
-        res, f = run_checks(config=config, info=info, data=data, mapping=mapping) 
-        if res == False:
-            print("Unsuccesful checks: the following check failed :", f.__name__) 
-            return
+        run_checks(config=config, info=info, data=data, mapping=mapping) 
         # Output the data
         output_CoA_pdf(config, info)
         output_CoA_mapping(config, info, mapping)
@@ -55,8 +52,8 @@ def main():
 
     if action == CoatActions.INIT:
         # Get the name of template file
-        dir_path = Path(config['model_dir']) / Path(model)
-        template_name = select_file(Pathcr(dir_path).as_path(), r"\.pdf$")
+        dir_path = Pathcr(Path(config['model_dir']) / model).as_path()
+        template_name = select_file(dir_path, r"\.pdf$")
         config['models'][model] = {}
         config['models'][model]['template'] = template_name
         # Get the name of the mapping file
@@ -72,6 +69,10 @@ def main():
         read = yaml.safe_load(open(Pathcr(args.config).as_path(), mode='r'))
         read[run_mode] = config
         yaml.safe_dump(read, open(Pathcr(args.config).as_path(), mode='w+'))
+        print(f"Configuartion for {model} finished succesfully!")
+        if args.verbose:
+            print("\n Created Config: \n")
+            print(yaml.dump(config['models'][model]))
         
     
     if action == CoatActions.CHECK:
