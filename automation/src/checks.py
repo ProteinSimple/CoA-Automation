@@ -28,13 +28,16 @@ from util import Pathcr
 """
 
 
+class CheckError(Exception):
+    pass
+
 
 def run_checks(**kwargs):
     """ Helper function from main"""
     for f in ASSERTIONS:
         if not f(**kwargs):
-            return False, f
-    return True, None
+            raise CheckError(" The following check failed to pass: " + f.__name__)
+    return True
 
 
 def check_columns(**kwargs) -> bool:
