@@ -1,0 +1,26 @@
+
+
+.list_item {
+  background-color: #222222;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content:baseline;
+  margin-top: 0.5rem;
+
+  padding-top: 0.5rem;
+  padding-bottom: 0.5rem;
+
+  border-radius: 1rem;
+}
+
+.list_item > * {
+  padding-left: 1rem;
+  padding-right: 1rem;
+}
+
+.list_item_date {
+  margin-left: auto;
+  font-size: 0.8rem;
+  color:gray
+}

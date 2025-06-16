@@ -1,0 +1,4 @@
+.list_container {
+  flex-direction: row;
+  align-content: center;
+}
