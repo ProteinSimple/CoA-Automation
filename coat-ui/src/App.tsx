@@ -1,34 +1,61 @@
-import { useState } from "react";
-import reactLogo from "./assets/react.svg";
+// import { useState } from "react";
+import logo from "./assets/ProteinSimple-horiz-white.png";
 import { invoke } from "@tauri-apps/api/core";
 import "./App.css";
 
-function App() {
-  const [greetMsg, setGreetMsg] = useState("");
-  const [name, setName] = useState("");
+type ListItemProps = {
+  id: string;
+  time: string;
+  date: string;
+};
 
+type CheckboxProps = {
+  id: string;
+}
+
+function Checkbox ({ id } : CheckboxProps) {
+  return (
+    <label className="checkbox-wrapper"
+           id={id}>
+    <input type="checkbox" />
+    <span className="custom-checkbox"></span>
+    </label>
+  )
+}
+
+function ListItem( { id, time, date }: ListItemProps) {
+  return (
+    <div className="list_item">
+      <Checkbox id={id}>
+      </Checkbox>
+      <p>
+        {id}
+      </p> 
+      <p className="list_item_date">
+        {time}  {date}  
+      </p> 
+    </div>
+    
+  )
+}
+
+
+function App() {
+  const datas = [
+    {SN: "SN1", time: "12:00" ,man_date: "21/04/2025", exp_date : "30/05/2025"},
+    {SN: "SN2", time: "12:00" ,man_date: "22/04/2025", exp_date : "01/06/2025"},
+    {SN: "SN3", time: "12:00" ,man_date: "23/04/2025", exp_date : "02/06/2025"},
+  ]
   async function greet() {
-    // Learn more about Tauri commands at https://tauri.app/develop/calling-rust/
-    setGreetMsg(await invoke("greet", { name }));
+    let mes = await invoke("python_com", {})
+    console.log(mes)
   }
 
   return (
     <main className="container">
-      <h1>Welcome to Tauri + React</h1>
-
-      <div className="row">
-        <a href="https://vitejs.dev" target="_blank">
-          <img src="/vite.svg" className="logo vite" alt="Vite logo" />
-        </a>
-        <a href="https://tauri.app" target="_blank">
-          <img src="/tauri.svg" className="logo tauri" alt="Tauri logo" />
-        </a>
-        <a href="https://reactjs.org" target="_blank">
-          <img src={reactLogo} className="logo react" alt="React logo" />
-        </a>
+      <div>
+        <img src={logo} alt="logo-placeholder" className="logo" />
       </div>
-      <p>Click on the Tauri, Vite, and React logos to learn more.</p>
-
       <form
         className="row"
         onSubmit={(e) => {
@@ -37,13 +64,18 @@ function App() {
         }}
       >
         <input
+          id="SN-search"
+          placeholder="Search 🔍"
+        />
+        <input
           id="greet-input"
-          onChange={(e) => setName(e.currentTarget.value)}
           placeholder="Enter a name..."
         />
         <button type="submit">Greet</button>
       </form>
-      <p>{greetMsg}</p>
+      <div className="list_container">
+        {datas.map(d => <ListItem id={d.SN} time={d.time} date={d.man_date}></ListItem>)}
+      </div>
     </main>
   );
 }
