@@ -22,7 +22,7 @@ function TopContainer() {
             id="greet-input"
             placeholder="Enter a name..."/>
         </div>
-        <button type="submit">Greet</button>
+        <button type="submit"> Generate </button>
       </form>
     </div>
   );

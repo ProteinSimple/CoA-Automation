@@ -1,6 +1,6 @@
 // import { useState } from "react";
 import { Logo } from "./components";
-import { CartridgeList, TopContainer } from "./containers";
+import { BottomText, CartridgeList, TopContainer } from "./containers";
 import "./App.css";
 
 
@@ -19,6 +19,7 @@ function App() {
       <Logo/>
       <TopContainer/>
       <CartridgeList data={catridgeData}/>
+      <BottomText/>
     </main>
   );
 }

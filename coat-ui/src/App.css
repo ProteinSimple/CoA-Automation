@@ -15,18 +15,15 @@
 }
 
 .container {
-  margin: 0;
-  padding-top: 10vh;
   display: flex;
   flex-direction: column;
   justify-content: center;
   text-align: center;
+  height: 97vh;
 }
 
-
-
-#greet-input {
-  margin-right: 5px;
+.container > :first-child {
+  align-self: flex-start;
 }
 
 @media (prefers-color-scheme: dark) {
