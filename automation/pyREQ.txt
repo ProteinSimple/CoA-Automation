@@ -1,5 +1,8 @@
 altgraph==0.17.4
+certifi==2025.6.15
+charset-normalizer==3.4.2
 et_xmlfile==2.0.0
+idna==3.10
 numpy==2.3.0
 openpyxl==3.1.5
 packaging==25.0
@@ -10,9 +13,12 @@ pyinstaller-hooks-contrib==2025.5
 PyMuPDF==1.26.0
 pypdf==5.6.0
 python-dateutil==2.9.0.post0
+python-dotenv==1.1.0
 pytz==2025.2
 pywin32-ctypes==0.2.3
 PyYAML==6.0.2
+requests==2.32.4
 setuptools==80.9.0
 six==1.17.0
 tzdata==2025.2
+urllib3==2.4.0
