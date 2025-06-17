@@ -196,3 +196,6 @@ python_env
 .vscode
 output
 launch.json
+UI2.0
+_internal
+main.exe

@@ -115,7 +115,7 @@ def generate_field_map_from_pdf(config, info, model):
 
     dir_path = Path(config['model_dir']) / Path(model)
     template_path = (Pathcr(dir_path) / info['template']).as_path()
-    field_path = (Pathcr(dir_path) / 'fields.yaml').as_path()
+    field_path: Path = (Pathcr(dir_path) / config['default_fields']).as_path()
     save_path = (Pathcr(dir_path) / "filled.pdf").as_path()
 
     try:
@@ -148,11 +148,14 @@ def fill_CoA_template(config: dict, info: dict, trav_data: dict, model: str, wri
     Exceptions:
         - PDFUtilError
     """
+
+    info['fields'] = info.get('fields', config.get('default_fields'))
     # Paths used throughout the function
     dir_path = Path(config['model_dir']) / Path(model)
     template_path = (Pathcr(dir_path) / info['template']).as_path()
     field_path = (Pathcr(dir_path) / info['fields']).as_path()
     save_path = Pathcr(write_path).as_path() if write_path is not None else (Pathcr(dir_path) / "temp.pdf").as_path()
+    
 
     try:
         doc = fitz.open(template_path)
@@ -249,3 +252,11 @@ def output_CoA_mapping(config, info, mapping, extn = '.csv'):
         except Exception as e:
             raise UtilError("Failed to output mapping excel file: " + str(e))
     
+def load_config(config_path, run_mode):
+    path = Pathcr(config_path).as_path()
+    if not path.exists():
+        raise FileNotFoundError(f"Config not found: {path}")
+    full_config = yaml.safe_load(open(path, "r"))
+    if run_mode not in full_config:
+        raise ValueError(f"Run mode '{run_mode}' not in config")
+    return full_config[run_mode]
