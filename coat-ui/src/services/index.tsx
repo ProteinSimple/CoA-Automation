@@ -1,1 +1,2 @@
-export { default as testPythoncom } from './tauriCommands'
+
+export * from "./tauriCommands";

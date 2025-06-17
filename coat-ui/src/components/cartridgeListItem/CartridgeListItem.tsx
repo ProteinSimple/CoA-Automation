@@ -4,10 +4,9 @@ import Checkbox from "../checkbox/Checkbox"
 type ListItemProps = {
   id: string;
   time: string;
-  date: string;
 };
 
-function ListItem( { id, time, date }: ListItemProps) {
+function ListItem( { id, time }: ListItemProps) {
   return (
     <div className="list_item">
       <Checkbox id={id}>
@@ -16,7 +15,7 @@ function ListItem( { id, time, date }: ListItemProps) {
         {id}
       </p> 
       <p className="list_item_date">
-        {time}  {date}  
+        {time}
       </p> 
     </div>
     

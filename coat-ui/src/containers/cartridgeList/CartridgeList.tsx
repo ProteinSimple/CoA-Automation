@@ -1,21 +1,33 @@
 import { CartridgeListItem } from "../../components";
+import { pythonListIds } from "../../services";
+import { useEffect, useState } from "react";
 import "./cartridgeList.css"
 
-interface CatridgeData {
-    SN: string;
-    time: string;
-    man_date: string;
-    exp_date: string;
+
+interface CartridgeInfo {
+  id: string;
+  b_date: string;
 }
 
-interface CartridgeListProps {
-  data: CatridgeData[];
-}
+function CartridgeList() {    
+    const [cartridgeList, setCartridgeList] = useState<CartridgeInfo[]>([]);
 
-function CartridgeList({ data } : CartridgeListProps ) {
+    useEffect(() => {
+        const fetchData = async () => {
+        try {
+            const raw = String(await pythonListIds()); // returns JSON string
+            const parsed: CartridgeInfo[] = JSON.parse(raw);
+            setCartridgeList(parsed); 
+        } catch (error) {
+            console.error("Error fetching/parsing cartridge list:", error);
+        }
+        };
+
+        fetchData();
+    }, []);
     return (
         <div className="list_container">
-            {data.map(d => <CartridgeListItem id={d.SN} time={d.time} date={d.man_date}/>)}
+            {cartridgeList.map(d => <CartridgeListItem id={d.id} time={d.b_date}></CartridgeListItem>)}
         </div>
     )
 }
