@@ -1,6 +1,6 @@
 from util import fill_CoA_template, output_CoA_mapping, output_CoA_pdf, get_filename, create_mapping, Pathcr, generate_field_map_from_pdf
 from cli import model_menu, select_file, ENV_FILE, init_env
-from saturn import saturn_get_cartridge_data
+from saturn import saturn_get_cartridge_data, saturn_check_connection
 from checks import run_checks
 from pathlib import Path
 import json, yaml
@@ -49,8 +49,16 @@ def dispatch_action(args, config):
     if action == CoatActions.ENV_OKAY:
         print(1) if env_path.exists() else print(0)
         return 
+    
     if not env_path.exists() and args.action != CoatActions.ENV_OKAY:
-        init_env(env_path)
+        while True:
+            init_env(env_path)
+            
+            load_dotenv(env_path) 
+            if (saturn_check_connection()):
+                break   
+            print("Bad Env Variables!")
+        
 
     load_dotenv(env_path)
     action = CoatActions.map(args.action.lower())

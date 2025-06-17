@@ -46,3 +46,16 @@ def saturn_get_cartridge_data(length, limit):
         print(response.text)
         return None
 
+
+def saturn_check_connection() -> bool:
+    username = os.getenv("API_USER")
+    passkey =  os.getenv("API_PASS")
+
+    end_dt = datetime.today()
+    enddate = end_dt.strftime("%Y-%m-%d")
+    url = build_saturn_url(startdate=enddate, enddate=enddate)
+    response = requests.get(url, auth=HTTPBasicAuth(username, passkey))
+    if response.status_code == 200:
+        return True
+    else:
+        return False
