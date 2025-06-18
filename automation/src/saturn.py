@@ -19,9 +19,8 @@ def build_saturn_url(startdate=None, enddate=None, **extra_params):
 
     return BASE_URL + "?" + urlencode(params)
 
-def saturn_get_cartridge_data(length, limit):
-    username = os.getenv("API_USER")
-    passkey =  os.getenv("API_PASS")
+def saturn_get_cartridge_data(length, limit, username, passkey):
+
 
     end_dt = datetime.today()
     start_dt = end_dt - timedelta(days=length)
@@ -47,10 +46,7 @@ def saturn_get_cartridge_data(length, limit):
         return None
 
 
-def saturn_check_connection() -> bool:
-    username = os.getenv("API_USER")
-    passkey =  os.getenv("API_PASS")
-
+def saturn_check_connection(username, passkey) -> bool:
     end_dt = datetime.today()
     enddate = end_dt.strftime("%Y-%m-%d")
     url = build_saturn_url(startdate=enddate, enddate=enddate)
