@@ -102,6 +102,9 @@ def get_args():
     
     fetch_sub.add_argument('length', type=int) # TODO: add help to these two
     fetch_sub.add_argument('limit', type=int)
+    fetch_sub.add_argument('--user', type=str, required=False)
+    fetch_sub.add_argument('--passkey', type=str, required=False)
+    
 
     init_sub.add_argument('--model', type=str, help="Model number of cartridge")
 

@@ -2,6 +2,7 @@ from util import fill_CoA_template, output_CoA_mapping, output_CoA_pdf, get_file
 from cli import model_menu, select_file, ENV_FILE, init_env
 from saturn import saturn_get_cartridge_data, saturn_check_connection
 from checks import run_checks
+from passkey import load_token, add_token
 from pathlib import Path
 import json, yaml
 from enum import Enum
@@ -131,6 +132,14 @@ def action_init(args, config):
     
 
 def action_list_id(args, config):
-    ids = saturn_get_cartridge_data(args.length, args.limit)
+    if args.user and args.passkey:
+        add_token(args.user, args.passkey)
+    user, passkey = None, None
+    try:
+        user, passkey = load_token()
+        assert saturn_check_connection(user, passkey)
+    except Exception as e:
+        raise BaseException("Couldn't load saturn API key correctly: " + str(e))
+    ids = saturn_get_cartridge_data(args.length, args.limit, user, passkey)
     print(json.dumps(list(ids)))
 
