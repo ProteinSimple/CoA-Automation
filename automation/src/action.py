@@ -2,6 +2,7 @@ from util import fill_CoA_template, output_CoA_mapping, output_CoA_pdf, get_file
 from cli import model_menu, select_file, ENV_FILE, init_env
 from saturn import saturn_get_cartridge_data, saturn_check_connection
 from checks import run_checks
+from passkey import load_token, add_token
 from pathlib import Path
 import json, yaml
 from enum import Enum
@@ -11,9 +12,8 @@ class CoatActions(Enum):
     COA = 1,
     INIT = 2,
     CHECK = 3,
-    LIST_ID = 4,
-    ENV_OKAY = 5,
-    NONE = 6
+    FETCH = 4,
+    NONE = 5
 
     @staticmethod
     def map(given: str):
@@ -23,10 +23,8 @@ ACTION_MAP = {
     "coa" : CoatActions.COA,
     "init" : CoatActions.INIT,
     "check" : CoatActions.CHECK,
-    "list_id": CoatActions.LIST_ID,
-    "list-id": CoatActions.LIST_ID, 
-    "env-okay": CoatActions.ENV_OKAY,
-    "env_okay": CoatActions.ENV_OKAY,
+    "fetch": CoatActions.FETCH,
+    "fetch": CoatActions.FETCH,
     "none": CoatActions.NONE  
 }
 
@@ -45,12 +43,8 @@ def dispatch_action(args, config):
     
     env_path = Pathcr(ENV_FILE).as_path()
     action = CoatActions.map(args.action.lower())
-
-    if action == CoatActions.ENV_OKAY:
-        print(1) if env_path.exists() else print(0)
-        return 
     
-    if not env_path.exists() and args.action != CoatActions.ENV_OKAY:
+    if not env_path.exists():
         while True:
             init_env(env_path)
             
@@ -66,7 +60,7 @@ def dispatch_action(args, config):
         action_coa(args, config)
     elif action == CoatActions.INIT:
         action_init(args, config)
-    elif action == CoatActions.LIST_ID:
+    elif action == CoatActions.FETCH:
         action_list_id(args, config)
     
     elif action == CoatActions.NONE:
@@ -138,6 +132,14 @@ def action_init(args, config):
     
 
 def action_list_id(args, config):
-    ids = saturn_get_cartridge_data(args.list_date_length, args.list_limit)
+    if args.user and args.passkey:
+        add_token(args.user, args.passkey)
+    user, passkey = None, None
+    try:
+        user, passkey = load_token()
+        assert saturn_check_connection(user, passkey)
+    except Exception as e:
+        raise BaseException("Couldn't load saturn API key correctly: " + str(e))
+    ids = saturn_get_cartridge_data(args.length, args.limit, user, passkey)
     print(json.dumps(list(ids)))
 

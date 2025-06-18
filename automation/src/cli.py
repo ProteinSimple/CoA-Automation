@@ -87,20 +87,32 @@ def get_args():
         " CoA creation program ",
         description= " This program uses pre-made templates alongside data from travelers to create CoA pdf"
     )
+
+    subparsers = parser.add_subparsers(dest='action', required=True, help='Action to perform')
+    sub_list: list[ArgumentParser] = []
+    sub_list.append(coa_sub := subparsers.add_parser('coa', help='coa and mapping creation action. uses information from args, config.yaml and files inside of inside of the model directory to'))
+    sub_list.append(init_sub := subparsers.add_parser('init', help='initilizing new cartridge type. Template pdf should be place in res/model/*model name*'))
+    sub_list.append(fetch_sub := subparsers.add_parser('fetch', help='f'))
+    sub_list.append(none_sub := subparsers.add_parser('none', help='Does nothing; mostly for debugging purpose'))
+    sub_list.append(check_sub := subparsers.add_parser('check', help='NOT IMPLEMENTED'))
     
-    parser.add_argument('action', type=str, help= 
-                        """Action for the tool as mentioned below. not case sensetive
-                        COA: coa and mapping creation action. uses information from args, config.yaml and files inside of 
-                             inside of the model directory to
-                        INIT: initilizing new cartridge type. Template pdf should be place in res/model/*model name* 
-                        CHECK: NotImplemented""")
+    # specific argument passed to certain actions:
+    coa_sub.add_argument('id', type=str, help="Id of the cartridge passed to the system")
+    coa_sub.add_argument('--model', type=str, help="Model number of cartridge")  
     
-    parser.add_argument('--id', type=str, default=None, help="Id of the cartridge passed to the system. *REQUIRED* for action=COA")
-    parser.add_argument('--list-date-length', type=int, default=5)
-    parser.add_argument('--list-limit', type=int, default=50)
-    parser.add_argument('--rm', type=str, default='prod',  help="Run mode")
-    parser.add_argument('--model', type=str, help="Model number of cartridge")  
-    parser.add_argument('--verbose', action='store_true' ,help="Print comments as process goes on")
-    parser.add_argument('--config', type=str, default="config.yaml", help="YAML file containing information for running the program")
+    fetch_sub.add_argument('length', type=int) # TODO: add help to these two
+    fetch_sub.add_argument('limit', type=int)
+    fetch_sub.add_argument('--user', type=str, required=False)
+    fetch_sub.add_argument('--passkey', type=str, required=False)
     
+
+    init_sub.add_argument('--model', type=str, help="Model number of cartridge")
+
+    for sub in sub_list:
+        sub.add_argument('--rm', type=str, default='prod',  help="Run mode")
+        sub.add_argument('--verbose', action='store_true' ,help="Print comments as process goes on")
+        sub.add_argument('--config', type=str, default="config.yaml", help="YAML file containing information for running the program")
+        sub.add_argument('--output', type=str, default='.out', help="output path for the program")
+    
+
     return parser.parse_args()
