@@ -126,6 +126,10 @@ def generate_field_map_from_pdf(config, info, model):
                 field.field_value = field.field_name
                 yaml_obj["fields"][field.field_name] = predict_mapping(field.field_name, [])   # TODO !!!
                 field.update()
+        yaml_obj['dates'] = []
+        for f in yaml_obj["fields"].keys():
+            if "date" in f.lower():
+                yaml_obj['dates'].append(f) # TODO: This is a bad way to detect dates!
         doc.save(save_path)
         yaml.safe_dump(yaml_obj, open(field_path, mode="w+"))
         return field_path.name
@@ -252,7 +256,9 @@ def output_CoA_mapping(config, info, mapping, extn = '.csv'):
         except Exception as e:
             raise UtilError("Failed to output mapping excel file: " + str(e))
     
-def load_config(config_path, run_mode):
+def load_config(args):
+    config_path = args.config
+    run_mode = args.rm
     path = Pathcr(config_path).as_path()
     if not path.exists():
         raise FileNotFoundError(f"Config not found: {path}")

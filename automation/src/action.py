@@ -11,9 +11,8 @@ class CoatActions(Enum):
     COA = 1,
     INIT = 2,
     CHECK = 3,
-    LIST_ID = 4,
-    ENV_OKAY = 5,
-    NONE = 6
+    FETCH = 4,
+    NONE = 5
 
     @staticmethod
     def map(given: str):
@@ -23,10 +22,8 @@ ACTION_MAP = {
     "coa" : CoatActions.COA,
     "init" : CoatActions.INIT,
     "check" : CoatActions.CHECK,
-    "list_id": CoatActions.LIST_ID,
-    "list-id": CoatActions.LIST_ID, 
-    "env-okay": CoatActions.ENV_OKAY,
-    "env_okay": CoatActions.ENV_OKAY,
+    "fetch": CoatActions.FETCH,
+    "fetch": CoatActions.FETCH,
     "none": CoatActions.NONE  
 }
 
@@ -45,12 +42,8 @@ def dispatch_action(args, config):
     
     env_path = Pathcr(ENV_FILE).as_path()
     action = CoatActions.map(args.action.lower())
-
-    if action == CoatActions.ENV_OKAY:
-        print(1) if env_path.exists() else print(0)
-        return 
     
-    if not env_path.exists() and args.action != CoatActions.ENV_OKAY:
+    if not env_path.exists():
         while True:
             init_env(env_path)
             
@@ -66,7 +59,7 @@ def dispatch_action(args, config):
         action_coa(args, config)
     elif action == CoatActions.INIT:
         action_init(args, config)
-    elif action == CoatActions.LIST_ID:
+    elif action == CoatActions.FETCH:
         action_list_id(args, config)
     
     elif action == CoatActions.NONE:
@@ -138,6 +131,6 @@ def action_init(args, config):
     
 
 def action_list_id(args, config):
-    ids = saturn_get_cartridge_data(args.list_date_length, args.list_limit)
+    ids = saturn_get_cartridge_data(args.length, args.limit)
     print(json.dumps(list(ids)))
 

@@ -22,6 +22,7 @@ prod:
       mapping: coa_mapping_flex.csv
       template: Q51-0003_CofA_090-157_Maurice-CE-SDS_PLUS_Cartridge_RevD.pdf
     cIEF 200:
+      fields: fields.yaml
       mapping: coa_mapping_template.csv
       template: 046-329_CofA_Maurice_cIEF_Cartridge_090-101_RevF.pdf
     cIEF-65:
