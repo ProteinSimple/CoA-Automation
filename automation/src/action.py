@@ -17,7 +17,7 @@ class CoatActions(Enum):
 
     @staticmethod
     def map(given: str):
-        return ACTION_MAP.get(given, CoatActions.INIT)
+        return ACTION_MAP.get(given, None)
 
 ACTION_MAP = {
     "coa" : CoatActions.COA,

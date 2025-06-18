@@ -1,7 +1,9 @@
 import { invoke } from "@tauri-apps/api/core";
 
-const testPythoncom = async () => {
-    return await invoke("python_com", {})
-}
+export const testPythoncom = async () => {
+  return await invoke("python_com", {});
+};
 
-export default testPythoncom;
+export const pythonListIds = async () => {
+  return await invoke("python_list_ids", {});
+};

@@ -1,4 +1,12 @@
+
+
+
 .list_container {
-  flex-direction: row;
+  display: flex;
+  flex-direction: column;
   align-content: center;
+  max-height: 80vh;
+  overflow-y: auto;
+  padding: 1rem;
+  gap: 1rem;
 }
