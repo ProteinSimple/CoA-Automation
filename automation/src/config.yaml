@@ -25,10 +25,6 @@ prod:
       fields: fields.yaml
       mapping: coa_mapping_template.csv
       template: 046-329_CofA_Maurice_cIEF_Cartridge_090-101_RevF.pdf
-    cIEF-65:
-      fields: fields.yaml
-      mapping: coa_mapping_SDS_plus.csv
-      template: Q51-0010_CofA_Maurice_cIEF-65_Cartridge_090-201_revB.pdf
   pdf_output_dir:
   - Z:/Private/arvin.asgharian/CoAs
   - Z:/Private/arvin.asgharian/Coa2

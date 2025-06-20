@@ -12,10 +12,10 @@ def main():
     
     # Arg Init
     args = get_args()
-    setup(args)
+    # setup(args)
     config = load_config(args)
     dispatch_action(args, config)
-    terminate(args)
+    # terminate(args)
 
 if __name__ == "__main__":    
     main()

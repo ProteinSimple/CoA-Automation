@@ -4,6 +4,9 @@ from pypdf.constants import UserAccessPermissions
 from pathlib import Path
 from datetime import datetime
 import pandas as pd
+from saturn import CartridgeData
+from passkey import load_token, add_token
+from saturn import saturn_check_connection
 
 MONTH_MAP = { 1: "JAN", 2: "FEB", 3: "MAR", 4: "APR",
               5: "MAY", 6: "JUN", 7: "JUL", 8: "AUG",
@@ -50,7 +53,7 @@ class Pathcr:
     
 def exec_c(command: str) -> str:
     commands = {
-        "TIME": lambda: datetime.now().strftime("%d/%m/%Y"),
+        "TIME": lambda: datetime.now().strftime("%m/%d/%Y"),
         "TEST": lambda: "Filled"
     }
     if command not in commands:
@@ -60,7 +63,7 @@ def exec_c(command: str) -> str:
 def get_filename():
     return "testOutput"    
 
-def create_mapping(config, info, traveler_data) -> pd.DataFrame:
+def create_mapping(config, info, traveler_data: CartridgeData) -> pd.DataFrame:
     """ Creates mapping using information from traveler
 
     Args:
@@ -75,7 +78,7 @@ def create_mapping(config, info, traveler_data) -> pd.DataFrame:
     try:
         mapping_path: Pathcr = Pathcr(config['mapping_dir']) / info['mapping']
         mapping = pd.read_csv(mapping_path.get_p(), encoding='cp1252')
-        mapping['LotNumber'] = traveler_data['lot_num']
+        mapping['LotNumber'] = traveler_data.id
         mapping['FileName'] = info['FileName']
 
         return mapping
@@ -161,29 +164,29 @@ def fill_CoA_template(config: dict, info: dict, trav_data: dict, model: str, wri
     save_path = Pathcr(write_path).as_path() if write_path is not None else (Pathcr(dir_path) / "temp.pdf").as_path()
     
 
-    try:
-        doc = fitz.open(template_path)
-        fields = yaml.safe_load(open(field_path))
-        dates = set(fields['dates'])
+    # try:
+    doc = fitz.open(template_path)
+    fields = yaml.safe_load(open(field_path))
+    dates = set(fields['dates'])
 
-        for page in doc:    
-            for name, key in fields['fields'].items():
-                for field in page.widgets():
-                    if (field.field_name == name):
-                        fn: str = field.field_name
-                        val = exec_c(key[2:]) if key.startswith("@!") else trav_data[key]
-                        if fn in dates: 
-                            parts = val.split('/')
-                            field.field_value = parts[0] + MONTH_MAP[int(parts[1])] + parts[2]
-                        else:
-                            field.field_value = val
+    for page in doc:    
+        for name, key in fields['fields'].items():
+            for field in page.widgets():
+                if (field.field_name == name):
+                    fn: str = field.field_name
+                    val = exec_c(key[2:]) if key.startswith("@!") else trav_data[key]
+                    if fn in dates: 
+                        parts = val.split('/')
+                        field.field_value = parts[1] + MONTH_MAP[int(parts[0])] + parts[2]
+                    else:
+                        field.field_value = str(val)
 
-                    field.update()
-        
-        doc.save(save_path)
-        return save_path
-    except Exception as e:
-        raise UtilError("Failed to populating CoA: " + str(e))
+                field.update()
+    
+    doc.save(save_path)
+    return save_path
+    # except Exception as e:
+    #     raise UtilError("Failed to populating CoA: " + str(e))
 
 def encrypt_pdf_file(f_path: str, write_path: str, permissions: dict):
     """ Writes the given file to specified path, with the given permissions
@@ -266,3 +269,16 @@ def load_config(args):
     if run_mode not in full_config:
         raise ValueError(f"Run mode '{run_mode}' not in config")
     return full_config[run_mode]
+
+
+    
+def auth(args, config):
+    if hasattr(args, "user") and hasattr(args, "passkey") and args.user and args.passkey:
+        add_token(args.user, args.passkey)
+    user, passkey = None, None
+    try:
+        user, passkey = load_token()
+        assert saturn_check_connection(user, passkey)
+        return user, passkey
+    except Exception as e:
+        raise BaseException("Couldn't load saturn API key correctly: " + str(e))
