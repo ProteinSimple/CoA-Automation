@@ -53,4 +53,5 @@ coll = COLLECT(
     upx=True,
     upx_exclude=[],
     name='main',
+    destdir='target'
 )
