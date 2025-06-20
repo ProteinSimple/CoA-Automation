@@ -1,10 +1,16 @@
 import './TopContainer.css';
-import { testPythoncom } from '../../services';
+import { pythonCoa } from '../../services';
 
-function TopContainer() {
+interface TopContainerProps {
+  selected: string[],
+  setFilter: (given: string) => void;
+}
+
+function TopContainer({ selected, setFilter } : TopContainerProps) {
   async function greet() {
-    let mes = await testPythoncom()
-    console.log(mes)
+    await pythonCoa(selected[0])
+    console.log(selected)
+    
   }
 
   return (
@@ -17,7 +23,8 @@ function TopContainer() {
         <div>
           <input
             id="SN-search"
-            placeholder="Search 🔍"/>
+            placeholder="Search 🔍"
+            onChange={(e) => setFilter(e.target.value)}/>
           <input
             id="greet-input"
             placeholder="Enter a name..."/>

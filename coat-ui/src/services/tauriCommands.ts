@@ -1,9 +1,21 @@
 import { invoke } from "@tauri-apps/api/core";
 
-export const testPythoncom = async () => {
+export const pythonTestCom = async () => {
   return await invoke("python_com", {});
 };
 
-export const pythonListIds = async () => {
-  return await invoke("python_list_ids", {});
+export const pythonFetchIds = async () => {
+  return await invoke("python_fetch_ids", {});
 };
+
+export const pythonCheck = async () => {
+  return await invoke("python_check", {})
+}
+
+export const pythonAuth = async (user: string, pass: string) => {
+  return await invoke("python_auth", {user, pass})
+}
+
+export const pythonCoa = async (id: string) => {
+  return await invoke("python_coa", {id})
+}

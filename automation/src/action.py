@@ -122,7 +122,10 @@ def action_init(args, config):
 
 
 def action_list_id(args, config):
-    user, passkey = auth(args, config)
-    ids = saturn_get_cartridge_data_range(args.length, args.limit, user, passkey)
-    print(json.dumps(list(ids)))
+    try:
+        user, passkey = auth(args, config)
+        ids = saturn_get_cartridge_data_range(args.length, args.limit, user, passkey)
+        print(json.dumps(list(ids)))
+    except Exception:
+        pass
 

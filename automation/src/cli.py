@@ -26,10 +26,10 @@ def get_args():
     init_sub.add_argument('mapping', type=str)
 
     for sub in sub_list:
-        sub.add_argument('--rm', type=str, default='prod',  help="Run mode")
+        sub.add_argument('--rm', type=str, default='test',  help="Run mode")
         sub.add_argument('--verbose', action='store_true' ,help="Print comments as process goes on")
         sub.add_argument('--config', type=str, default="config.yaml", help="YAML file containing information for running the program")
-        sub.add_argument('--output', type=str, default='.out', help="output path for the program")
+        sub.add_argument('--output', type=str, default='./.out', help="output path for the program")
         sub.add_argument('--user', type=str, required=False)
         sub.add_argument('--passkey', type=str, required=False) # TODO : add comments for these
 

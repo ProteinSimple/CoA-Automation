@@ -23,7 +23,6 @@ def add_token(user: str, passkey: str):
         f.write(f'{user}\n{passkey}')
 
 def load_token() -> tuple[str, str] | None:
-    
     with open(PUB_PATH, mode="r") as f:
         user = f.readline().strip()
         passkey = f.readline().strip()
