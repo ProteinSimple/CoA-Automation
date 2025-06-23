@@ -24,10 +24,14 @@ function App() {
       try {
         let result = await pythonCheck();
         console.log("python_check result:", result);
-
+        
         while(!result) {
           const user = prompt("Enter username:", "");
           const pass = prompt("Enter passkey:", "");
+          if (user === null || pass === null) {
+            alert("Login cancelled.");
+            break;
+          }
           try {
             result = await pythonAuth(user, pass);
           } catch (err) {

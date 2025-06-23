@@ -24,6 +24,10 @@
     }
   },
   "bundle": {
+    "resources": [
+        "src/main.exe",
+        "src/_internal"
+    ],
     "active": true,
     "targets": "all",
     "icon": [

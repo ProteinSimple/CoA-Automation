@@ -9,6 +9,7 @@ def get_args():
     subparsers = parser.add_subparsers(dest='action', required=True, help='Action to perform')
     sub_list: list[ArgumentParser] = []
     sub_list.append(coa_sub := subparsers.add_parser('coa', help='coa and mapping creation action. uses information from args, config.yaml and files inside of inside of the model directory to'))
+    sub_list.append(coa_bun_sub := subparsers.add_parser('coa_bun', help=' Coa bundle action '))
     sub_list.append(init_sub := subparsers.add_parser('init', help='initilizing new cartridge type. Template pdf should be place in res/model/*model name*'))
     sub_list.append(fetch_sub := subparsers.add_parser('fetch', help='f'))
     sub_list.append(none_sub := subparsers.add_parser('none', help='Does nothing; mostly for debugging purpose'))

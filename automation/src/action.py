@@ -10,7 +10,8 @@ class CoatActions(Enum):
     INIT = 2,
     CHECK = 3,
     FETCH = 4,
-    NONE = 5
+    COA_BUNDLE= 5,
+    NONE = 6
 
     @staticmethod
     def map(given: str):
@@ -21,7 +22,9 @@ ACTION_MAP = {
     "init" : CoatActions.INIT,
     "check" : CoatActions.CHECK,
     "fetch": CoatActions.FETCH,
-    "none": CoatActions.NONE  
+    "none": CoatActions.NONE,
+    "coa_bundle": CoatActions.COA_BUNDLE,
+    "coa-bundle": CoatActions.COA_BUNDLE  
 }
 
 data = {
@@ -33,9 +36,11 @@ data = {
 
 def dispatch_action(args, config):
     action = CoatActions.map(args.action.lower())
-    
+
     if action == CoatActions.COA:
         action_coa(args, config)
+    elif action == CoatActions.COA_BUNDLE:
+        raise NotImplementedError()    
     elif action == CoatActions.INIT:
         action_init(args, config)
     elif action == CoatActions.FETCH:
@@ -81,6 +86,8 @@ def action_coa(args, config):
     
     if args.verbose:
         print("CoA and mapping files created succesfully !")
+
+# def action_coa_bundle(args, config):
 
 
 def action_init(args, config):
