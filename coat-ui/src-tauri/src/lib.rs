@@ -3,15 +3,22 @@ use std::process::Command;
 use std::path::PathBuf;
 use std::fs;
 use dirs::home_dir;
+use std::env;
 
 fn get_output_path() -> PathBuf {
     let home = home_dir().expect("Could not determine home directory");
     home.join("data").join("coat_output.txt")
 }
 
+fn get_temp_output_path() -> PathBuf {
+    let mut temp_dir = env::temp_dir();
+    let timestamp = chrono::Utc::now().timestamp();
+    temp_dir.push(format!("coat_{}.out", timestamp));
+    temp_dir
+}
 
 fn run_python_command_with_output(args: Vec<&str>) -> Result<String, String> {
-    let output_path = get_output_path();
+    let output_path = get_temp_output_path();
     let output_path_str = output_path.to_str().ok_or("Invalid output path")?;
 
     // Append --output <file> to args
@@ -20,11 +27,23 @@ fn run_python_command_with_output(args: Vec<&str>) -> Result<String, String> {
     full_args.push(output_path_str);
 
     let exe_path = std::path::Path::new("src").join("main.exe");
+
+    println!(
+        "Running: {} {}",
+        exe_path.display(),
+        full_args
+            .iter()
+            .map(|s| format!("\"{}\"", s))
+            .collect::<Vec<_>>()
+            .join(" ")
+    );
+
     let status = Command::new(exe_path)
         .args(full_args)
         .status()
         .map_err(|e| format!("Failed to run main.exe: {}", e))?;
 
+    
     if !status.success() {
         return Err("Python script failed".into());
     }
@@ -68,13 +87,8 @@ fn python_auth(user: String, pass: String) -> bool {
 }
 
 #[tauri::command]
-fn python_coa(id: String) {
-    let exe_path = std::path::Path::new("src").join("main.exe");
-
-    let _ = Command::new(exe_path)
-        .arg("coa")
-        .arg(id)
-        .output(); // Ignore result intentionally, as it returns nothing
+fn python_coa(id: String) -> Result<(), String> {
+    run_python_command_with_output(vec!["coa", &id]).map(|_| ())
 }
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]

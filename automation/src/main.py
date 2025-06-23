@@ -3,11 +3,15 @@ from action import dispatch_action
 from util import load_config
 import sys, os
 def setup(args):
+    if args.verbose:
+        return
     if not os.path.exists(args.output):
         os.makedirs(os.path.dirname(args.output), exist_ok=True)
     sys.stdout = open(args.output, "w")
 
 def terminate(args):
+    if args.verbose:
+        return
     sys.stdout.close()
 
 def main():

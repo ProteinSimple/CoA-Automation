@@ -31,3 +31,5 @@ Write-Host "Copying built files to $destination..."
 Copy-Item -Path "$buildOutput\*" -Destination $destination -Recurse -Force
 
 Write-Host "✅ Build and copy complete."
+
+cd ../
