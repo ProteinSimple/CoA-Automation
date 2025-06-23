@@ -80,12 +80,18 @@ def action_coa(args, config):
 
     mapping = create_mapping(config, info, data)
     run_checks(config=config, info=info, data=data, mapping=mapping) 
+    try:
+        pdf_files = output_CoA_pdf(config, info)
+        csv_files = output_CoA_mapping(config, info, mapping)
+
+        print(1)
+        for f in pdf_files:
+            print(f) 
+        for c in csv_files:
+            print(c)
+    except Exception as e:
+        print(0)
     
-    output_CoA_pdf(config, info)
-    output_CoA_mapping(config, info, mapping)
-    
-    if args.verbose:
-        print("CoA and mapping files created succesfully !")
 
 # def action_coa_bundle(args, config):
 

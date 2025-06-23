@@ -236,6 +236,7 @@ def output_CoA_pdf(config, info, rm_input: bool = True):
             os.makedirs(dir_p)
         try:
             encrypt_pdf_file(info['TempFile'], (dir_p / info['FileName']).with_suffix('.pdf'), config['file_perm'])
+            yield str((dir_p / info['FileName']).with_suffix('.pdf').absolute())
         except Exception as e:
             raise UtilError("Failed to output CoA PDF file: " + str(e))
     
@@ -256,6 +257,7 @@ def output_CoA_mapping(config, info, mapping, extn = '.csv'):
             os.makedirs(dir_p)
         try:
             mapping.to_csv(dir_p / Path(info['FileName']).with_suffix(extn), index=False)
+            yield str(dir_p / Path(info['FileName']).with_suffix(extn).absolute())
         except Exception as e:
             raise UtilError("Failed to output mapping excel file: " + str(e))
     

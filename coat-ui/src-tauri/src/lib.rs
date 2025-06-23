@@ -4,7 +4,10 @@ use std::path::PathBuf;
 use std::fs;
 use dirs::home_dir;
 use std::env;
+use tauri::async_runtime::spawn_blocking;
 
+
+// Not used anymore !
 fn get_output_path() -> PathBuf {
     let home = home_dir().expect("Could not determine home directory");
     home.join("data").join("coat_output.txt")
@@ -87,8 +90,16 @@ fn python_auth(user: String, pass: String) -> bool {
 }
 
 #[tauri::command]
-fn python_coa(id: String) -> Result<(), String> {
-    run_python_command_with_output(vec!["coa", &id]).map(|_| ())
+fn python_coa(id: String) -> Result<Vec<String>, String> {
+    let output = run_python_command_with_output(vec!["coa", &id])?;
+
+    let mut lines = output.lines();
+    match lines.next() {
+        Some("1") => Ok(lines.map(|s| s.to_string()).collect()),
+        Some("0") => Err("Error during CoA creation".to_string()),
+        Some(other) => Err(format!("Unexpected output prefix: {}", other)),
+        None => Err("No output from Python script".to_string()),
+    }
 }
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
