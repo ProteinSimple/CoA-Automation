@@ -16,6 +16,6 @@ export const pythonAuth = async (user: string, pass: string) => {
   return await invoke("python_auth", {user, pass})
 }
 
-export const pythonCoa = async (id: string) => {
-  return await invoke("python_coa", {id})
+export const pythonCoa = async (ids: string[]) => {
+  return await invoke("python_coa", { ids })
 }

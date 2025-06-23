@@ -31,15 +31,15 @@ async fn run_python_command_with_output(args: Vec<String>) -> Result<String, Str
 
         let exe_path = std::path::Path::new("src").join("main.exe");
 
-        println!(
-            "Running: {} {}",
-            exe_path.display(),
-            full_args
-                .iter()
-                .map(|s| format!("\"{}\"", s))
-                .collect::<Vec<_>>()
-                .join(" ")
-        );
+        // println!(
+        //     "Running: {} {}",
+        //     exe_path.display(),
+        //     full_args
+        //         .iter()
+        //         .map(|s| format!("\"{}\"", s))
+        //         .collect::<Vec<_>>()
+        //         .join(" ")
+        // );
 
         let status = Command::new(exe_path)
             .args(full_args)
@@ -93,8 +93,11 @@ async fn python_auth(user: String, pass: String) -> bool {
 }
 
 #[tauri::command]
-async fn python_coa(id: String) -> Result<Vec<String>, String> {
-    let output = run_python_command_with_output(vec!["coa".to_string(), id]).await?;
+async fn python_coa(ids: Vec<String>) -> Result<Vec<String>, String> {
+    // eprintln!("[CMD] python_coa invoked with ids: {:?}", ids); 
+    let mut args = vec!["coa".to_string()];
+    args.extend(ids);
+    let output = run_python_command_with_output(args).await?;
 
     let mut lines = output.lines();
     match lines.next() {

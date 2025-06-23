@@ -65,7 +65,7 @@ def action_coa(args, config):
     datas = saturn_get_cartridge_data_bundle(args.ids, user, passkey)
     pdf_outputs = []
     mapping_rows = []
-    prod_map = pd.read_excel(config['prod_code_map'])
+    prod_map = pd.read_excel(Pathcr(config['prod_code_map']).get_p())
 
     try: 
         for _, data in enumerate(datas):

@@ -8,8 +8,8 @@ interface TopContainerProps {
 
 function TopContainer({ selected, setFilter } : TopContainerProps) {
   async function generate() {
-    try {
-    const outputed_files = await pythonCoa(selected[0]);
+   
+    const outputed_files = await pythonCoa(selected);
 
     if (Array.isArray(outputed_files)) {
       const message = `Following files were created in the process of generation!\n\n${outputed_files.join("\n")}`;
@@ -18,10 +18,7 @@ function TopContainer({ selected, setFilter } : TopContainerProps) {
       // fallback, but normally shouldn't hit here
       alert("Unexpected output format");
     }
-  } catch (error) {
-    // If Rust returned Err, Tauri throws
-    alert(error);
-  }
+  
   }
 
   return (
