@@ -28,7 +28,7 @@ prod:
   pdf_output_dir:
   - Z:/Private/arvin.asgharian/CoAs
   - Z:/Private/arvin.asgharian/Coa2
-  prod_code: res/Western-Biologics Part Number to ProdCode.xlsx
+  prod_code_map: res/Western-Biologics Part Number to ProdCode.xlsx
 test:
   def_mapping_columns: res/mapping_columns.json
   default_fields: fields.yaml
@@ -49,6 +49,7 @@ test:
     cIEF 200:
       mapping: coa_mapping_template.csv
       template: 046-329_CofA_Maurice_cIEF_Cartridge_090-101_RevF.pdf
+      PN: '090-101'
   pdf_output_dir:
   - ./output/
-  prod_code: res/Western-Biologics Part Number to ProdCode.xlsx
+  prod_code_map: res/Western-Biologics Part Number to ProdCode.xlsx

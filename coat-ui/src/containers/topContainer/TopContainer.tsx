@@ -7,10 +7,18 @@ interface TopContainerProps {
 }
 
 function TopContainer({ selected, setFilter } : TopContainerProps) {
-  async function greet() {
-    await pythonCoa(selected[0])
-    console.log(selected)
-    
+  async function generate() {
+   
+    const outputed_files = await pythonCoa(selected);
+
+    if (Array.isArray(outputed_files)) {
+      const message = `Following files were created in the process of generation!\n\n${outputed_files.join("\n")}`;
+      alert(message);
+    } else {
+      // fallback, but normally shouldn't hit here
+      alert("Unexpected output format");
+    }
+  
   }
 
   return (
@@ -18,7 +26,7 @@ function TopContainer({ selected, setFilter } : TopContainerProps) {
       <form className="row"
             onSubmit={(e) => {
               e.preventDefault();
-              greet();}}>
+              generate();}}>
         
         <div>
           <input

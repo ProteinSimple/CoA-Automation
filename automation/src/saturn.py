@@ -124,6 +124,30 @@ def saturn_get_cartridge_data(id, username, passkey) -> CartridgeData | None:
         print(response.text)
         return None
 
+def saturn_get_cartridge_data_bundle(ids, username, passkey) -> list[CartridgeData] | None:
+    end_dt = datetime.today() + timedelta(days=1)
+    start_dt = end_dt - timedelta(days=5) # TODO: change this to search cartridges form previous days as well!
+    ids_s = set(ids)
+    startdate = start_dt.strftime("%Y-%m-%d")
+    enddate = end_dt.strftime("%Y-%m-%d")
+    url = build_saturn_url(startdate=startdate, enddate=enddate)
+    response = requests.get(url, auth=HTTPBasicAuth(username, passkey))
+
+    if response.status_code == 200:
+        df = pd.DataFrame(response.json())
+        df["b_date_ts"] = df["build_completion_date"].apply(lambda x: x["$date"])
+        df["b_date"] = pd.to_datetime(df["b_date_ts"], unit="ms")
+        df["exp_date"] = (df["b_date"] + pd.DateOffset(months=12)).dt.to_period("M").dt.to_timestamp("M")
+        df.to_csv("out.csv")
+        retVal = []
+        for _, d in df.iloc[::-1].iterrows():
+            if int(d["_id"]) in ids_s:
+                retVal.append(CartridgeData(d))
+        return retVal
+    else:
+        print(f"Request failed with status code {response.status_code}")
+        print(response.text)
+        return None
 
 
 def saturn_check_connection(username, passkey) -> bool:

@@ -7,6 +7,7 @@ import pandas as pd
 from saturn import CartridgeData
 from passkey import load_token, add_token
 from saturn import saturn_check_connection
+import tempfile
 
 MONTH_MAP = { 1: "JAN", 2: "FEB", 3: "MAR", 4: "APR",
               5: "MAY", 6: "JUN", 7: "JUL", 8: "AUG",
@@ -60,8 +61,15 @@ def exec_c(command: str) -> str:
         raise UtilError(f"Unknown command: {command}")
     return commands[command]()
 
-def get_filename():
-    return "testOutput"    
+def get_filename(id):
+    return str(id) + "_testOutput"    
+
+def create_mapping_template(config) -> pd.DataFrame:
+    columns_names = [
+        'PartNumber','ProdCode','LotNumber','FileName'
+    ]
+
+    return pd.DataFrame(columns=columns_names)
 
 def create_mapping(config, info, traveler_data: CartridgeData) -> pd.DataFrame:
     """ Creates mapping using information from traveler
@@ -161,32 +169,36 @@ def fill_CoA_template(config: dict, info: dict, trav_data: dict, model: str, wri
     dir_path = Path(config['model_dir']) / Path(model)
     template_path = (Pathcr(dir_path) / info['template']).as_path()
     field_path = (Pathcr(dir_path) / info['fields']).as_path()
-    save_path = Pathcr(write_path).as_path() if write_path is not None else (Pathcr(dir_path) / "temp.pdf").as_path()
     
-
-    # try:
-    doc = fitz.open(template_path)
-    fields = yaml.safe_load(open(field_path))
-    dates = set(fields['dates'])
-
-    for page in doc:    
-        for name, key in fields['fields'].items():
-            for field in page.widgets():
-                if (field.field_name == name):
-                    fn: str = field.field_name
-                    val = exec_c(key[2:]) if key.startswith("@!") else trav_data[key]
-                    if fn in dates: 
-                        parts = val.split('/')
-                        field.field_value = parts[1] + MONTH_MAP[int(parts[0])] + parts[2]
-                    else:
-                        field.field_value = str(val)
-
-                field.update()
+    if write_path is not None:
+        save_path = Pathcr(write_path).as_path()
+    else:
+        with tempfile.NamedTemporaryFile(delete=False, suffix=".pdf") as tmp:
+            save_path = Path(tmp.name)
     
-    doc.save(save_path)
-    return save_path
-    # except Exception as e:
-    #     raise UtilError("Failed to populating CoA: " + str(e))
+    try:
+        doc = fitz.open(template_path)
+        fields = yaml.safe_load(open(field_path))
+        dates = set(fields['dates'])
+
+        for page in doc:    
+            for name, key in fields['fields'].items():
+                for field in page.widgets():
+                    if (field.field_name == name):
+                        fn: str = field.field_name
+                        val = exec_c(key[2:]) if key.startswith("@!") else trav_data[key]
+                        if fn in dates: 
+                            parts = val.split('/')
+                            field.field_value = parts[1] + MONTH_MAP[int(parts[0])] + parts[2]
+                        else:
+                            field.field_value = str(val)
+
+                    field.update()
+        
+        doc.save(save_path)
+        return save_path
+    except Exception as e:
+        raise UtilError("Failed to populating CoA: " + str(e))
 
 def encrypt_pdf_file(f_path: str, write_path: str, permissions: dict):
     """ Writes the given file to specified path, with the given permissions
@@ -219,6 +231,18 @@ def encrypt_pdf_file(f_path: str, write_path: str, permissions: dict):
     except Exception as e:
         raise UtilError("Failed to create CoA mapping: " + str(e))
 
+def output_CoA_pdf_v2(config, info, input_path, dest_filename):
+    for dir in config['pdf_output_dir']:
+        dir_p = Path(dir)
+        if (not os.path.exists(dir_p)):
+            os.makedirs(dir_p)
+        try:
+            dest_path = (dir_p / dest_filename).with_suffix('.pdf')
+            encrypt_pdf_file(input_path, dest_path, config['file_perm'])
+            yield str(dest_path.absolute())
+        except Exception as e:
+            raise UtilError("Failed to output CoA PDF file: " + str(e))
+
 def output_CoA_pdf(config, info, rm_input: bool = True):
     """ Outputs the filled CoA to the path specified using the two passed arguments
 
@@ -236,12 +260,13 @@ def output_CoA_pdf(config, info, rm_input: bool = True):
             os.makedirs(dir_p)
         try:
             encrypt_pdf_file(info['TempFile'], (dir_p / info['FileName']).with_suffix('.pdf'), config['file_perm'])
+            yield str((dir_p / info['FileName']).with_suffix('.pdf').absolute())
         except Exception as e:
             raise UtilError("Failed to output CoA PDF file: " + str(e))
     
     if rm_input: os.remove(info['TempFile']) 
 
-def output_CoA_mapping(config, info, mapping, extn = '.csv'):
+def output_CoA_mapping(config, info, mapping, mapping_f_name = "mapping", extn = '.csv'):
     """ Outputs the mapping data to the path specified using the two passed arguments
 
     Args:
@@ -255,7 +280,8 @@ def output_CoA_mapping(config, info, mapping, extn = '.csv'):
         if (not os.path.exists(dir_p)):
             os.makedirs(dir_p)
         try:
-            mapping.to_csv(dir_p / Path(info['FileName']).with_suffix(extn), index=False)
+            mapping.to_csv((dir_p / mapping_f_name).with_suffix(extn), index=False)
+            yield str((dir_p / mapping_f_name).with_suffix(extn).absolute())
         except Exception as e:
             raise UtilError("Failed to output mapping excel file: " + str(e))
     
