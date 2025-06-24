@@ -176,29 +176,28 @@ def fill_CoA_template(config: dict, info: dict, trav_data: dict, model: str, wri
         with tempfile.NamedTemporaryFile(delete=False, suffix=".pdf") as tmp:
             save_path = Path(tmp.name)
     
-    try:
-        doc = fitz.open(template_path)
-        fields = yaml.safe_load(open(field_path))
-        dates = set(fields['dates'])
+    # try:
+    doc = fitz.open(template_path)
+    fields = yaml.safe_load(open(field_path))
+    dates = set(fields['dates'])
+    for page in doc:    
+        for name, key in fields['fields'].items():
+            for field in page.widgets():
+                if (field.field_name == name):
+                    fn: str = field.field_name
+                    val = exec_c(key[2:]) if key.startswith("@!") else trav_data[key]
+                    if fn in dates: 
+                        parts = val.split('/')
+                        field.field_value = parts[1] + MONTH_MAP[int(parts[0])] + parts[2]
+                    else:
+                        field.field_value = str(val)
 
-        for page in doc:    
-            for name, key in fields['fields'].items():
-                for field in page.widgets():
-                    if (field.field_name == name):
-                        fn: str = field.field_name
-                        val = exec_c(key[2:]) if key.startswith("@!") else trav_data[key]
-                        if fn in dates: 
-                            parts = val.split('/')
-                            field.field_value = parts[1] + MONTH_MAP[int(parts[0])] + parts[2]
-                        else:
-                            field.field_value = str(val)
-
-                    field.update()
-        
-        doc.save(save_path)
-        return save_path
-    except Exception as e:
-        raise UtilError("Failed to populating CoA: " + str(e))
+                field.update()
+    
+    doc.save(save_path)
+    return save_path
+    # except Exception as e:
+    #     raise UtilError("Failed to populating CoA: " + str(e))
 
 def encrypt_pdf_file(f_path: str, write_path: str, permissions: dict):
     """ Writes the given file to specified path, with the given permissions

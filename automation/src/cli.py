@@ -23,9 +23,7 @@ def get_args():
 
     init_sub.add_argument('model', type=str, help="Model number of cartridge")
     init_sub.add_argument('template', type=str)
-    init_sub.add_argument('mapping', type=str)
-
-    
+    init_sub.add_argument('part_number', type=str)
 
     for sub in sub_list:
         sub.add_argument('--rm', type=str, default='test',  help="Run mode")

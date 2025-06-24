@@ -3,7 +3,6 @@ from requests.auth import HTTPBasicAuth
 from urllib.parse import urlencode
 from datetime import datetime, timedelta
 import pandas as pd
-import ast
 
 BASE_URL = "https://saturn.proteinsimple.com/api/1/cartridges/"
 
@@ -15,7 +14,6 @@ class CartridgeData:
         8: 'SDSTurbo',
         6: 'SDS+',
         5: 'Flex',
-        6: 'SDS+ 50',
     } # TODO: change this to accomodate for future additions!
     
     def __init__(self, sat_data: pd.DataFrame =None):
@@ -41,7 +39,8 @@ class CartridgeData:
                 self.batch_num = d["size_insert_lot"]
             if self.class_code == 8:
                 self.batch_num = d["pn702_0013_lot"]
-            self.batch_num = int(self.batch_num) if self.batch_num is not None else self.batch_num
+            
+
     def to_dict(self):
         return {
             "id" : self.id,

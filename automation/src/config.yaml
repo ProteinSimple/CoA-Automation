@@ -46,10 +46,18 @@ test:
   - ./output/
   model_dir: res/models
   models:
+    SDS+:
+      PN: 090-157
+      fields: fields.yaml
+      template: Q51-0003_CofA_090-157_Maurice-CE-SDS_PLUS_Cartridge_RevD.pdf
+    SDSTurbo:
+      PN: 101-0058
+      fields: fields.yaml
+      template: Q51-0194_CofA_101-0058_Cartridge, Maurice Turbo CE-SDS_REVB.pdf
     cIEF 200:
+      PN: 090-101
       mapping: coa_mapping_template.csv
       template: 046-329_CofA_Maurice_cIEF_Cartridge_090-101_RevF.pdf
-      PN: '090-101'
   pdf_output_dir:
   - ./output/
   prod_code_map: res/Western-Biologics Part Number to ProdCode.xlsx
