@@ -1,4 +1,6 @@
 prod:
+  fontsize: 8
+  font: 'Helv'
   def_mapping_columns: res/mapping_columns.json
   default_fields: fields.yaml
   file_perm:
@@ -30,6 +32,8 @@ prod:
   - Z:/Private/arvin.asgharian/Coa2
   prod_code_map: res/Western-Biologics Part Number to ProdCode.xlsx
 test:
+  fontsize: 8
+  font: 'Helv'
   def_mapping_columns: res/mapping_columns.json
   default_fields: fields.yaml
   file_perm:
