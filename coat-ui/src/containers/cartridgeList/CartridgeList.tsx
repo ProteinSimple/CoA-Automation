@@ -1,8 +1,8 @@
 import { CartridgeListItem } from "../../components";
 import { pythonFetchIds } from "../../services";
 import { useEffect, useState } from "react";
-import "./cartridgeList.css"
-
+import { pythonAuth, pythonCheck } from "../../services";
+import "./cartridgeList.css";
 
 interface CartridgeInfo {
   id: string;
@@ -10,53 +10,64 @@ interface CartridgeInfo {
 }
 
 interface CartridgeListProps {
-  checkDone: boolean;
-  add: (newCartridge: string) => void;
-  remove: (given: string) => void;
-  filterText: string
+  filterText: string;
 }
 
-function CartridgeList({ checkDone, add, remove, filterText } : CartridgeListProps) {    
-    const [cartridgeList, setCartridgeList] = useState<CartridgeInfo[]>([]);
+function CartridgeList({ filterText }: CartridgeListProps) {
+  const [cartridgeList, setCartridgeList] = useState<CartridgeInfo[]>([]);
+  const [checkDone, setCheckDone] = useState<boolean>(false);
 
-    useEffect(() => {
-        if (!checkDone) return;
-        const fetchData = async () => {
-        try {
-            const raw = String(await pythonFetchIds()); // returns JSON string
-            const parsed: CartridgeInfo[] = JSON.parse(raw);
-            setCartridgeList(parsed); 
-        } catch (error) {
-            console.error("Error fetching/parsing cartridge list:", error);
+  useEffect(() => {
+    const check = async () => {
+      try {
+        let result = await pythonCheck();
+
+        while (!result) {
+          const user = prompt("Enter username:", "");
+          const pass = prompt("Enter passkey:", "");
+          if (user === null || pass === null) {
+            alert("Login cancelled.");
+            break;
+          }
+          result = await pythonAuth(user, pass);
         }
-        };
+        setCheckDone(true);
+      } catch (err) {
+        console.error("Failed to run python_check:", err);
+      }
+    };
 
-        fetchData();
-    }, [checkDone]);
+    check();
+  }, []);
 
-    if (cartridgeList.length == 0) return <div>Loading Cartridge Data...</div>;
+  useEffect(() => {
+    if (!checkDone) return;
+    const fetchData = async () => {
+      try {
+        const raw = String(await pythonFetchIds()); // returns JSON string
+        const parsed: CartridgeInfo[] = JSON.parse(raw);
+        setCartridgeList(parsed);
+      } catch (error) {
+        console.error("Error fetching/parsing cartridge list:", error);
+      }
+    };
 
-    // const filteredList = useMemo(() => {
-    //     return cartridgeList.filter(d =>
-    //     d.id.toLowerCase().includes(filterText.toLowerCase())
-    //     );
-    // }, [cartridgeList, filterText]);
+    fetchData();
+  }, [checkDone]);
 
-    return (
-        <div className="list_container">
-            {cartridgeList.map(d =>
-                d.id.toLowerCase().includes(filterText.toLowerCase()) ? (
-                    <CartridgeListItem
-                    key={d.id}
-                    id={d.id}
-                    time={d.b_date}
-                    add={add}
-                    remove={remove}
-                    />
-                ) : null
-            )}
-        </div>
-    )
+  if (cartridgeList.length == 0) return <div>Loading Cartridge Data...</div>;
+
+  const filteredList = cartridgeList.filter((d) =>
+    d.id.toLowerCase().includes(filterText.toLowerCase())
+  );
+
+  return (
+    <div className="list_container">
+      {filteredList.map((d) => (
+        <CartridgeListItem key={d.id} id={d.id} time={d.b_date} />
+      ))}
+    </div>
+  );
 }
 
 export default CartridgeList;

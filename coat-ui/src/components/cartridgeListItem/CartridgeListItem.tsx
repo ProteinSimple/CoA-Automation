@@ -1,19 +1,19 @@
 import "./cartridgeListItem.css"
 import Checkbox from "../checkbox/Checkbox"
+import { useCartridge } from "../../contexts";
 
 type ListItemProps = {
   id: string;
   time: string;
-  add: (newCartridge: string) => void;
-  remove: (newCartridge: string) => void;
 };
 
-function ListItem( { id, time, add, remove }: ListItemProps) {
+function ListItem( { id, time}: ListItemProps) {
+  const {addCartridge, removeCartridge} = useCartridge()
   return (
     <div className="list_item">
       <Checkbox  id={id}
-                 onChecked={add}
-                 onUnchecked={remove}>
+                 onChecked={addCartridge}
+                 onUnchecked={removeCartridge}>
       </Checkbox>
       <div className="list_item_infobox">
         <p>

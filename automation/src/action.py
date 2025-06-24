@@ -82,7 +82,7 @@ def action_coa(args, config):
             os.remove(temp_file) 
             
             # Adding data to the mapping CSV
-            part_number = info['PN'] # TODO:  fix this
+            part_number = info['PN']
             prod_code = prod_map[prod_map['PartNumber'] == part_number]['ProdCode'].values[0]
             lot_num = id
             file_name = get_filename(id)
