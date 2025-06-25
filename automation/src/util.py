@@ -236,19 +236,17 @@ def output_CoA_mapping(config, info, mapping, mapping_f_name = "mapping", extn =
     Args:
         config: Config dict
         info: Information dict
-    Exceptions:
-         PDFUtilError
     """
+    retVal = []
     for dir in config['mapping_output_dir']:
         dir_p = Path(dir)
         if (not os.path.exists(dir_p)):
             os.makedirs(dir_p)
-        try:
-            mapping.to_csv((dir_p / mapping_f_name).with_suffix(extn), index=False)
-            yield str((dir_p / mapping_f_name).with_suffix(extn).absolute())
-        except Exception as e:
-            raise UtilError("Failed to output mapping excel file: " + str(e))
-    
+        
+        mapping.to_csv((dir_p / mapping_f_name).with_suffix(extn), index=False)
+        retVal.append(str((dir_p / mapping_f_name).with_suffix(extn).absolute()))
+    return retVal
+        
 def load_config(args):
     config_path = args.config
     run_mode = args.rm
@@ -271,4 +269,4 @@ def auth(args):
         assert saturn_check_connection(user, passkey)
         return user, passkey
     except Exception as e:
-        raise BaseException("Couldn't load saturn API key correctly: " + str(e))
+        raise Exception("Couldn't load saturn API key correctly: " + str(e))
