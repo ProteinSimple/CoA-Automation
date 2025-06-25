@@ -2,9 +2,6 @@ name: Build and Release CL Tool (windows)
 
 on:
   push:
-    branches:
-      - prod
-  push:
     tags:
       - 'v*'
 jobs:
