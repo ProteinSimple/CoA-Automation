@@ -2,7 +2,7 @@ from util import fill_CoA, output_CoA_mapping, get_filename, Pathcr, generate_fi
 from saturn import saturn_get_cartridge_data_range , saturn_get_cartridge_data_bundle
 from checks import run_checks
 from pathlib import Path
-import json, yaml, shutil, os, traceback
+import json, yaml, shutil, os, traceback, sys
 from enum import Enum
 import pandas as pd
 
@@ -51,22 +51,22 @@ def dispatch_action(args, config):
     
 def action_check(args, config):
     try:
-        auth(args, config)
+        auth(args)
         print(1)
-    except BaseException:
+    except Exception:
         print(0)
+        traceback.print_exc(file=sys.stdout)
 
 def action_coa(args, config):
-    if 'models' not in config:
-        raise KeyError("Missing 'models' section in config")
-    
-    user, passkey = auth(args)
-    datas = saturn_get_cartridge_data_bundle(args.ids, user, passkey)
-    pdf_outputs = []
-    mapping_rows = []
-    prod_map = pd.read_excel(Pathcr(config['prod_code_map']).as_path())
-
     try: 
+        if 'models' not in config:
+            raise KeyError("Missing 'models' section in config")
+
+        user, passkey = auth(args)
+        datas = saturn_get_cartridge_data_bundle(args.ids, user, passkey)
+        pdf_outputs = []
+        mapping_rows = []
+        prod_map = pd.read_excel(Pathcr(config['prod_code_map']).as_path())
         for _, data in enumerate(datas):
             id = data.id
             model = data.model_name()
@@ -82,7 +82,7 @@ def action_coa(args, config):
             os.remove(temp_file) 
             
             # Adding data to the mapping CSV
-            part_number = info['PN'] # TODO:  fix this
+            part_number = info['PN']
             prod_code = prod_map[prod_map['PartNumber'] == part_number]['ProdCode'].values[0]
             lot_num = id
             file_name = get_filename(id)
@@ -105,8 +105,8 @@ def action_coa(args, config):
             print(c)
     except Exception as e:
         print(0)
-        print(traceback.print_exc())
-        raise BaseException("Failed to create given CoAs :")
+        sys.stdout.flush()
+        traceback.print_exc(file=sys.stdout)
 
     
 def action_init(args, config):
@@ -147,10 +147,11 @@ def action_init(args, config):
 
 def action_list_id(args, config):
     try:
-        user, passkey = auth(args, config)
+        user, passkey = auth(args)
         ids = saturn_get_cartridge_data_range(args.length, args.limit, user, passkey)
-        
+        print(1)
         print(json.dumps(list(ids)))
     except Exception:
-        pass
+        print(0)
+        traceback.print_exc(file=sys.stdout)
 

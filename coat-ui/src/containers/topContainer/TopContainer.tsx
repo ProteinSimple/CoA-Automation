@@ -1,46 +1,65 @@
-import './TopContainer.css';
-import { pythonCoa } from '../../services';
+import "./TopContainer.css";
+import { pythonCoa } from "../../services";
+import { useCartridge } from "../../contexts";
+import { useState } from "react";
+import { DotLoader } from "react-spinners";
+
+type ErrorTuple = [boolean, string];
 
 interface TopContainerProps {
-  selected: string[],
   setFilter: (given: string) => void;
+  setError: (_: ErrorTuple) => void;
 }
+function TopContainer({ setFilter, setError }: TopContainerProps) {
+  const { cartridgeList } = useCartridge();
+  const [ fetchFin, setFetchFin ] = useState(true)
 
-function TopContainer({ selected, setFilter } : TopContainerProps) {
   async function generate() {
-   
-    const outputed_files = await pythonCoa(selected);
-
-    if (Array.isArray(outputed_files)) {
-      const message = `Following files were created in the process of generation!\n\n${outputed_files.join("\n")}`;
-      alert(message);
-    } else {
-      // fallback, but normally shouldn't hit here
-      alert("Unexpected output format");
+    setFetchFin(false)
+    try {
+      const outputed_files = await pythonCoa(cartridgeList);
+      if (Array.isArray(outputed_files)) {
+        const message = `Following files were created in the process of generation!\n\n${outputed_files.join(
+          "\n"
+        )}`;
+        alert(message);
+      } else {
+        throw new Error("Unexpected output format from backend.");
+      }
+    } catch (err: any) {
+      const errMsg = err?.message || typeof err == "string"
+        ? err.toString()
+        : "An uknown error occured during generation!";
+      setError([true, errMsg])
+    } finally {
+      setFetchFin(true)
     }
-  
   }
 
   return (
     <div className="topContainer-container">
-      <form className="row"
-            onSubmit={(e) => {
-              e.preventDefault();
-              generate();}}>
+      <form
+        className="row"
+        onSubmit={(e) => {
+          e.preventDefault();
+          generate();
+        }}
+      >
         
-        <div>
-          <input
-            id="SN-search"
-            placeholder="Search 🔍"
-            onChange={(e) => setFilter(e.target.value)}/>
-          <input
-            id="greet-input"
-            placeholder="Enter a name..."/>
-        </div>
-        <button type="submit"> Generate </button>
+        <input
+          id="SN-search"
+          placeholder="Search... 🔍"
+          onChange={(e) => setFilter(e.target.value)}
+        />
+        <input id="greet-input" placeholder="Enter a name..." />
+        
+        <button type="submit" disabled={!fetchFin}>
+          {fetchFin? "Generate" : 
+              <DotLoader color="white" loading={!fetchFin} size={20} />}
+       </button>
       </form>
     </div>
   );
-};
+}
 
 export default TopContainer;

@@ -30,22 +30,20 @@ async fn run_python_command_with_output(args: Vec<String>) -> Result<String, Str
         full_args.push(output_path_str.to_string());
 
         let exe_path = std::path::Path::new("src").join("main.exe");
-
-        // println!(
-        //     "Running: {} {}",
-        //     exe_path.display(),
-        //     full_args
-        //         .iter()
-        //         .map(|s| format!("\"{}\"", s))
-        //         .collect::<Vec<_>>()
-        //         .join(" ")
-        // );
-
+        println!(
+            "Running: {} {}",
+            exe_path.display(),
+            full_args
+                .iter()
+                .map(|s| format!("\"{}\"", s))
+                .collect::<Vec<_>>()
+                .join(" ")
+        );
         let status = Command::new(exe_path)
             .args(full_args)
             .status()
             .map_err(|e| format!("Failed to run main.exe: {}", e))?;
-
+        
         if !status.success() {
             return Err("Python script failed".into());
         }
@@ -59,7 +57,6 @@ async fn run_python_command_with_output(args: Vec<String>) -> Result<String, Str
     .map_err(|e| format!("Failed to spawn blocking task: {}", e))?
 }
 
-// 🔁 All Tauri commands using subprocess now async
 
 #[tauri::command]
 async fn python_com() -> Result<String, String> {
@@ -68,7 +65,28 @@ async fn python_com() -> Result<String, String> {
 
 #[tauri::command]
 async fn python_fetch_ids() -> Result<String, String> {
-    run_python_command_with_output(vec!["fetch".to_string(), "5".to_string(), "50".to_string()]).await
+    let output = run_python_command_with_output(vec![
+        "fetch".to_string(),
+        "5".to_string(),
+        "50".to_string(),
+    ])
+    .await?;
+
+    let mut lines = output.lines();
+    match lines.next() {
+        Some("1") => {
+            match lines.next() {
+                Some(json) => Ok(json.to_string()),
+                None => Err("Expected JSON string after success flag, got nothing.".to_string()),
+            }
+        }
+        Some("0") => {
+            let error_msg = lines.collect::<Vec<_>>().join("\n");
+            Err(format!("Python script failed:\n{}", error_msg))
+        }
+        Some(other) => Err(format!("Unexpected output prefix: {}", other)),
+        None => Err("No output from Python script".to_string()),
+    }
 }
 
 #[tauri::command]
@@ -102,7 +120,10 @@ async fn python_coa(ids: Vec<String>) -> Result<Vec<String>, String> {
     let mut lines = output.lines();
     match lines.next() {
         Some("1") => Ok(lines.map(|s| s.to_string()).collect()),
-        Some("0") => Err("Error during CoA creation".to_string()),
+        Some("0") => {
+            let err_output: String = lines.collect::<Vec<_>>().join("\n");
+            Err(format!("CoA creation failed:\n{}", err_output))
+        }
         Some(other) => Err(format!("Unexpected output prefix: {}", other)),
         None => Err("No output from Python script".to_string()),
     }
