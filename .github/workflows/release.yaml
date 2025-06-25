@@ -2,9 +2,8 @@ name: Build and Release CL Tool (windows)
 
 on:
   push:
-    tags:
-      - 'v*'  # Only run on version tags like v0.1.0, v1.2.3
-
+    branches:
+      - prod
 jobs:
   build:
     runs-on: windows-latest
@@ -25,17 +24,26 @@ jobs:
           pip install -r automation/pyREQ.txt
 
       - name: Build using PyInstaller
-        run: |
-          cd automation
-          pyinstaller .\main.spec -y --clean
-          mkdir dist_package
-          move dist\main dist_package\
-          powershell Compress-Archive -Path dist_package\* -DestinationPath Coa_Auto.zip
-          move Coa_Auto.zip $env:GITHUB_WORKSPACE\Coa_Auto.zip
+        shell: pwsh
+        run: ./buildPy.ps1
+      
+      - name: Zip CLI Tool
+        shell: pwsh
+          run: |
+            Compress-Archive -Path automation/dist/main/* -DestinationPath cli_tool.zip
 
-      - name: Upload Release
+      - name: Build Tauri App
+        shell: pwsh
+        run: |
+          cd coat-ui
+          npm install
+          npm run tauri build
+
+      - name: Upload NSIS Installer and CLI Tool
         uses: softprops/action-gh-release@v2
         with:
-          files: Coa_Auto.zip
+          files: |
+            coat-ui/src-tauri/target/release/bundle/nsis/*.exe
+            cli_tool.zip
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
