@@ -1,0 +1,14 @@
+
+
+
+.list_container {
+  padding-right: 1rem;
+  padding-left: 1rem;
+  display: grid;
+  grid-template-columns: repeat(5, 1fr); /* 5 columns */
+  max-height: 80vh;
+  overflow-y: auto;
+}
+
+
+
