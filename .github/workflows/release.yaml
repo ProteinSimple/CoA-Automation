@@ -29,7 +29,7 @@ jobs:
       
       - name: Zip CLI Tool
         shell: pwsh
-          run: |
+        run: |
             Compress-Archive -Path automation/dist/main/* -DestinationPath cli_tool.zip
 
       - name: Build Tauri App
