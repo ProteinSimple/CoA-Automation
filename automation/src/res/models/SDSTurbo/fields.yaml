@@ -1,8 +1,10 @@
 dates:
 - Date of Manufacture
 - Expiration Date
+- Text Field 9
 fields:
+  Batch No: 'batch_num'
   Date of Manufacture: 'build_date'
   Expiration Date: 'exp_date'
   Serial Number: 'id'
-  Text1: '@!TIME'
+  Text Field 9: '@!TIME'

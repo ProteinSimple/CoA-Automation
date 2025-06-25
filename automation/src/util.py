@@ -4,6 +4,10 @@ from pypdf.constants import UserAccessPermissions
 from pathlib import Path
 from datetime import datetime
 import pandas as pd
+from typing import Self
+from passkey import load_token, add_token
+from saturn import saturn_check_connection
+import tempfile
 
 MONTH_MAP = { 1: "JAN", 2: "FEB", 3: "MAR", 4: "APR",
               5: "MAY", 6: "JUN", 7: "JUL", 8: "AUG",
@@ -23,6 +27,11 @@ PERM_MAP = {
     "extract": UserAccessPermissions.EXTRACT,
 }
 
+COMMANDS = {
+    "TIME": lambda: datetime.now().strftime("%m/%d/%Y"),
+    "TEST": lambda: "Filled"
+}
+
 class UtilError(Exception):
     """Custom exception for PDF processing errors"""
     pass
@@ -32,55 +41,37 @@ class Pathcr:
     def __init__(self, p):
         self.path = Path(p)
     def __str__(self):
-        return str(self.get_p())
+        return str(self._get_p())
     
-    def __truediv__(self, p2):
+    def __truediv__(self, p2) -> Self:
         return Pathcr(self.path / str(p2))
 
-    def get_p(self):
+    def _get_p(self):
         if hasattr(sys, "_MEIPASS"):
             return os.path.join(sys._MEIPASS, str(self.path))
         return os.path.abspath(Path(__file__).parent / self.path)
 
-    def as_path(self):
-        return Path(self.get_p())
+    def as_path(self) -> Path:
+        return Path(self._get_p())
 
     def __repr__(self):
         return f"Pathcr({str(self)})"
     
 def exec_c(command: str) -> str:
-    commands = {
-        "TIME": lambda: datetime.now().strftime("%d/%m/%Y"),
-        "TEST": lambda: "Filled"
-    }
-    if command not in commands:
+    
+    if command not in COMMANDS:
         raise UtilError(f"Unknown command: {command}")
-    return commands[command]()
+    return COMMANDS[command]()
 
-def get_filename():
-    return "testOutput"    
+def get_filename(id):
+    return str(id) + "_testOutput"    
 
-def create_mapping(config, info, traveler_data) -> pd.DataFrame:
-    """ Creates mapping using information from traveler
-
-    Args:
-        config: Configuraiton dict
-        info: Information dict
-        traveler_data: Traveler's Data dict
-    Return val:
-        Pandas DataFrame
-    Exceptions:
-        PDFUtilError
-    """
-    try:
-        mapping_path: Pathcr = Pathcr(config['mapping_dir']) / info['mapping']
-        mapping = pd.read_csv(mapping_path.get_p(), encoding='cp1252')
-        mapping['LotNumber'] = traveler_data['lot_num']
-        mapping['FileName'] = info['FileName']
-
-        return mapping
-    except Exception as e:
-        raise UtilError("Failed to create CoA mapping: " + str(e))
+def create_mapping_template(config) -> pd.DataFrame:
+    columns_names = [
+        'PartNumber','ProdCode',
+        'LotNumber','FileName'
+    ]
+    return pd.DataFrame(columns=columns_names)
 
 def predict_mapping(x: str, ys: list[str]):
     """ TODO: This function is incomplete
@@ -115,7 +106,7 @@ def generate_field_map_from_pdf(config, info, model):
 
     dir_path = Path(config['model_dir']) / Path(model)
     template_path = (Pathcr(dir_path) / info['template']).as_path()
-    field_path: Path = (Pathcr(dir_path) / config['default_fields']).as_path()
+    field_path = (Pathcr(dir_path) / config['default_fields']).as_path()
     save_path = (Pathcr(dir_path) / "filled.pdf").as_path()
 
     try:
@@ -137,10 +128,10 @@ def generate_field_map_from_pdf(config, info, model):
         raise UtilError("Failed to initilize template and fields.yaml!: " + str(e))
 
 
-def fill_CoA_template(config: dict, info: dict, trav_data: dict, model: str, write_path: Path | str = None) -> Path:
+def fill_CoA(config: dict, info: dict, trav_data: dict, model: str, write_path: Path | str = None) -> Path:
     """ Using the given template and fields yaml file in the directory, creates a new CoA, either in the
         specified path or in the same directory, and fills the fields given the appropriate command.
-        for specs on commands see : exec_c
+        for specs on COMMANDS see : exec_c
 
     Args:
         - dir_path: Path to the Directory containing the fields.yaml and PDF template
@@ -158,32 +149,33 @@ def fill_CoA_template(config: dict, info: dict, trav_data: dict, model: str, wri
     dir_path = Path(config['model_dir']) / Path(model)
     template_path = (Pathcr(dir_path) / info['template']).as_path()
     field_path = (Pathcr(dir_path) / info['fields']).as_path()
-    save_path = Pathcr(write_path).as_path() if write_path is not None else (Pathcr(dir_path) / "temp.pdf").as_path()
     
+    if write_path is not None:
+        save_path = Pathcr(write_path).as_path()
+    else:
+        with tempfile.NamedTemporaryFile(delete=False, suffix=".pdf") as tmp:
+            save_path = Path(tmp.name)
+    
+    doc = fitz.open(template_path)
+    fields = yaml.safe_load(open(field_path))
+    dates = set(fields['dates'])
+    for page in doc:    
+        for name, key in fields['fields'].items():
+            for field in page.widgets():
+                if (field.field_name == name):
+                    fn: str = field.field_name
+                    val = exec_c(key[2:]) if key.startswith("@!") else trav_data[key]
+                    if fn in dates: 
+                        parts = val.split('/')
+                        field.field_value = parts[1] + MONTH_MAP[int(parts[0])] + parts[2]
+                    else:
+                        field.field_value = str(val)
+                field.text_fontsize =  config['fontsize']
+                field.text_font = config['font']
+                field.update()
 
-    try:
-        doc = fitz.open(template_path)
-        fields = yaml.safe_load(open(field_path))
-        dates = set(fields['dates'])
-
-        for page in doc:    
-            for name, key in fields['fields'].items():
-                for field in page.widgets():
-                    if (field.field_name == name):
-                        fn: str = field.field_name
-                        val = exec_c(key[2:]) if key.startswith("@!") else trav_data[key]
-                        if fn in dates: 
-                            parts = val.split('/')
-                            field.field_value = parts[0] + MONTH_MAP[int(parts[1])] + parts[2]
-                        else:
-                            field.field_value = val
-
-                    field.update()
-        
-        doc.save(save_path)
-        return save_path
-    except Exception as e:
-        raise UtilError("Failed to populating CoA: " + str(e))
+    doc.save(save_path)
+    return save_path
 
 def encrypt_pdf_file(f_path: str, write_path: str, permissions: dict):
     """ Writes the given file to specified path, with the given permissions
@@ -216,7 +208,7 @@ def encrypt_pdf_file(f_path: str, write_path: str, permissions: dict):
     except Exception as e:
         raise UtilError("Failed to create CoA mapping: " + str(e))
 
-def output_CoA_pdf(config, info, rm_input: bool = True):
+def output_CoA(config, info, input_path, dest_filename):
     """ Outputs the filled CoA to the path specified using the two passed arguments
 
     Args:
@@ -226,36 +218,35 @@ def output_CoA_pdf(config, info, rm_input: bool = True):
         removes the given input PDF file if rm_input = True
     Exceptions:
          PDFUtilError
-    """
+    """ # TODO: Update this
     for dir in config['pdf_output_dir']:
         dir_p = Path(dir)
         if (not os.path.exists(dir_p)):
             os.makedirs(dir_p)
         try:
-            encrypt_pdf_file(info['TempFile'], (dir_p / info['FileName']).with_suffix('.pdf'), config['file_perm'])
+            dest_path = (dir_p / dest_filename).with_suffix('.pdf')
+            encrypt_pdf_file(input_path, dest_path, config['file_perm'])
+            yield str(dest_path.absolute())
         except Exception as e:
             raise UtilError("Failed to output CoA PDF file: " + str(e))
-    
-    if rm_input: os.remove(info['TempFile']) 
 
-def output_CoA_mapping(config, info, mapping, extn = '.csv'):
+def output_CoA_mapping(config, info, mapping, mapping_f_name = "mapping", extn = '.csv'):
     """ Outputs the mapping data to the path specified using the two passed arguments
 
     Args:
         config: Config dict
         info: Information dict
-    Exceptions:
-         PDFUtilError
     """
+    retVal = []
     for dir in config['mapping_output_dir']:
         dir_p = Path(dir)
         if (not os.path.exists(dir_p)):
             os.makedirs(dir_p)
-        try:
-            mapping.to_csv(dir_p / Path(info['FileName']).with_suffix(extn), index=False)
-        except Exception as e:
-            raise UtilError("Failed to output mapping excel file: " + str(e))
-    
+        
+        mapping.to_csv((dir_p / mapping_f_name).with_suffix(extn), index=False)
+        retVal.append(str((dir_p / mapping_f_name).with_suffix(extn).absolute()))
+    return retVal
+        
 def load_config(args):
     config_path = args.config
     run_mode = args.rm
@@ -266,3 +257,16 @@ def load_config(args):
     if run_mode not in full_config:
         raise ValueError(f"Run mode '{run_mode}' not in config")
     return full_config[run_mode]
+
+
+    
+def auth(args):
+    if hasattr(args, "user") and hasattr(args, "passkey") and args.user and args.passkey:
+        add_token(args.user, args.passkey)
+    user, passkey = None, None
+    try:
+        user, passkey = load_token()
+        assert saturn_check_connection(user, passkey)
+        return user, passkey
+    except Exception as e:
+        raise Exception("Couldn't load saturn API key correctly: " + str(e))

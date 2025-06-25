@@ -9,7 +9,7 @@
   color: #ffffff;
   background-color: #0f0f0f;
   
-  transition: border-color 0.25s;
+  transition: border-color 0.6s;
   box-shadow: 0 2px 2px rgba(0, 0, 0, 0.2);
 
   margin: 1rem;
@@ -24,18 +24,31 @@
 
 .topContainer-container button {
   cursor: pointer;
+  width: 10%;
+  display: flex;
+  justify-content: center;
 }
 
 .topContainer-container button:hover {
   border-color: #396cd8;
+  transform: scale(1.05);
+}
+
+.topContainer-container input:hover {
+  transform: scale(1.05);
 }
 
 .topContainer-container button:active {
   border-color: #396cd8;
-  background-color: #e8e8e8;
+  transform: scale(0.98); 
 }
 
-.topContainer-container input,
 .topContainer-container button {
   outline: none;
+  transition: transform 0.2s ease;
+}
+
+.topContainer-container input {
+  outline: none;
+  transition: transform 0.2s ease;
 }

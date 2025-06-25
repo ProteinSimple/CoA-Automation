@@ -6,23 +6,42 @@
   flex-direction: row;
   align-items: center;
   justify-content:baseline;
+
+  border-radius: 10px;
+  margin-right: 0.25rem;
   margin-top: 0.5rem;
-
-  padding-top: 0.5rem;
-  padding-bottom: 0.5rem;
-  margin-left: 2rem;
-  margin-right: 2rem;
-
-  border-radius: 1rem;
+  margin-bottom: 0.5rem;
+  
 }
 
 .list_item > * {
-  padding-left: 1rem;
-  padding-right: 1rem;
 }
 
-.list_item_date {
-  margin-left: auto;
-  font-size: 0.8rem;
-  color:gray
+.list_item > * {
+  margin-left: 0.5rem;
+  margin-right: 0.5rem;
 }
+.list_item > p {
+  font-size: x-small;
+}
+
+.list_item_infobox{
+  font-size: x-small;
+}
+
+.list_item_infobox > p {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: center;
+  max-height: 50%;
+  margin-block-start: 0;
+  margin-block-end: 0;
+  
+}
+
+.list_item_infobox > p.list_item_date {
+  font-size: 0.4rem;
+  color: gray;
+}
+

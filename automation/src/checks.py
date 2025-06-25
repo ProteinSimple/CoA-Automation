@@ -56,7 +56,7 @@ def check_columns(**kwargs) -> bool:
     config: dict = kwargs['config']
     mapping: pd.DataFrame = kwargs['mapping']
 
-    with open(Pathcr(config['def_mapping_columns']).get_p()) as f:
+    with open(Pathcr(config['def_mapping_columns']).as_path()) as f:
         if (json.load(f) != sorted(mapping.columns.values)):
             return False
     
@@ -81,7 +81,7 @@ def check_prodcode_matching(**kwargs):
     mapping: pd.DataFrame = kwargs['mapping']
 
 
-    prod_code = pd.read_excel(Pathcr(config['prod_code']).get_p())
+    prod_code = pd.read_excel(Pathcr(config['prod_code_map']).as_path())
     expected = prod_code[prod_code['PartNumber'] == mapping['PartNumber'].values[0]]['ProdCode']
     actual = mapping['ProdCode']
     if (expected.values[0].strip() != actual.values[0].strip()):
