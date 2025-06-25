@@ -4,6 +4,9 @@ on:
   push:
     branches:
       - prod
+  push:
+    tags:
+      - 'v*'
 jobs:
   build:
     runs-on: windows-latest
