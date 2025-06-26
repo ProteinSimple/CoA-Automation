@@ -7,13 +7,19 @@ type ListItemProps = {
   time: string;
 };
 
-function ListItem( { id, time}: ListItemProps) {
-  const {addCartridge, removeCartridge} = useCartridge()
+function ListItem( { id, time }: ListItemProps) {
+  const { selectedCartridgeList, addCartridge, removeCartridge } = useCartridge()
+   
+  const isChecked = (id: string) => {
+    return selectedCartridgeList.has(id)
+  }
+
   return (
     <div className="list_item">
       <Checkbox  id={id}
                  onChecked={addCartridge}
-                 onUnchecked={removeCartridge}>
+                 onUnchecked={removeCartridge}
+                 isChecked={isChecked}>
       </Checkbox>
       <div className="list_item_infobox">
         <p>

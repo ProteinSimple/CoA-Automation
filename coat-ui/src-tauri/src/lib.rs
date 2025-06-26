@@ -30,15 +30,15 @@ async fn run_python_command_with_output(args: Vec<String>) -> Result<String, Str
         full_args.push(output_path_str.to_string());
 
         let exe_path = std::path::Path::new("src").join("main.exe");
-        println!(
-            "Running: {} {}",
-            exe_path.display(),
-            full_args
-                .iter()
-                .map(|s| format!("\"{}\"", s))
-                .collect::<Vec<_>>()
-                .join(" ")
-        );
+        // println!(
+        //     "Running: {} {}",
+        //     exe_path.display(),
+        //     full_args
+        //         .iter()
+        //         .map(|s| format!("\"{}\"", s))
+        //         .collect::<Vec<_>>()
+        //         .join(" ")
+        // );
         let status = Command::new(exe_path)
             .args(full_args)
             .status()

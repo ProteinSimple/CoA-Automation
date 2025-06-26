@@ -11,13 +11,15 @@ interface TopContainerProps {
   setError: (_: ErrorTuple) => void;
 }
 function TopContainer({ setFilter, setError }: TopContainerProps) {
-  const { cartridgeList } = useCartridge();
+  const { selectedCartridgeList } = useCartridge();
   const [ fetchFin, setFetchFin ] = useState(true)
 
   async function generate() {
+
     setFetchFin(false)
+
     try {
-      const outputed_files = await pythonCoa(cartridgeList);
+      const outputed_files = await pythonCoa([...selectedCartridgeList]);
       if (Array.isArray(outputed_files)) {
         const message = `Following files were created in the process of generation!\n\n${outputed_files.join(
           "\n"
