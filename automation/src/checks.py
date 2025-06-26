@@ -56,7 +56,7 @@ def check_columns(**kwargs) -> bool:
     config: dict = kwargs['config']
     mapping: pd.DataFrame = kwargs['mapping']
 
-    with open(Pathcr(config['def_mapping_columns']).as_path()) as f:
+    with open(Pathcr(config['mapping_columns']).as_path()) as f:
         if (json.load(f) != sorted(mapping.columns.values)):
             return False
     

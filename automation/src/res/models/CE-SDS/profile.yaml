@@ -1,0 +1,19 @@
+# Saturn data fields:
+# id         : Unique cartridge ID
+# build_date : Build date (YYYY-MM-DD)
+# build_time : Time of build (HH:MM)
+# exp_date   : Expiration date
+# class_name : Name of classification
+# class_code : Code of classification
+# batch_num  : Batch number
+# Possilbe actions: @!TEST, @!TIME
+
+PN: 090-100
+dates:
+- Date of Manufacture
+- Date
+fields:
+  Date: '@!TIME'
+  Date of Manufacture: 'build_date'
+  Serial Number: 'id'
+template: 046-317 CofA_Maurice-CE-SDS_Cartridge_090-100_revE.pdf
