@@ -1,4 +1,4 @@
-import requests, os, json
+import requests
 from requests.auth import HTTPBasicAuth
 from urllib.parse import urlencode
 from datetime import datetime, timedelta

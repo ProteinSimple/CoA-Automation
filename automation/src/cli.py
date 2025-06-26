@@ -16,6 +16,7 @@ def get_args():
     
     # specific argument passed to certain actions:
     coa_sub.add_argument('ids', type=int, nargs='+', help="Id of the cartridge for file generation")
+    coa_sub.add_argument('--name', type=str, default="AA")
     
     fetch_sub.add_argument('length', type=int) # TODO: add help to these two
     fetch_sub.add_argument('limit', type=int)

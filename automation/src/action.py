@@ -1,4 +1,4 @@
-from util import fill_CoA, output_CoA_mapping, get_filename, Pathcr, generate_field_map_from_pdf,auth, output_CoA
+from util import fill_CoA, output_CoA_mapping, get_filename, get_mapping_name, Pathcr, generate_field_map_from_pdf,auth, output_CoA
 from saturn import saturn_get_cartridge_data_range , saturn_get_cartridge_data_bundle
 from checks import run_checks
 from pathlib import Path
@@ -70,37 +70,39 @@ def action_coa(args, config):
         datas = saturn_get_cartridge_data_bundle(args.ids, user, passkey)
         pdf_outputs = []
         mapping_rows = []
+        created_models = set()
         prod_map = pd.read_excel(Pathcr(config['prod_code_map']).as_path())
         for _, data in enumerate(datas):
             id = data.id
             model = data.model_name()
             if model not in config['models']:
                 raise ValueError("Given model configuration is not setup. use 'init' action to setup the model")
-            info = yaml.safe_load(open((Pathcr(config['model_dir']) / model / config['profile']).as_path()))
-            filename = get_filename(id)
+            profile = yaml.safe_load(open((Pathcr(config['model_dir']) / model / config['profile']).as_path()))
+            filename = get_filename(id, profile)
             print(id, model)
             
             # CoA Creation
-            temp_file = fill_CoA(config, info, data.to_dict(), model)
-            files = output_CoA(config, info, temp_file, filename)
+            temp_file = fill_CoA(config, profile, data.to_dict(), model)
+            files = output_CoA(config, profile, temp_file, filename)
             pdf_outputs += files
             os.remove(temp_file) 
             
             # Adding data to the mapping CSV
-            part_number = info['PN']
+            part_number = profile['PN']
             prod_code = prod_map[prod_map['PartNumber'] == part_number]['ProdCode'].values[0]
             lot_num = id
-            
+            created_models.add(model)
             mapping_rows.append({
                 "PartNumber": part_number,
                 "ProdCode": prod_code,
                 "LotNumber": lot_num,
                 "FileName": filename
             }) # TODO: make this robust! should not be creating rows of mapping like this!
+
         
         mapping = pd.DataFrame(mapping_rows)
-        run_checks(config=config, info=info, data=data, mapping=mapping)
-        csv_files = output_CoA_mapping(config, info, mapping)
+        run_checks(config=config, data=data, mapping=mapping)
+        csv_files = output_CoA_mapping(config, mapping, get_mapping_name(args))
         
         print(1)
         for f in pdf_outputs:
