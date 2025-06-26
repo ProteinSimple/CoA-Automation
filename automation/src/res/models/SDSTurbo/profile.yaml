@@ -1,0 +1,22 @@
+# Saturn data fields:
+# id         : Unique cartridge ID
+# build_date : Build date (YYYY-MM-DD)
+# build_time : Time of build (HH:MM)
+# exp_date   : Expiration date
+# class_name : Name of classification
+# class_code : Code of classification
+# batch_num  : Batch number
+# Possilbe actions: @!TEST, @!TIME
+
+PN: 101-0058
+dates:
+- Date of Manufacture
+- Expiration Date
+- Text Field 9
+fields:
+  Batch No: 'batch_num'
+  Date of Manufacture: 'build_date'
+  Expiration Date: 'exp_date'
+  Serial Number: 'id'
+  Text Field 9: '@!TIME'
+template: Q51-0194_CofA_101-0058_Cartridge, Maurice Turbo CE-SDS_REVB.pdf

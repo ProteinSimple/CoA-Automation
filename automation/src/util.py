@@ -79,7 +79,7 @@ def predict_mapping(x: str, ys: list[str]):
 
     return ""
 
-def generate_field_map_from_pdf(config, info, model):
+def generate_field_map_from_pdf(config, template, model):
     
     """
         Extracts form fields from a PDF template and generates a `fields.yaml` file 
@@ -92,7 +92,7 @@ def generate_field_map_from_pdf(config, info, model):
         - model (str): Name of the model directory where the PDF template and output files reside.
 
     Return val:
-        - str: The filename of the generated `fields.yaml`.
+        - str: The filename of the generated `fields.yaml`. TODO: Update this this is old comment
 
     Exceptions:
         - UtilError: If the PDF cannot be opened or the YAML file cannot be generated.
@@ -105,25 +105,23 @@ def generate_field_map_from_pdf(config, info, model):
     """
 
     dir_path = Path(config['model_dir']) / Path(model)
-    template_path = (Pathcr(dir_path) / info['template']).as_path()
-    field_path = (Pathcr(dir_path) / config['default_fields']).as_path()
+    template_path = Pathcr(template).as_path()
     save_path = (Pathcr(dir_path) / "filled.pdf").as_path()
 
     try:
         doc = fitz.open(template_path)
-        yaml_obj = {"fields" : {}}
+        retVal = {}
         for page in doc:
             for field in page.widgets():
                 field.field_value = field.field_name
-                yaml_obj["fields"][field.field_name] = predict_mapping(field.field_name, [])   # TODO !!!
+                retVal[field.field_name] = predict_mapping(field.field_name, [])   # TODO !!!
                 field.update()
-        yaml_obj['dates'] = []
-        for f in yaml_obj["fields"].keys():
+        dates = []
+        for f in retVal.keys():
             if "date" in f.lower():
-                yaml_obj['dates'].append(f) # TODO: This is a bad way to detect dates!
+                dates.append(f) # TODO: This is a bad way to detect dates!
         doc.save(save_path)
-        yaml.safe_dump(yaml_obj, open(field_path, mode="w+"))
-        return field_path.name
+        return retVal, dates
     except Exception as e:        
         raise UtilError("Failed to initilize template and fields.yaml!: " + str(e))
 
@@ -144,11 +142,9 @@ def fill_CoA(config: dict, info: dict, trav_data: dict, model: str, write_path: 
         - PDFUtilError
     """
 
-    info['fields'] = info.get('fields', config.get('default_fields'))
     # Paths used throughout the function
     dir_path = Path(config['model_dir']) / Path(model)
     template_path = (Pathcr(dir_path) / info['template']).as_path()
-    field_path = (Pathcr(dir_path) / info['fields']).as_path()
     
     if write_path is not None:
         save_path = Pathcr(write_path).as_path()
@@ -157,10 +153,10 @@ def fill_CoA(config: dict, info: dict, trav_data: dict, model: str, write_path: 
             save_path = Path(tmp.name)
     
     doc = fitz.open(template_path)
-    fields = yaml.safe_load(open(field_path))
-    dates = set(fields['dates'])
+    fields = info['fields']
+    dates = set(info['dates'])
     for page in doc:    
-        for name, key in fields['fields'].items():
+        for name, key in fields.items():
             for field in page.widgets():
                 if (field.field_name == name):
                     fn: str = field.field_name

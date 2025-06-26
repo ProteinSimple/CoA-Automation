@@ -1,0 +1,22 @@
+# Saturn data fields:
+# id         : Unique cartridge ID
+# build_date : Build date (YYYY-MM-DD)
+# build_time : Time of build (HH:MM)
+# exp_date   : Expiration date
+# class_name : Name of classification
+# class_code : Code of classification
+# batch_num  : Batch number
+# Possilbe actions: @!TEST, @!TIME
+
+PN: 101-0069
+dates:
+- Date of Manufacture
+- Expiration Date
+- Text1
+fields:
+  Batch No: 'batch_num'
+  Date of Manufacture: 'build_date'
+  Expiration Date: 'exp_date'
+  Serial Number: 'id'
+  Text1: '@!TIME'
+template: Q51-0214_CofA_101-0069_Maurice CE-SDS 50 Cartridge_RevA.pdf

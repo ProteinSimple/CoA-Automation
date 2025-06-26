@@ -9,18 +9,12 @@ def setup(args):
         os.makedirs(os.path.dirname(args.output), exist_ok=True)
     sys.stdout = open(args.output, "w")
 
-def terminate(args):
-    if args.verbose:
-        return
-    sys.stdout.close()
-
 def main():
     # Arg Init
     args = get_args()
     setup(args)
     config = load_config(args)
     dispatch_action(args, config)
-    # terminate(args)
 
 if __name__ == "__main__":    
     main()
