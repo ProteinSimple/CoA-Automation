@@ -29,7 +29,7 @@ function ErrorPopUpContainer( { errorTup, setError } : ErrorProps) {
       <div className='errorPopUpSuggestions'>
         Possible causes of the issue:
         <ul>
-          {suggestions.map((s) => <li>{s}</li>)}
+          {suggestions.map((s, idx) => <li key={idx}>{s}</li>)}
         </ul>
       </div>
     </Modal>

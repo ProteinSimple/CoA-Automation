@@ -1,23 +1,19 @@
-import { useState } from "react";
 import "./checkbox.css"
 
 type CheckboxProps = {
   id: string;
   onChecked?: (data: string) => void;
   onUnchecked?: (data: string) => void;
+  isChecked: (data: string) => boolean
 };
 
-function Checkbox ({ id, onChecked, onUnchecked } : CheckboxProps) {
-  const [checked, setChecked] = useState(false);
+function Checkbox ({ id, onChecked, onUnchecked, isChecked } : CheckboxProps) {
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const isChecked = e.target.checked;
-    setChecked(isChecked);
-
-    if (isChecked) {
-      onChecked?.(id);
-    } else {
+  const handleChange = (_: React.ChangeEvent<HTMLInputElement>) => {
+    if (isChecked(id)) {
       onUnchecked?.(id);
+    } else {
+      onChecked?.(id);
     }
   };
 
@@ -26,7 +22,7 @@ function Checkbox ({ id, onChecked, onUnchecked } : CheckboxProps) {
     <label className="checkbox-wrapper"
            id={id}>
     <input type="checkbox"
-           checked={checked}
+           checked={isChecked(id)}
            onChange={handleChange}/>
     <span className="custom-checkbox"></span>
     </label>

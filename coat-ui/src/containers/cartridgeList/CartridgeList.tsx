@@ -21,7 +21,6 @@ function CartridgeList({ filterText }: CartridgeListProps) {
     const check = async () => {
       try {
         let result = await pythonCheck();
-        console.log(result)
         while (!result) {
           const user = prompt("Enter username:", "");
           const pass = prompt("Enter passkey:", "");
@@ -30,7 +29,6 @@ function CartridgeList({ filterText }: CartridgeListProps) {
             break;
           }
           result = await pythonAuth(user, pass);
-          console.log(result)
         }
         setCheckDone(true);
       } catch (err) {
@@ -46,7 +44,6 @@ function CartridgeList({ filterText }: CartridgeListProps) {
     const fetchData = async () => {
       try {
         const raw = String(await pythonFetchIds()); // returns JSON string
-        console.log(raw)
         const parsed: CartridgeInfo[] = JSON.parse(raw);
         setCartridgeList(parsed);
       } catch (error) {
