@@ -30,15 +30,15 @@ async fn run_python_command_with_output(args: Vec<String>) -> Result<String, Str
         full_args.push(output_path_str.to_string());
 
         let exe_path = std::path::Path::new("src").join("main.exe");
-        // println!(
-        //     "Running: {} {}",
-        //     exe_path.display(),
-        //     full_args
-        //         .iter()
-        //         .map(|s| format!("\"{}\"", s))
-        //         .collect::<Vec<_>>()
-        //         .join(" ")
-        // );
+        println!(
+            "Running: {} {}",
+            exe_path.display(),
+            full_args
+                .iter()
+                .map(|s| format!("\"{}\"", s))
+                .collect::<Vec<_>>()
+                .join(" ")
+        );
         let status = Command::new(exe_path)
             .args(full_args)
             .status()
@@ -90,6 +90,34 @@ async fn python_fetch_ids() -> Result<String, String> {
 }
 
 #[tauri::command]
+async fn python_fetch_range(start: String, end: String) -> Result<String, String> {
+    let output = run_python_command_with_output(vec![
+        "fetch".to_string(),
+        "range".to_string(),
+        start,
+        end,
+    ])
+    .await?;
+
+    let mut lines = output.lines();
+
+    match lines.next() {
+        Some("1") => {
+            match lines.next() {
+                Some(json) => Ok(json.to_string()),
+                None => Err("Expected JSON string after success flag, got nothing.".to_string()),
+            }
+        }
+        Some("0") => {
+            let error_msg = lines.collect::<Vec<_>>().join("\n");
+            Err(format!("Python script failed:\n{}", error_msg))
+        }
+        Some(other) => Err(format!("Unexpected output prefix: {}", other)),
+        None => Err("No output from Python script".to_string()),
+    }
+}
+
+#[tauri::command]
 async fn python_check() -> bool {
     match run_python_command_with_output(vec!["check".to_string()]).await {
         Ok(output) => output == "1",
@@ -104,7 +132,8 @@ async fn python_auth(user: String, pass: String) -> bool {
         "--user".to_string(),
         user,
         "--passkey".to_string(),
-    pass]).await {
+        pass]
+    ).await {
         Ok(output) => output == "1",
         Err(_) => false,
     }
@@ -136,6 +165,7 @@ pub fn run() {
         .invoke_handler(tauri::generate_handler![
             python_com,
             python_fetch_ids,
+            python_fetch_range,
             python_check,
             python_coa,
             python_auth

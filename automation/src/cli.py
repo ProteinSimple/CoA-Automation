@@ -18,9 +18,17 @@ def get_args():
     coa_sub.add_argument('ids', type=int, nargs='+', help="Id of the cartridge for file generation")
     coa_sub.add_argument('--name', type=str, default="AA")
     
-    fetch_sub.add_argument('length', type=int) # TODO: add help to these two
-    fetch_sub.add_argument('limit', type=int)
-    
+    # Case 1: Default fetch with length and limit
+    fetch_subparsers = fetch_sub.add_subparsers(dest='fetch_mode', required=False)
+    sub_list.append(default_fetch := fetch_subparsers.add_parser('default', help='Default fetch mode using length and limit'))
+    default_fetch.add_argument('length', type=int, help="Number of items to fetch")
+    default_fetch.add_argument('limit', type=int, help="Limit per request")
+
+    # Case 2: fetch range with start and end
+    sub_list.append(range_fetch := fetch_subparsers.add_parser('range', help='Fetch with a start and end range'))
+    range_fetch.add_argument('start', type=str, help="Start of the range")
+    range_fetch.add_argument('end', type=str, help="End of the range")
+
 
     init_sub.add_argument('model', type=str, help="Model number of cartridge")
     init_sub.add_argument('template', type=str)

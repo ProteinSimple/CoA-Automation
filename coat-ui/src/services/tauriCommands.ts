@@ -8,6 +8,13 @@ export const pythonFetchIds = async () => {
   return await invoke("python_fetch_ids", {});
 };
 
+export const pythonFetchRange = async (startDate: Date, endDate: Date) => {
+  let start = startDate.toISOString().split('T')[0]
+  let end = endDate.toISOString().split('T')[0]
+  console.log(start, end);
+  return await invoke("python_fetch_range", { start,  end})
+}
+
 export const pythonCheck = async () => {
   return await invoke("python_check", {})
 }

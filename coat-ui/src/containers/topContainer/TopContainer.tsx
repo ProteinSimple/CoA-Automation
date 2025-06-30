@@ -3,19 +3,24 @@ import { pythonCoa } from "../../services";
 import { useCartridge } from "../../contexts";
 import { useState } from "react";
 import { DotLoader } from "react-spinners";
+import DatePicker from "react-datepicker";
+import "react-datepicker/dist/react-datepicker.css";
 
 type ErrorTuple = [boolean, string];
 
 interface TopContainerProps {
   setFilter: (given: string) => void;
   setError: (_: ErrorTuple) => void;
+  setStart: (_: Date) => void;
+  setEnd: (_: Date) => void;
+  startDate: Date;
+  endDate: Date
 }
-function TopContainer({ setFilter, setError }: TopContainerProps) {
+function TopContainer({ setFilter, setError, setStart, setEnd, startDate, endDate }: TopContainerProps) {
   const { selectedCartridgeList } = useCartridge();
   const [ fetchFin, setFetchFin ] = useState(true)
 
   async function generate() {
-
     setFetchFin(false)
 
     try {
@@ -59,6 +64,10 @@ function TopContainer({ setFilter, setError }: TopContainerProps) {
           {fetchFin? "Generate" : 
               <DotLoader color="white" loading={!fetchFin} size={20} />}
        </button>
+       <DatePicker selected={startDate} onChange={(date) => setStart(date as Date)}
+                   dateFormat="yyyy-MM-dd" customInput={<input readOnly />} />
+       <DatePicker selected={endDate} onChange={(date) => setEnd(date as Date)}
+                   dateFormat="yyyy-MM-dd" customInput={<input readOnly />} />
       </form>
     </div>
   );
