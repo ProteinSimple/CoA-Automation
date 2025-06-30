@@ -70,7 +70,7 @@ def get_filename(id, profile, extn = ".pdf"):
 
 def get_mapping_name(args, name_prefix = "coa_mapping", extn: str = ".csv") -> str:
 
-    initials = args.name
+    initials = args.name.lower()
     today = datetime.now().date()
     date = today.strftime('%b').lower() + str(today.day)
     return "_".join([name_prefix, initials, date]) + extn

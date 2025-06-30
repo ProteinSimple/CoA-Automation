@@ -1,5 +1,5 @@
 from util import fill_CoA, output_CoA_mapping, get_filename, get_mapping_name, Pathcr, generate_field_map_from_pdf,auth, output_CoA
-from saturn import saturn_get_cartridge_data_range , saturn_get_cartridge_data_bundle
+from saturn import saturn_get_cartridge_data_past , saturn_get_cartridge_data_bundle, saturn_get_cartridge_data_range
 from checks import run_checks
 from pathlib import Path
 import json, yaml, shutil, os, traceback, sys
@@ -46,7 +46,10 @@ def dispatch_action(args, config):
     elif action == CoatActions.INIT:
         action_init(args, config)
     elif action == CoatActions.FETCH:
-        action_list_id(args, config)
+        if (args.fetch_mode == "range"): # TODO: CHANGE this !?
+            action_fetch_range(args, config)
+        else:
+            action_fetch(args, config)
     elif action == CoatActions.NONE:
         pass
     elif action == CoatActions.CHECK:
@@ -79,8 +82,6 @@ def action_coa(args, config):
                 raise ValueError("Given model configuration is not setup. use 'init' action to setup the model")
             profile = yaml.safe_load(open((Pathcr(config['model_dir']) / model / config['profile']).as_path()))
             filename = get_filename(id, profile)
-            print(id, model)
-            
             # CoA Creation
             temp_file = fill_CoA(config, profile, data.to_dict(), model)
             files = output_CoA(config, profile, temp_file, filename)
@@ -158,13 +159,22 @@ def action_init(args, config):
         print(yaml.dump(profile))
 
 
-def action_list_id(args, config):
+def action_fetch(args, config):
     try:
         user, passkey = auth(args)
-        ids = saturn_get_cartridge_data_range(args.length, args.limit, user, passkey)
+        ids = saturn_get_cartridge_data_past(args.length, args.limit, user, passkey)
         print(1)
         print(json.dumps(list(ids)))
     except Exception:
         print(0)
         traceback.print_exc(file=sys.stdout)
 
+def action_fetch_range(args, config):
+    try:
+        user, passkey = auth(args)
+        ids = saturn_get_cartridge_data_range(args.start, args.end, user, passkey)
+        print(1)
+        print(json.dumps(list(ids)))
+    except Exception:
+        print(0)
+        traceback.print_exc(file=sys.stdout)
