@@ -44,31 +44,32 @@ function TopContainer({ setFilter, setError, setStart, setEnd, startDate, endDat
   }
 
   return (
-    <div className="topContainer-container">
+    <div className="topContainer">
       <form
         className="row"
         onSubmit={(e) => {
           e.preventDefault();
           generate();
         }}
-      >
-        
+      >  
         <input
-          id="SN-search"
-          placeholder="Search... 🔍"
-          onChange={(e) => setFilter(e.target.value)}
-        />
+            id="SN-search"
+            placeholder="Search... 🔍"
+            onChange={(e) => setFilter(e.target.value)}
+          />
         <input id="greet-input" placeholder="Enter a name..." />
-        
+          
         <button type="submit" disabled={!fetchFin}>
-          {fetchFin? "Generate" : 
-              <DotLoader color="white" loading={!fetchFin} size={20} />}
-       </button>
-       <DatePicker selected={startDate} onChange={(date) => setStart(date as Date)}
-                   dateFormat="yyyy-MM-dd" customInput={<input readOnly />} />
-       <DatePicker selected={endDate} onChange={(date) => setEnd(date as Date)}
-                   dateFormat="yyyy-MM-dd" customInput={<input readOnly />} />
-      </form>
+            {fetchFin? "Generate" : 
+                <DotLoader color="white" loading={!fetchFin} size={20} />}
+        </button>
+       </form>
+       <div className="topContainer-dates">
+          <DatePicker selected={startDate} onChange={(date) => setStart(date as Date)}
+                      dateFormat="yyyy-MM-dd" customInput={<input readOnly />} />
+          <DatePicker selected={endDate} onChange={(date) => setEnd(date as Date)}
+                      dateFormat="yyyy-MM-dd" customInput={<input readOnly />} />
+        </div>
     </div>
   );
 }
