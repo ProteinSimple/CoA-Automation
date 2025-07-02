@@ -1,17 +1,13 @@
 import { invoke } from "@tauri-apps/api/core";
 
 export const pythonTestCom = async () => {
-  return await invoke("python_com", {});
-};
-
-export const pythonFetchIds = async () => {
-  return await invoke("python_fetch_ids", {});
+  return await invoke("python_call", {args: ["--help"]});
 };
 
 export const pythonFetchRange = async (startDate: Date, endDate: Date) => {
   let start = startDate.toISOString().split('T')[0]
   let end = endDate.toISOString().split('T')[0]
-  return await invoke("python_fetch_range", { start,  end})
+  return await invoke("python_call", { args: ["fetch", "range", start,  end]})
 }
 
 export const pythonCheck = async () => {
@@ -23,7 +19,7 @@ export const pythonAuth = async (user: string, pass: string) => {
 }
 
 export const pythonCoa = async (ids: string[]) => {
-  return await invoke("python_coa", { ids })
+  return await invoke("python_call", { args:  ["coa", ...ids] })
 }
 
 export const pythonConfigList = async () => {

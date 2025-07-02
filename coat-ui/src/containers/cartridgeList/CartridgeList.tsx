@@ -1,5 +1,5 @@
 import { CartridgeListItem } from "../../components";
-import { pythonFetchIds, pythonFetchRange } from "../../services";
+import { pythonFetchRange } from "../../services";
 import { useEffect, useState } from "react";
 import { pythonAuth, pythonCheck } from "../../services";
 import "./cartridgeList.css";

@@ -6,12 +6,6 @@ use std::path::PathBuf;
 use std::process::Command;
 use tauri::async_runtime::spawn_blocking;
 
-// Not used anymore !
-fn get_output_path() -> PathBuf {
-    let home = home_dir().expect("Could not determine home directory");
-    home.join("data").join("coat_output.txt")
-}
-
 fn get_temp_output_path() -> PathBuf {
     let mut temp_dir = env::temp_dir();
     let timestamp = chrono::Utc::now().timestamp();
@@ -56,56 +50,7 @@ async fn run_python_command_with_output(args: Vec<String>) -> Result<String, Str
     .map_err(|e| format!("Failed to spawn blocking task: {}", e))?
 }
 
-#[tauri::command]
-async fn python_com() -> Result<String, String> {
-    run_python_command_with_output(vec!["--help".to_string()]).await
-}
 
-#[tauri::command]
-async fn python_fetch_ids() -> Result<String, String> {
-    let output = run_python_command_with_output(vec![
-        "fetch".to_string(),
-        "5".to_string(),
-        "50".to_string(),
-    ])
-    .await?;
-
-    let mut lines = output.lines();
-    match lines.next() {
-        Some("1") => match lines.next() {
-            Some(json) => Ok(json.to_string()),
-            None => Err("Expected JSON string after success flag, got nothing.".to_string()),
-        },
-        Some("0") => {
-            let error_msg = lines.collect::<Vec<_>>().join("\n");
-            Err(format!("Python script failed:\n{}", error_msg))
-        }
-        Some(other) => Err(format!("Unexpected output prefix: {}", other)),
-        None => Err("No output from Python script".to_string()),
-    }
-}
-
-#[tauri::command]
-async fn python_fetch_range(start: String, end: String) -> Result<String, String> {
-    let output =
-        run_python_command_with_output(vec!["fetch".to_string(), "range".to_string(), start, end])
-            .await?;
-
-    let mut lines = output.lines();
-
-    match lines.next() {
-        Some("1") => match lines.next() {
-            Some(json) => Ok(json.to_string()),
-            None => Err("Expected JSON string after success flag, got nothing.".to_string()),
-        },
-        Some("0") => {
-            let error_msg = lines.collect::<Vec<_>>().join("\n");
-            Err(format!("Python script failed:\n{}", error_msg))
-        }
-        Some(other) => Err(format!("Unexpected output prefix: {}", other)),
-        None => Err("No output from Python script".to_string()),
-    }
-}
 
 #[tauri::command]
 async fn python_check() -> bool {
@@ -151,25 +96,6 @@ async fn python_call(args: Vec<String>) -> Result<String, String> {
     }
 }
 
-#[tauri::command]
-async fn python_coa(ids: Vec<String>) -> Result<Vec<String>, String> {
-    // eprintln!("[CMD] python_coa invoked with ids: {:?}", ids);
-    let mut args = vec!["coa".to_string()];
-    args.extend(ids);
-    let output = run_python_command_with_output(args).await?;
-
-    let mut lines = output.lines();
-    match lines.next() {
-        Some("1") => Ok(lines.map(|s| s.to_string()).collect()),
-        Some("0") => {
-            let err_output: String = lines.collect::<Vec<_>>().join("\n");
-            Err(format!("CoA creation failed:\n{}", err_output))
-        }
-        Some(other) => Err(format!("Unexpected output prefix: {}", other)),
-        None => Err("No output from Python script".to_string()),
-    }
-}
-
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
@@ -177,11 +103,7 @@ pub fn run() {
         .plugin(tauri_plugin_dialog::init())
         .plugin(tauri_plugin_opener::init())
         .invoke_handler(tauri::generate_handler![
-            python_com,
-            python_fetch_ids,
-            python_fetch_range,
             python_check,
-            python_coa,
             python_auth,
             python_call,
         ])
