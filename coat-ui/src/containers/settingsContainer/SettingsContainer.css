@@ -1,0 +1,74 @@
+.settings-modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.75);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  opacity: 0;
+  transition: opacity 0.4s ease;
+}
+
+.ReactModal__Overlay--after-open {
+  opacity: 1;
+}
+
+.ReactModal__Overlay--before-close {
+  opacity: 0;
+}
+
+.settings-modal-container {
+  position: relative;
+  width: 60vw;
+  max-width: 625px;
+  height: 60vh;
+  max-height: 500px;
+  padding: 25px;
+  background-color: #333; /* slightly darker gray */
+  border-radius: 8px;
+  text-align: center;
+  color: white;
+
+  display: flex;
+  flex-direction: column;
+  opacity: 0;
+  transform: translateY(-10px);
+  transition: opacity 0.6s ease, transform 0.3s ease;
+}
+
+.ReactModal__Content--after-open {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.ReactModal__Content--before-close {
+  opacity: 0;
+  transform: translateY(-10px);
+}
+
+.setting_x {
+  position: absolute;
+  top: 0;
+  right: 0;
+  padding: 1px 1px;
+  border: 0px solid;
+  cursor: pointer;
+  background-color: darkgray;
+}
+
+.settings-modal-container > * {
+  padding: 0.25rem;
+  margin: 0.25rem;
+}
+
+.settings-modal-message {
+  border: 1px ridge black;
+  font-size: small;
+  max-height: 45%;
+  overflow-y: auto;
+  text-align: left;
+}

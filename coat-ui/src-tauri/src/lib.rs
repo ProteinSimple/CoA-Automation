@@ -1,11 +1,10 @@
 // Learn more about Tauri commands at https://tauri.app/develop/calling-rust/
-use std::process::Command;
-use std::path::PathBuf;
-use std::fs;
 use dirs::home_dir;
 use std::env;
+use std::fs;
+use std::path::PathBuf;
+use std::process::Command;
 use tauri::async_runtime::spawn_blocking;
-
 
 // Not used anymore !
 fn get_output_path() -> PathBuf {
@@ -43,7 +42,7 @@ async fn run_python_command_with_output(args: Vec<String>) -> Result<String, Str
             .args(full_args)
             .status()
             .map_err(|e| format!("Failed to run main.exe: {}", e))?;
-        
+
         if !status.success() {
             return Err("Python script failed".into());
         }
@@ -56,7 +55,6 @@ async fn run_python_command_with_output(args: Vec<String>) -> Result<String, Str
     .await
     .map_err(|e| format!("Failed to spawn blocking task: {}", e))?
 }
-
 
 #[tauri::command]
 async fn python_com() -> Result<String, String> {
@@ -74,12 +72,10 @@ async fn python_fetch_ids() -> Result<String, String> {
 
     let mut lines = output.lines();
     match lines.next() {
-        Some("1") => {
-            match lines.next() {
-                Some(json) => Ok(json.to_string()),
-                None => Err("Expected JSON string after success flag, got nothing.".to_string()),
-            }
-        }
+        Some("1") => match lines.next() {
+            Some(json) => Ok(json.to_string()),
+            None => Err("Expected JSON string after success flag, got nothing.".to_string()),
+        },
         Some("0") => {
             let error_msg = lines.collect::<Vec<_>>().join("\n");
             Err(format!("Python script failed:\n{}", error_msg))
@@ -91,23 +87,17 @@ async fn python_fetch_ids() -> Result<String, String> {
 
 #[tauri::command]
 async fn python_fetch_range(start: String, end: String) -> Result<String, String> {
-    let output = run_python_command_with_output(vec![
-        "fetch".to_string(),
-        "range".to_string(),
-        start,
-        end,
-    ])
-    .await?;
+    let output =
+        run_python_command_with_output(vec!["fetch".to_string(), "range".to_string(), start, end])
+            .await?;
 
     let mut lines = output.lines();
 
     match lines.next() {
-        Some("1") => {
-            match lines.next() {
-                Some(json) => Ok(json.to_string()),
-                None => Err("Expected JSON string after success flag, got nothing.".to_string()),
-            }
-        }
+        Some("1") => match lines.next() {
+            Some(json) => Ok(json.to_string()),
+            None => Err("Expected JSON string after success flag, got nothing.".to_string()),
+        },
         Some("0") => {
             let error_msg = lines.collect::<Vec<_>>().join("\n");
             Err(format!("Python script failed:\n{}", error_msg))
@@ -132,8 +122,10 @@ async fn python_auth(user: String, pass: String) -> bool {
         "--user".to_string(),
         user,
         "--passkey".to_string(),
-        pass]
-    ).await {
+        pass,
+    ])
+    .await
+    {
         Ok(output) => output == "1",
         Err(_) => false,
     }
@@ -141,7 +133,7 @@ async fn python_auth(user: String, pass: String) -> bool {
 
 #[tauri::command]
 async fn python_coa(ids: Vec<String>) -> Result<Vec<String>, String> {
-    // eprintln!("[CMD] python_coa invoked with ids: {:?}", ids); 
+    // eprintln!("[CMD] python_coa invoked with ids: {:?}", ids);
     let mut args = vec!["coa".to_string()];
     args.extend(ids);
     let output = run_python_command_with_output(args).await?;
@@ -161,6 +153,7 @@ async fn python_coa(ids: Vec<String>) -> Result<Vec<String>, String> {
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     tauri::Builder::default()
+        .plugin(tauri_plugin_dialog::init())
         .plugin(tauri_plugin_opener::init())
         .invoke_handler(tauri::generate_handler![
             python_com,

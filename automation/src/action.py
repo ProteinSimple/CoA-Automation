@@ -11,8 +11,8 @@ class CoatActions(Enum):
     INIT = 2,
     CHECK = 3,
     FETCH = 4,
-    COA_BUNDLE= 5,
-    NONE = 6
+    NONE = 5,
+    CONFIG = 6
 
     @staticmethod
     def map(given: str):
@@ -23,6 +23,7 @@ ACTION_MAP = {
     "init" : CoatActions.INIT,
     "check" : CoatActions.CHECK,
     "fetch": CoatActions.FETCH,
+    "config": CoatActions.CONFIG,
     "none": CoatActions.NONE, 
 }
 
@@ -50,6 +51,8 @@ def dispatch_action(args, config):
             action_fetch_range(args, config)
         else:
             action_fetch(args, config)
+    elif action == CoatActions.CONFIG:
+        action_config(args, config)
     elif action == CoatActions.NONE:
         pass
     elif action == CoatActions.CHECK:
@@ -158,6 +161,41 @@ def action_init(args, config):
         print("\n Created Config: \n")
         print(yaml.dump(profile))
 
+def action_config(args, config):
+
+    pdf_paths = args.pdf if args.pdf is not None else []
+    csv_paths = args.csv if args.csv is not None else []
+
+
+    if args.config_mode == "add":    
+        
+        pdf_paths = args.pdf if args.pdf is not None else []
+        csv_paths = args.csv if args.csv is not None else []
+
+        prev_pdf = config['pdf_output_dir']
+        prev_csv = config['mapping_output_dir']
+        config['pdf_output_dir'] = list(set(pdf_paths) | set(prev_pdf))
+        config['mapping_output_dir'] = list(set(csv_paths) | set(prev_csv))
+        
+    
+    if args.config_mode == "delete":
+    
+        prev_pdf = config['pdf_output_dir']
+        prev_csv = config['mapping_output_dir']
+        config['pdf_output_dir'] = list(set(prev_pdf) - set(pdf_paths))
+        config['mapping_output_dir'] = list(set(prev_csv) - set(csv_paths))
+
+    
+
+    config_path = args.config
+    p = Pathcr(config_path).as_path()
+    
+    full_config = yaml.safe_load(open(p, mode='r'))
+    full_config[args.rm] = config
+
+    with open(p, mode="w+") as f:
+        yaml.safe_dump(full_config, f)
+    yaml.safe_dump(config, sys.stdout)
 
 def action_fetch(args, config):
     try:

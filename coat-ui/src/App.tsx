@@ -1,12 +1,13 @@
 // import { useState } from "react";
 import { Logo } from "./components";
 import { useState } from "react";
-import { BottomText, CartridgeList, TopContainer, ErrorPopUpContainer } from "./containers";
+import { BottomText, CartridgeList, TopContainer, ErrorPopUpContainer, SettingsContainer } from "./containers";
 import { CartridgeProvider } from "./contexts";
 import Modal  from "react-modal"
 import "./App.css";
 
 Modal.setAppElement('#root');
+
 
 
 
@@ -19,11 +20,16 @@ function App() {
     d.setDate(d.getDate() - 1);
     return d;
 });
+  const [ setting, setSetting] = useState<boolean>(false);
+  const showSettings = () => { setSetting(true) }
+  const hideSettings = () => { setSetting(false) }
+
   return (
     <CartridgeProvider>
       <main className="container">
         <ErrorPopUpContainer errorTup={error} setError={setError}/>
-        <Logo/>
+        <SettingsContainer isOpen={setting} onClose={hideSettings}/>
+        <Logo CogAction={showSettings}/>
         <TopContainer setFilter={setFilter} setError={setError} setStart={setStart} setEnd={setEnd} startDate={startDate} endDate={endDate}/>
         <CartridgeList filterText={idFilter} startDate={startDate} endDate={endDate}/>
         <BottomText/>
