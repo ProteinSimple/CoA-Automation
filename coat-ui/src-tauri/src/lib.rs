@@ -131,6 +131,26 @@ async fn python_auth(user: String, pass: String) -> bool {
     }
 }
 
+
+#[tauri::command]
+async fn python_call(args: Vec<String>) -> Result<String, String> {
+    let output = run_python_command_with_output(args).await?;
+
+    let mut lines = output.lines();
+    match lines.next() {
+        Some("1") => match lines.next() {
+            Some(json_or_result) => Ok(json_or_result.to_string()),
+            None => Err("Expected result after success flag, but got nothing.".to_string()),
+        },
+        Some("0") => {
+            let err_msg = lines.collect::<Vec<_>>().join("\n");
+            Err(format!("Python script failed:\n{}", err_msg))
+        }
+        Some(other) => Err(format!("Unexpected output prefix: {}", other)),
+        None => Err("No output from Python script.".to_string()),
+    }
+}
+
 #[tauri::command]
 async fn python_coa(ids: Vec<String>) -> Result<Vec<String>, String> {
     // eprintln!("[CMD] python_coa invoked with ids: {:?}", ids);
@@ -150,6 +170,7 @@ async fn python_coa(ids: Vec<String>) -> Result<Vec<String>, String> {
     }
 }
 
+
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     tauri::Builder::default()
@@ -161,7 +182,8 @@ pub fn run() {
             python_fetch_range,
             python_check,
             python_coa,
-            python_auth
+            python_auth,
+            python_call,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

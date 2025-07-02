@@ -11,7 +11,6 @@ export const pythonFetchIds = async () => {
 export const pythonFetchRange = async (startDate: Date, endDate: Date) => {
   let start = startDate.toISOString().split('T')[0]
   let end = endDate.toISOString().split('T')[0]
-  console.log(start, end);
   return await invoke("python_fetch_range", { start,  end})
 }
 
@@ -25,4 +24,25 @@ export const pythonAuth = async (user: string, pass: string) => {
 
 export const pythonCoa = async (ids: string[]) => {
   return await invoke("python_coa", { ids })
+}
+
+export const pythonConfigList = async () => {
+  return await invoke("python_call", { args: ["config", "list"]})
+}
+
+export const pythonConfigAddPdf = async (path: string[]): Promise<string>  => {
+  return await invoke("python_call", { args: ["config", "add", "--pdf", ...path]})
+}
+
+export const pythonConfigDeletePdf = async (path: string[]): Promise<string>  => {
+  return await invoke("python_call", { args: ["config", "delete", "--pdf", ...path]})
+}
+
+
+export const pythonConfigAddMapping = async (path: string[]): Promise<string>  => {
+  return await invoke("python_call", { args: ["config", "add", "--csv", ...path]})
+}
+
+export const pythonConfigDeleteMapping = async (path: string[]): Promise<string>  => {
+  return await invoke("python_call", { args: ["config", "delete", "--csv", ...path]})
 }

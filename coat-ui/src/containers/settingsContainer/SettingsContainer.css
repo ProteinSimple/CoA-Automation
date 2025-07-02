@@ -40,6 +40,24 @@
   transition: opacity 0.6s ease, transform 0.3s ease;
 }
 
+.settings-content-container {
+  display: flex;
+  flex-direction: row;
+  flex-grow: 1;
+  gap: 1rem;
+  overflow-y: auto;
+}
+
+.settings-content-container > div {
+  flex: 1;             /* Each side occupies equal width */
+  display: flex;
+  flex-direction: column;
+}
+
+.settings-content-container > div > .settings-modal-message {
+  flex-grow: 1;        /* Message lists also expand */
+}
+
 .ReactModal__Content--after-open {
   opacity: 1;
   transform: translateY(0);

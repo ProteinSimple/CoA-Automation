@@ -1,8 +1,9 @@
 import './SettingsContainer.css';
 import Modal from "react-modal";
 import { SettingPathListItem } from '../../components';
-import { useState } from 'react';
-import { open } from '@tauri-apps/plugin-dialog';
+import { useEffect, useState } from 'react';
+import { open  } from '@tauri-apps/plugin-dialog';
+import { pythonConfigAddPdf, pythonConfigList, pythonConfigDeletePdf, pythonConfigAddMapping, pythonConfigDeleteMapping } from '../../services';
 
 interface Props {
   isOpen: boolean;
@@ -13,31 +14,81 @@ interface Props {
 
 function SettingsContainer( {isOpen, onClose} : Props) {
 
-  const [paths, setPaths] = useState<string[]>([
-    "./out",
-    "./out2"
-  ])
+  const [pdfPaths, setPdfPaths] = useState<string[]>([])
+  const [mappingPaths, setMappingPaths] = useState<string[]>([])
 
-  const addPath = (given: string) => {
-    setPaths(prev => [...prev, given])
+  const addPdfPath = async (given: string) => {
+    try {
+        const res = await pythonConfigAddPdf([given])
+        const config = JSON.parse(res as string) as { [key: string]: any }
+        setPdfPaths(config["pdf_output_dir"])
+    } catch (err) {
+        console.error("Failed to fetch or parse config:", err);
+    }
   }
 
-  const removePath = (given: string) => {
-    setPaths(prev => prev.filter(p => p !== given))
+  
+
+  const removePdfPath = async (given: string) => {
+    try {
+        const res = await pythonConfigDeletePdf([given])
+        const config = JSON.parse(res as string) as { [key: string]: any }
+        setPdfPaths(config["pdf_output_dir"])
+    } catch (err) {
+        console.error("Failed to fetch or parse config:", err);
+    }
   }
 
-  const handleAddButton = () => {
+  const addMappingPath = async (given: string) => {
+    try {
+        const res = await pythonConfigAddMapping([given])
+        const config = JSON.parse(res as string) as { [key: string]: any }
+        setMappingPaths(config["mapping_output_dir"])
+    } catch (err) {
+        console.error("Failed to fetch or parse config:", err);
+    }
+  }
+
+  const removeMappingPath = async (given: string) => {
+    try {
+        const res = await pythonConfigDeleteMapping([given])
+        const config = JSON.parse(res as string) as { [key: string]: any }
+        setMappingPaths(config["mapping_output_dir"])
+    } catch (err) {
+        console.error("Failed to fetch or parse config:", err);
+    }
+  }
+
+  const handleAddButton = async (addFunc: (_: string) => void) => {
     const prompted = prompt("Paste your output path here")
-    if (prompted != null) { addPath(prompted) }
+    
+    if (prompted != null) { 
+      addFunc(prompted)
+    }
   }
 
-  const handleFolderButton = async () => {
+  const handleFolderButton = async (addFunc: (_: string) => void) => {
     const file = await open({
       multiple: false,
       directory: true,
     });
-    if (file != null) { addPath(file) }
+    if (file != null) { addFunc(file) }
   }
+
+  useEffect(() => {
+    const effect = async () => {
+      try {
+        const res = await pythonConfigList();
+        const config = JSON.parse(res as string) as { [key: string]: any };
+        console.log(config)
+        setPdfPaths(config["pdf_output_dir"]);
+        setMappingPaths(config["mapping_output_dir"]);
+      } catch (err) {
+        console.error("Failed to fetch or parse config:", err);
+      }
+    }
+    effect()
+  }, [isOpen])
 
   return (
     <Modal
@@ -60,16 +111,35 @@ function SettingsContainer( {isOpen, onClose} : Props) {
       
       
       <h2>Settings</h2>
-      <div>
-          <button onClick={handleAddButton}>
-            Add button
-          </button>
-          <button onClick={handleFolderButton}>
-            Folder button
-          </button>
-      </div>
-      <div className="settings-modal-message">
-        {paths.map((val) => <SettingPathListItem path={val} deleteAction={removePath}/>)}
+      <div className="settings-content-container">
+        <div>
+          COA Output paths
+          <div>
+              <button onClick={() => handleAddButton(addPdfPath)}>
+                Add button
+              </button>
+              <button onClick={() => handleFolderButton(addPdfPath)}>
+                Folder button
+              </button>
+          </div>
+          <div className="settings-modal-message">
+            {pdfPaths.map((val) => <SettingPathListItem path={val} deleteAction={removePdfPath}/>)}
+          </div>
+        </div>
+        <div>
+          Mapping Output paths
+          <div>
+              <button onClick={() => handleAddButton(addMappingPath)}>
+                Add button
+              </button>
+              <button onClick={() => handleFolderButton(addMappingPath)}>
+                Folder button
+              </button>
+          </div>
+          <div className="settings-modal-message">
+            {mappingPaths.map((val) => <SettingPathListItem path={val} deleteAction={removeMappingPath}/>)}
+          </div>
+        </div>
       </div>
       <button className='setting_x' onClick={onClose}>X</button>
     </Modal>

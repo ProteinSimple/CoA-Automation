@@ -43,8 +43,10 @@ def get_args():
     sub_list.append(delete_config := config_subparser.add_parser('delete'))
     delete_config.add_argument('--pdf', type=str, nargs='+', help="TODO")
     delete_config.add_argument('--csv', type=str, nargs='+', help="TODO")
-    
 
+    sub_list.append(list_config := config_subparser.add_parser('list'))
+    list_config.add_argument('--pdf', type=str, nargs='+', help="TODO")
+    list_config.add_argument('--csv', type=str, nargs='+', help="TODO")
 
     for sub in sub_list:
         sub.add_argument('--rm', type=str, default='test',  help="Run mode")
