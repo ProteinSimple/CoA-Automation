@@ -7,7 +7,7 @@ interface CartridgeContextType {
 }
 
 const CartridgeContext = createContext<CartridgeContextType | undefined>(undefined)
-
+  
 export const useCartridge = (): CartridgeContextType => {
     const context = useContext(CartridgeContext)
     if (!context) {

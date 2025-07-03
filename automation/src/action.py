@@ -11,8 +11,8 @@ class CoatActions(Enum):
     INIT = 2,
     CHECK = 3,
     FETCH = 4,
-    COA_BUNDLE= 5,
-    NONE = 6
+    NONE = 5,
+    CONFIG = 6
 
     @staticmethod
     def map(given: str):
@@ -23,6 +23,7 @@ ACTION_MAP = {
     "init" : CoatActions.INIT,
     "check" : CoatActions.CHECK,
     "fetch": CoatActions.FETCH,
+    "config": CoatActions.CONFIG,
     "none": CoatActions.NONE, 
 }
 
@@ -46,10 +47,9 @@ def dispatch_action(args, config):
     elif action == CoatActions.INIT:
         action_init(args, config)
     elif action == CoatActions.FETCH:
-        if (args.fetch_mode == "range"): # TODO: CHANGE this !?
-            action_fetch_range(args, config)
-        else:
-            action_fetch(args, config)
+        action_fetch(args, config)
+    elif action == CoatActions.CONFIG:
+        action_config(args, config)
     elif action == CoatActions.NONE:
         pass
     elif action == CoatActions.CHECK:
@@ -158,8 +158,56 @@ def action_init(args, config):
         print("\n Created Config: \n")
         print(yaml.dump(profile))
 
+def action_config(args, config):
+    try: 
+        pdf_paths = args.pdf if args.pdf is not None else []
+        csv_paths = args.csv if args.csv is not None else []
+        
+
+        if args.config_mode == "add":    
+            
+            pdf_paths = args.pdf if args.pdf is not None else []
+            csv_paths = args.csv if args.csv is not None else []
+
+            prev_pdf = config['pdf_output_dir']
+            prev_csv = config['mapping_output_dir']
+            config['pdf_output_dir'] = list(set(pdf_paths) | set(prev_pdf))
+            config['mapping_output_dir'] = list(set(csv_paths) | set(prev_csv))
+            
+            
+            
+        
+        if args.config_mode == "delete":
+        
+            prev_pdf = config['pdf_output_dir']
+            prev_csv = config['mapping_output_dir']
+            config['pdf_output_dir'] = list(set(prev_pdf) - set(pdf_paths))
+            config['mapping_output_dir'] = list(set(prev_csv) - set(csv_paths))
+
+        
+
+        config_path = args.config
+        p = Pathcr(config_path).as_path()
+        
+        if args.config_mode != "list":
+            full_config = yaml.safe_load(open(p, mode='r'))
+            full_config[args.rm] = config
+            with open(p, mode="w+") as f:
+                yaml.safe_dump(full_config, f)
+        print(1)    
+        json.dump(config, sys.stdout)
+    except Exception as e:
+        sys.stdout.flush()
+        print(0)
+        traceback.print_exc(file=sys.stdout)
+
+
+
 
 def action_fetch(args, config):
+    if (args.fetch_mode == "range"):
+        return action_fetch_range(args, config)
+    
     try:
         user, passkey = auth(args)
         ids = saturn_get_cartridge_data_past(args.length, args.limit, user, passkey)
