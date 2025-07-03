@@ -8,6 +8,7 @@ import { useDate } from "../../contexts";
 interface CartridgeInfo {
   id: string;
   b_date: string;
+  type: string;
 }
 
 interface CartridgeListProps {
@@ -56,8 +57,10 @@ function CartridgeList({ filterText }: CartridgeListProps) {
       setLoading(true)
       try {
         const raw = String(await pythonFetchRange(startDate, endDate)); // returns JSON string
+        console.log(raw)
         const parsed: CartridgeInfo[] = JSON.parse(raw);
         setCartridgeList(parsed);
+        console.log(parsed)
       } catch (error) {
         console.error("Error fetching/parsing cartridge list:", error);
       }
@@ -77,7 +80,7 @@ function CartridgeList({ filterText }: CartridgeListProps) {
   return (
     <div className="list_container">
       {filteredList.map((d) => (
-        <CartridgeListItem key={d.id} id={d.id} time={d.b_date} />
+        <CartridgeListItem key={d.id} id={d.id} time={d.b_date} type={d.type} />
       ))}
     </div>
   );
