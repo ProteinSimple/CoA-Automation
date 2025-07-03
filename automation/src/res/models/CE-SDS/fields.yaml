@@ -1,8 +1,0 @@
-fields:
-  "Serial Number" : "@!TEST"
-  "Date of Manufacture" : "@!TEST"
-  "Date" : "@!TEST"
-
-dates:
-  - "Date of Manufacture"
-  - "Date"

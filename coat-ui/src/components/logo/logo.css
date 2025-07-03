@@ -1,3 +1,37 @@
+.logo-container {
+  display: flex;
+  align-items: center;
+  flex-direction: row;
+  justify-content: space-between;
+  width: 100%;
+}
+
+.settings-btn {
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  align-items: center;
+}
+
+.settings-btn:hover {
+  color: var(--color-button-hover);
+}
+
+.settings-btn {
+  color: var(--color-button-secondary);
+  transition: transform 0.3s ease;
+}
+
+.settings-btn:hover {
+  transform: rotate(25deg);
+}
+
+.settings-btn:active {
+  transform: scale(0.92);
+}
 
 .logo {
   height: auto;

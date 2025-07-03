@@ -1,54 +1,75 @@
-.topContainer-container input,
-.topContainer-container button {
+.topContainer input,
+.topContainer button {
   border-radius: 8px;
   border: 1px solid transparent;
-  padding: 0.6em 1.2em;
-  font-size: 1em;
+  padding-top: 0.5rem;
+  padding-bottom: 0.5rem;
+  width: 50%;
+  font-size: 0.9em;
   font-weight: 500;
   font-family: inherit;
-  color: #ffffff;
-  background-color: #0f0f0f;
+  color: var(--color-text-primary);
+  background-color: var(--color-button-primary);
   
   transition: border-color 0.6s;
   box-shadow: 0 2px 2px rgba(0, 0, 0, 0.2);
 
-  margin: 1rem;
+  margin: 0.5rem 1rem 0.5rem 1rem;
+
+}
+
+.topContainer-dates {
+  display: flex;
+  flex-direction: row;
+  justify-content: start;
+  align-items: center;
+}
+
+.topContainer-dates > p {
+  margin-left: 1em;
 }
 
 
 .row {
   display: flex;
-  justify-content: center;
+  flex-direction: row;
+  justify-content: space-between;
+  gap: 5em;
+  
 }
 
 
-.topContainer-container button {
+.topContainer button {
   cursor: pointer;
   width: 10%;
   display: flex;
   justify-content: center;
 }
 
-.topContainer-container button:hover {
-  border-color: #396cd8;
+.topContainer button:hover {
+  border-color: var(--color-button-hover);
   transform: scale(1.05);
 }
 
-.topContainer-container input:hover {
+.topContainer input:hover {
   transform: scale(1.05);
 }
 
-.topContainer-container button:active {
-  border-color: #396cd8;
+.topContainer button:active {
+  border-color: var(--color-button-hover);
   transform: scale(0.98); 
 }
 
-.topContainer-container button {
+.topContainer button {
   outline: none;
   transition: transform 0.2s ease;
 }
 
-.topContainer-container input {
+.topContainer input {
   outline: none;
   transition: transform 0.2s ease;
+}
+
+.topContainer input {
+  text-align: center;
 }

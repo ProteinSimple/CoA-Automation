@@ -5,7 +5,7 @@ from pathlib import Path
 from datetime import datetime
 import pandas as pd
 from typing import Self
-from passkey import load_token, add_token
+from keyToken import load_token, add_token
 from saturn import saturn_check_connection
 import tempfile
 
@@ -63,8 +63,18 @@ def exec_c(command: str) -> str:
         raise UtilError(f"Unknown command: {command}")
     return COMMANDS[command]()
 
-def get_filename(id):
-    return str(id) + "_testOutput"    
+def get_filename(id, profile, extn = ".pdf"):
+    
+    template_name = Path(profile['template']).stem
+    return "_".join([str(id), template_name]) + extn
+
+def get_mapping_name(args, name_prefix = "coa_mapping", extn: str = ".csv") -> str:
+
+    initials = args.name.lower()
+    today = datetime.now().date()
+    date = today.strftime('%b').lower() + str(today.day)
+    return "_".join([name_prefix, initials, date]) + extn
+
 
 def create_mapping_template(config) -> pd.DataFrame:
     columns_names = [
@@ -79,7 +89,7 @@ def predict_mapping(x: str, ys: list[str]):
 
     return ""
 
-def generate_field_map_from_pdf(config, info, model):
+def generate_field_map_from_pdf(config, template, model):
     
     """
         Extracts form fields from a PDF template and generates a `fields.yaml` file 
@@ -92,7 +102,7 @@ def generate_field_map_from_pdf(config, info, model):
         - model (str): Name of the model directory where the PDF template and output files reside.
 
     Return val:
-        - str: The filename of the generated `fields.yaml`.
+        - str: The filename of the generated `fields.yaml`. TODO: Update this this is old comment
 
     Exceptions:
         - UtilError: If the PDF cannot be opened or the YAML file cannot be generated.
@@ -105,25 +115,23 @@ def generate_field_map_from_pdf(config, info, model):
     """
 
     dir_path = Path(config['model_dir']) / Path(model)
-    template_path = (Pathcr(dir_path) / info['template']).as_path()
-    field_path = (Pathcr(dir_path) / config['default_fields']).as_path()
+    template_path = Pathcr(template).as_path()
     save_path = (Pathcr(dir_path) / "filled.pdf").as_path()
 
     try:
         doc = fitz.open(template_path)
-        yaml_obj = {"fields" : {}}
+        retVal = {}
         for page in doc:
             for field in page.widgets():
                 field.field_value = field.field_name
-                yaml_obj["fields"][field.field_name] = predict_mapping(field.field_name, [])   # TODO !!!
+                retVal[field.field_name] = predict_mapping(field.field_name, [])   # TODO !!!
                 field.update()
-        yaml_obj['dates'] = []
-        for f in yaml_obj["fields"].keys():
+        dates = []
+        for f in retVal.keys():
             if "date" in f.lower():
-                yaml_obj['dates'].append(f) # TODO: This is a bad way to detect dates!
+                dates.append(f) # TODO: This is a bad way to detect dates!
         doc.save(save_path)
-        yaml.safe_dump(yaml_obj, open(field_path, mode="w+"))
-        return field_path.name
+        return retVal, dates
     except Exception as e:        
         raise UtilError("Failed to initilize template and fields.yaml!: " + str(e))
 
@@ -144,11 +152,9 @@ def fill_CoA(config: dict, info: dict, trav_data: dict, model: str, write_path: 
         - PDFUtilError
     """
 
-    info['fields'] = info.get('fields', config.get('default_fields'))
     # Paths used throughout the function
     dir_path = Path(config['model_dir']) / Path(model)
     template_path = (Pathcr(dir_path) / info['template']).as_path()
-    field_path = (Pathcr(dir_path) / info['fields']).as_path()
     
     if write_path is not None:
         save_path = Pathcr(write_path).as_path()
@@ -157,10 +163,10 @@ def fill_CoA(config: dict, info: dict, trav_data: dict, model: str, write_path: 
             save_path = Path(tmp.name)
     
     doc = fitz.open(template_path)
-    fields = yaml.safe_load(open(field_path))
-    dates = set(fields['dates'])
+    fields = info['fields']
+    dates = set(info['dates'])
     for page in doc:    
-        for name, key in fields['fields'].items():
+        for name, key in fields.items():
             for field in page.widgets():
                 if (field.field_name == name):
                     fn: str = field.field_name
@@ -230,32 +236,66 @@ def output_CoA(config, info, input_path, dest_filename):
         except Exception as e:
             raise UtilError("Failed to output CoA PDF file: " + str(e))
 
-def output_CoA_mapping(config, info, mapping, mapping_f_name = "mapping", extn = '.csv'):
-    """ Outputs the mapping data to the path specified using the two passed arguments
+def output_CoA_mapping(config, mapping: pd.DataFrame, mapping_f_name = "mapping.csv"):
+    """ Outputs the mapping data to path specified in config
 
     Args:
-        config: Config dict
-        info: Information dict
+        config: Config dict containing 'mapping_output_dir' list of directory paths
+        mapping: pandas DataFrame to be saved
+        mapping_f_name: Base filename (default: "mapping")
+    
+    Returns:
+        list[str]: List of absolute file paths where mapping was saved
     """
-    retVal = []
+    if 'mapping_output_dir' not in config:
+        raise KeyError("'mapping_output_dir' not found in config")
+    
+    output_paths = []
     for dir in config['mapping_output_dir']:
-        dir_p = Path(dir)
-        if (not os.path.exists(dir_p)):
-            os.makedirs(dir_p)
-        
-        mapping.to_csv((dir_p / mapping_f_name).with_suffix(extn), index=False)
-        retVal.append(str((dir_p / mapping_f_name).with_suffix(extn).absolute()))
-    return retVal
+        dir_path = Path(dir)
+        dir_path.mkdir(parents=True, exist_ok=True)
+        write_path = (dir_path / mapping_f_name)
+        try:
+            mapping.to_csv(write_path, index=False)
+            output_paths.append(write_path.absolute())
+        except Exception as e:
+            raise OSError(f"Failed to write mapping file to {write_path}: {e}")
+    return output_paths
         
 def load_config(args):
+    """Load configuration settings from a YAML file based on specified run mode.
+    
+    Args:
+        args: Parsed command line arguments with config and rm attributes
+    
+    Returns:
+        dict: Configuration dictionary for the specified run mode
+        
+    Raises:
+        FileNotFoundError: If the configuration file doesn't exist
+        ValueError: If the specified run mode is not found in the config
+        yaml.YAMLError: If the YAML file is malformed
+    """
+
     config_path = args.config
     run_mode = args.rm
     path = Pathcr(config_path).as_path()
+    full_config = None
+
     if not path.exists():
         raise FileNotFoundError(f"Config not found: {path}")
-    full_config = yaml.safe_load(open(path, "r"))
+    
+    try:
+        with open(path, "r", encoding="utf-8") as f:
+            full_config = yaml.safe_load(f)
+    except yaml.YAMLError as e:
+        raise yaml.YAMLError(f"Failed to parse YAML file: {e}")
+    
     if run_mode not in full_config:
-        raise ValueError(f"Run mode '{run_mode}' not in config")
+        available_modes = list(full_config.keys())
+        raise ValueError(
+            f"Run mode '{run_mode}' not found. Available modes: {available_modes}"
+        )
     return full_config[run_mode]
 
 

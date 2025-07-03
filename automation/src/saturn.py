@@ -1,4 +1,4 @@
-import requests, os, json
+import requests
 from requests.auth import HTTPBasicAuth
 from urllib.parse import urlencode
 from datetime import datetime, timedelta
@@ -66,12 +66,32 @@ def build_saturn_url(startdate=None, enddate=None, **extra_params):
     if enddate:
         params["enddate"] = enddate
 
-    # Add any other params dynamically
     params.update(extra_params)
 
     return BASE_URL + "?" + urlencode(params)
 
-def saturn_get_cartridge_data_range(length, limit, username, passkey):
+def saturn_get_cartridge_data_range(start, end, username, passkey):
+    
+    url = build_saturn_url(startdate=start, enddate=end)
+    response = requests.get(url, auth=HTTPBasicAuth(username, passkey))
+
+    if response.status_code == 200:
+        data = pd.DataFrame(response.json())
+        data.to_csv("out.csv")
+        for _, d in data.iloc[::-1].iterrows():
+            val = {
+                "id": d["_id"],
+                "b_date": datetime.fromtimestamp(int(d["build_completion_date"]["$date"]) / 1000).strftime("%Y-%m-%d %H:%M:%S")
+            }
+            yield val
+    else:
+        print(f"Request failed with status code {response.status_code}")
+        print(response.text)
+        return None
+
+
+
+def saturn_get_cartridge_data_past(length, limit, username, passkey):
 
 
     end_dt = datetime.today() + timedelta(days=1)
@@ -81,8 +101,7 @@ def saturn_get_cartridge_data_range(length, limit, username, passkey):
     enddate = end_dt.strftime("%Y-%m-%d")
     url = build_saturn_url(startdate=startdate, enddate=enddate)
     response = requests.get(url, auth=HTTPBasicAuth(username, passkey))
-
-
+    
     if response.status_code == 200:
         data = pd.DataFrame(response.json())
         data.to_csv("out.csv")

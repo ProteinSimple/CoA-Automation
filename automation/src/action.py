@@ -1,5 +1,5 @@
-from util import fill_CoA, output_CoA_mapping, get_filename, Pathcr, generate_field_map_from_pdf,auth, output_CoA
-from saturn import saturn_get_cartridge_data_range , saturn_get_cartridge_data_bundle
+from util import fill_CoA, output_CoA_mapping, get_filename, get_mapping_name, Pathcr, generate_field_map_from_pdf,auth, output_CoA
+from saturn import saturn_get_cartridge_data_past , saturn_get_cartridge_data_bundle, saturn_get_cartridge_data_range
 from checks import run_checks
 from pathlib import Path
 import json, yaml, shutil, os, traceback, sys
@@ -11,8 +11,8 @@ class CoatActions(Enum):
     INIT = 2,
     CHECK = 3,
     FETCH = 4,
-    COA_BUNDLE= 5,
-    NONE = 6
+    NONE = 5,
+    CONFIG = 6
 
     @staticmethod
     def map(given: str):
@@ -23,15 +23,21 @@ ACTION_MAP = {
     "init" : CoatActions.INIT,
     "check" : CoatActions.CHECK,
     "fetch": CoatActions.FETCH,
+    "config": CoatActions.CONFIG,
     "none": CoatActions.NONE, 
 }
 
-data = {
-    "ref_num" : "6350527431",
-    "start_date" : "27/05/2025",
-    "exp_date" : "31/05/2026",
-    "lot_num" : "242206PJ-A"
-}
+profile_comment = """\
+# Saturn data fields:
+# id         : Unique cartridge ID
+# build_date : Build date (YYYY-MM-DD)
+# build_time : Time of build (HH:MM)
+# exp_date   : Expiration date
+# class_name : Name of classification
+# class_code : Code of classification
+# batch_num  : Batch number
+# Possilbe actions: @!TEST, @!TIME
+"""
 
 def dispatch_action(args, config):
     action = CoatActions.map(args.action.lower())
@@ -41,7 +47,9 @@ def dispatch_action(args, config):
     elif action == CoatActions.INIT:
         action_init(args, config)
     elif action == CoatActions.FETCH:
-        action_list_id(args, config)
+        action_fetch(args, config)
+    elif action == CoatActions.CONFIG:
+        action_config(args, config)
     elif action == CoatActions.NONE:
         pass
     elif action == CoatActions.CHECK:
@@ -61,42 +69,41 @@ def action_coa(args, config):
     try: 
         if 'models' not in config:
             raise KeyError("Missing 'models' section in config")
-
         user, passkey = auth(args)
         datas = saturn_get_cartridge_data_bundle(args.ids, user, passkey)
         pdf_outputs = []
         mapping_rows = []
+        created_models = set()
         prod_map = pd.read_excel(Pathcr(config['prod_code_map']).as_path())
         for _, data in enumerate(datas):
             id = data.id
             model = data.model_name()
-            if config['models'].get(model, None) is None:
+            if model not in config['models']:
                 raise ValueError("Given model configuration is not setup. use 'init' action to setup the model")
-            info = config['models'][model]
-            filename = get_filename(id)
-            
+            profile = yaml.safe_load(open((Pathcr(config['model_dir']) / model / config['profile']).as_path()))
+            filename = get_filename(id, profile)
             # CoA Creation
-            temp_file = fill_CoA(config, info, data.to_dict(), model)
-            files = output_CoA(config, info, temp_file, filename)
+            temp_file = fill_CoA(config, profile, data.to_dict(), model)
+            files = output_CoA(config, profile, temp_file, filename)
             pdf_outputs += files
             os.remove(temp_file) 
             
             # Adding data to the mapping CSV
-            part_number = info['PN']
+            part_number = profile['PN']
             prod_code = prod_map[prod_map['PartNumber'] == part_number]['ProdCode'].values[0]
             lot_num = id
-            file_name = get_filename(id)
-            
+            created_models.add(model)
             mapping_rows.append({
                 "PartNumber": part_number,
                 "ProdCode": prod_code,
                 "LotNumber": lot_num,
-                "FileName": file_name
+                "FileName": filename
             }) # TODO: make this robust! should not be creating rows of mapping like this!
+
         
         mapping = pd.DataFrame(mapping_rows)
-        run_checks(config=config, info=info, data=data, mapping=mapping)
-        csv_files = output_CoA_mapping(config, info, mapping)
+        run_checks(config=config, data=data, mapping=mapping)
+        csv_files = output_CoA_mapping(config, mapping, get_mapping_name(args))
         
         print(1)
         for f in pdf_outputs:
@@ -110,7 +117,7 @@ def action_coa(args, config):
 
     
 def action_init(args, config):
-    models = config.setdefault('models', {})
+    models = config.setdefault('models', [])
     model = args.model
     run_mode = args.rm
     template_file = Path(args.template)
@@ -126,32 +133,96 @@ def action_init(args, config):
     except Exception as e:
         pass
     
-    model_config = {'template': template_file.name}
+    
     
     # Fill fields with their names and print to it to a new file
-    model_config['fields'] = generate_field_map_from_pdf(config, model_config, model)
-    model_config['PN'] = part_number
-    models[model] = model_config
+    profile = {'template': template_file.name}
+    profile['fields'], profile['dates'] = generate_field_map_from_pdf(config, template_file, model)
+    profile['PN'] = part_number
+    if model not in models:
+        models.append(model)
 
     # Output
     config_path = Pathcr(args.config).as_path()
+    profile_path = dir_path / config['profile'] 
+    with open(profile_path, mode="w") as f:
+        f.write(profile_comment + "\n")
+        yaml.safe_dump(profile, f)
     full_config = yaml.safe_load(open(config_path, mode='r'))
     full_config[run_mode] = config
-    yaml.safe_dump(full_config, open(config_path, mode='w+'))
+    with open(config_path, mode='w+') as f:
+        yaml.safe_dump(full_config, f)
 
     if args.verbose:
         print(f"Configuartion for {model} finished succesfully!")
         print("\n Created Config: \n")
-        print(yaml.dump(config['models'][model]))
+        print(yaml.dump(profile))
+
+def action_config(args, config):
+    try: 
+        pdf_paths = args.pdf if args.pdf is not None else []
+        csv_paths = args.csv if args.csv is not None else []
+        
+
+        if args.config_mode == "add":    
+            
+            pdf_paths = args.pdf if args.pdf is not None else []
+            csv_paths = args.csv if args.csv is not None else []
+
+            prev_pdf = config['pdf_output_dir']
+            prev_csv = config['mapping_output_dir']
+            config['pdf_output_dir'] = list(set(pdf_paths) | set(prev_pdf))
+            config['mapping_output_dir'] = list(set(csv_paths) | set(prev_csv))
+            
+            
+            
+        
+        if args.config_mode == "delete":
+        
+            prev_pdf = config['pdf_output_dir']
+            prev_csv = config['mapping_output_dir']
+            config['pdf_output_dir'] = list(set(prev_pdf) - set(pdf_paths))
+            config['mapping_output_dir'] = list(set(prev_csv) - set(csv_paths))
+
+        
+
+        config_path = args.config
+        p = Pathcr(config_path).as_path()
+        
+        if args.config_mode != "list":
+            full_config = yaml.safe_load(open(p, mode='r'))
+            full_config[args.rm] = config
+            with open(p, mode="w+") as f:
+                yaml.safe_dump(full_config, f)
+        print(1)    
+        json.dump(config, sys.stdout)
+    except Exception as e:
+        sys.stdout.flush()
+        print(0)
+        traceback.print_exc(file=sys.stdout)
 
 
-def action_list_id(args, config):
+
+
+def action_fetch(args, config):
+    if (args.fetch_mode == "range"):
+        return action_fetch_range(args, config)
+    
     try:
         user, passkey = auth(args)
-        ids = saturn_get_cartridge_data_range(args.length, args.limit, user, passkey)
+        ids = saturn_get_cartridge_data_past(args.length, args.limit, user, passkey)
         print(1)
         print(json.dumps(list(ids)))
     except Exception:
         print(0)
         traceback.print_exc(file=sys.stdout)
 
+def action_fetch_range(args, config):
+    try:
+        user, passkey = auth(args)
+        ids = saturn_get_cartridge_data_range(args.start, args.end, user, passkey)
+        print(1)
+        print(json.dumps(list(ids)))
+    except Exception:
+        print(0)
+        traceback.print_exc(file=sys.stdout)
