@@ -2,6 +2,9 @@ from cli import get_args
 from action import dispatch_action
 from util import load_config
 import sys, os
+
+
+
 def setup(args):
     if args.verbose:
         return

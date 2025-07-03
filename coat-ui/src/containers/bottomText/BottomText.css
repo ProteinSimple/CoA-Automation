@@ -1,6 +1,5 @@
-
 .bottomText-container {
-  color: gray;
+  color: var(--color-text-secondary);
   align-self: flex-end;
   font-size: x-small;
   margin-top: auto;

@@ -1,7 +1,5 @@
-
-
 .list_item {
-  background-color: #222222;
+  background-color: var(--color-bg-secondary);
   display: flex;
   flex-direction: row;
   align-items: center;
@@ -15,12 +13,10 @@
 }
 
 .list_item > * {
-}
-
-.list_item > * {
   margin-left: 0.5rem;
   margin-right: 0.5rem;
 }
+
 .list_item > p {
   font-size: small;
 }
@@ -42,6 +38,6 @@
 
 .list_item_infobox > p.list_item_date {
   font-size: 0.5rem;
-  color: gray;
+  color: var(--color-text-secondary);
 }
 
