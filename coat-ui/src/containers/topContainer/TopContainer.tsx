@@ -1,45 +1,49 @@
 import "./TopContainer.css";
 import { pythonCoa } from "../../services";
-import { useCartridge } from "../../contexts";
+import { useCartridge, useDate, usePopUp } from "../../contexts";
 import { useState } from "react";
 import { DotLoader } from "react-spinners";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 
-type ErrorTuple = [boolean, string];
-
 interface TopContainerProps {
   setFilter: (given: string) => void;
-  setError: (_: ErrorTuple) => void;
-  setStart: (_: Date) => void;
-  setEnd: (_: Date) => void;
-  startDate: Date;
-  endDate: Date
 }
-function TopContainer({ setFilter, setError, setStart, setEnd, startDate, endDate }: TopContainerProps) {
+function TopContainer({ setFilter }: TopContainerProps) {
+  
   const { selectedCartridgeList } = useCartridge();
-  const [ fetchFin, setFetchFin ] = useState(true)
+  const [ isGenerating, setIsGenerating ] = useState(false)
+  const { startDate, endDate, setStartDate, setEndDate } = useDate()
+  const { setError } = usePopUp()
 
-  async function generate() {
-    setFetchFin(false)
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsGenerating(true);
 
     try {
       const outputed_files = await pythonCoa([...selectedCartridgeList]);
-      if (Array.isArray(outputed_files)) {
-        const message = `Following files were created in the process of generation!\n\n${outputed_files.join(
-          "\n"
-        )}`;
-        alert(message);
+      let fileList: string[] = [];
+
+      if (typeof outputed_files === "string") {
+        fileList = outputed_files.trim().split("\n").filter(Boolean); // Remove empty lines
+      } else if (Array.isArray(outputed_files)) {
+        fileList = outputed_files;
       } else {
         throw new Error("Unexpected output format from backend.");
       }
+
+      if (fileList.length > 0) {
+        const message = `Following files were created in the process of generation!\n\n${fileList.join("\n")}`;
+        alert(message);
+      } else {
+        alert("No files were created.");
+      }
     } catch (err: any) {
-      const errMsg = err?.message || typeof err == "string"
-        ? err.toString()
-        : "An uknown error occured during generation!";
+      const errMsg = typeof err == "string" ? err.toString()
+                    : err?.message || "An uknown error occured during generation!";
       setError([true, errMsg])
     } finally {
-      setFetchFin(true)
+      setIsGenerating(false)
     }
   }
 
@@ -47,28 +51,40 @@ function TopContainer({ setFilter, setError, setStart, setEnd, startDate, endDat
     <div className="topContainer">
       <form
         className="row"
-        onSubmit={(e) => {
-          e.preventDefault();
-          generate();
-        }}
-      >  
-        <input
-            id="SN-search"
-            placeholder="Search... 🔍"
-            onChange={(e) => setFilter(e.target.value)}
-          />
-        <input id="greet-input" placeholder="Enter a name..." />
+        onSubmit={handleSubmit}>  
+        <input className="top-field" id="SN-search"
+               placeholder="Search... 🔍"
+               onChange={(e) => setFilter(e.target.value)}/>
+        <input className="top-field" id="greet-input" placeholder="Enter a name..." />
           
-        <button type="submit" disabled={!fetchFin}>
-            {fetchFin? "Generate" : 
-                <DotLoader color="white" loading={!fetchFin} size={20} />}
+        <button type="submit" disabled={isGenerating}>
+            {isGenerating? (
+              <DotLoader color="white" loading={isGenerating} size={20} />
+             ) : (
+              "Generate"
+             )}
         </button>
        </form>
+
        <div className="topContainer-dates">
-          <DatePicker selected={startDate} onChange={(date) => setStart(date as Date)}
-                      dateFormat="yyyy-MM-dd" customInput={<input readOnly />} />
-          <DatePicker selected={endDate} onChange={(date) => setEnd(date as Date)}
-                      dateFormat="yyyy-MM-dd" customInput={<input readOnly />} />
+          <p>
+            Start Date:
+          </p>
+          <DatePicker 
+            selected={startDate} 
+            onChange={(date) => setStartDate(date as Date)}
+            dateFormat="yyyy-MM-dd" 
+            customInput={<input readOnly />} 
+          />
+          <p>
+            End Date:
+          </p>
+          <DatePicker 
+            selected={endDate} 
+            onChange={(date) => setEndDate(date as Date)}
+            dateFormat="yyyy-MM-dd" 
+            customInput={<input readOnly />} 
+          />
         </div>
     </div>
   );

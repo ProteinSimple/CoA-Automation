@@ -24,15 +24,13 @@
 .settings-modal-container {
   position: relative;
   width: 60vw;
-  max-width: 625px;
   height: 60vh;
+  max-width: 625px;
   max-height: 500px;
   padding: 25px;
   background-color: #333; /* slightly darker gray */
   border-radius: 8px;
   text-align: center;
-  color: white;
-
   display: flex;
   flex-direction: column;
   opacity: 0;
@@ -44,18 +42,23 @@
   display: flex;
   flex-direction: row;
   flex-grow: 1;
-  gap: 1rem;
   overflow-y: auto;
 }
 
+.settings-content-container button {
+  margin: 0.5em 0.25em;
+  padding: 0.5em 0.25em;
+}
+
 .settings-content-container > div {
-  flex: 1;             /* Each side occupies equal width */
+  flex: 1;
   display: flex;
   flex-direction: column;
+  margin: 0.5rem;
 }
 
 .settings-content-container > div > .settings-modal-message {
-  flex-grow: 1;        /* Message lists also expand */
+  flex-grow: 1;
 }
 
 .ReactModal__Content--after-open {
@@ -78,15 +81,11 @@
   background-color: darkgray;
 }
 
-.settings-modal-container > * {
-  padding: 0.25rem;
-  margin: 0.25rem;
-}
 
 .settings-modal-message {
   border: 1px ridge black;
   font-size: small;
-  max-height: 45%;
   overflow-y: auto;
   text-align: left;
+  padding: 0.25em;
 }

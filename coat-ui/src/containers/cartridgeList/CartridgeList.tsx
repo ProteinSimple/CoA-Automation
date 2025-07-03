@@ -1,8 +1,9 @@
 import { CartridgeListItem } from "../../components";
 import { pythonFetchRange } from "../../services";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { pythonAuth, pythonCheck } from "../../services";
 import "./cartridgeList.css";
+import { useDate } from "../../contexts";
 
 interface CartridgeInfo {
   id: string;
@@ -10,31 +11,39 @@ interface CartridgeInfo {
 }
 
 interface CartridgeListProps {
-  filterText: string;
-  startDate: Date;
-  endDate: Date;
+  filterText: string
 }
 
-function CartridgeList({ filterText, startDate, endDate }: CartridgeListProps) {
+function CartridgeList({ filterText }: CartridgeListProps) {
   const [cartridgeList, setCartridgeList] = useState<CartridgeInfo[]>([]);
   const [checkDone, setCheckDone] = useState<boolean>(false);
   const [loading, setLoading] = useState<boolean>(false);
+  const {startDate, endDate} = useDate()
+  const loginInProgress = useRef(false);
+
   useEffect(() => {
+
     const check = async () => {
+      if (loginInProgress.current) return;
+      loginInProgress.current = true;
       try {
         let result = await pythonCheck();
+        console.log(result)
         while (!result) {
           const user = prompt("Enter username:", "");
           const pass = prompt("Enter passkey:", "");
           if (user === null || pass === null) {
             alert("Login cancelled.");
-            break;
+            loginInProgress.current = false;
+            return;
           }
           result = await pythonAuth(user, pass);
         }
         setCheckDone(true);
       } catch (err) {
         console.error("Failed to run python_check:", err);
+      } finally {
+        loginInProgress.current = false;
       }
     };
 

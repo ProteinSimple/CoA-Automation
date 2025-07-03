@@ -4,18 +4,17 @@ import { SettingPathListItem } from '../../components';
 import { useEffect, useState } from 'react';
 import { open  } from '@tauri-apps/plugin-dialog';
 import { pythonConfigAddPdf, pythonConfigList, pythonConfigDeletePdf, pythonConfigAddMapping, pythonConfigDeleteMapping } from '../../services';
-
-interface Props {
-  isOpen: boolean;
-  onClose: () => void
-}
+import { usePopUp } from '../../contexts';
 
 
 
-function SettingsContainer( {isOpen, onClose} : Props) {
+
+
+function SettingsContainer() {
 
   const [pdfPaths, setPdfPaths] = useState<string[]>([])
   const [mappingPaths, setMappingPaths] = useState<string[]>([])
+  const { setting: isOpen, hideSettings: onClose} = usePopUp()
 
   const addPdfPath = async (given: string) => {
     try {

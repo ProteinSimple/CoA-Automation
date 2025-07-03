@@ -17,11 +17,11 @@
 }
 
 .settings-btn:hover {
-  color: #396cd8; /* optional hover effect */
+  color: var(--color-button-hover);
 }
 
 .settings-btn {
-  color: white;
+  color: var(--color-button-secondary);
   transition: transform 0.3s ease;
 }
 

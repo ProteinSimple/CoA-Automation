@@ -51,12 +51,17 @@ async fn run_python_command_with_output(args: Vec<String>) -> Result<String, Str
 }
 
 
-
 #[tauri::command]
 async fn python_check() -> bool {
     match run_python_command_with_output(vec!["check".to_string()]).await {
-        Ok(output) => output == "1",
-        Err(_) => false,
+        Ok(output) => {
+            println!("python_check output: {}", output);
+            output == "1"
+        }
+        Err(e) => {
+            println!("python_check error: {}", e);
+            false
+        }
     }
 }
 
@@ -80,12 +85,13 @@ async fn python_auth(user: String, pass: String) -> bool {
 #[tauri::command]
 async fn python_call(args: Vec<String>) -> Result<String, String> {
     let output = run_python_command_with_output(args).await?;
-
+    
+    // println!("[python_call] output:\n{}", output);
     let mut lines = output.lines();
     match lines.next() {
-        Some("1") => match lines.next() {
-            Some(json_or_result) => Ok(json_or_result.to_string()),
-            None => Err("Expected result after success flag, but got nothing.".to_string()),
+        Some("1") => {
+            let result = lines.collect::<Vec<_>>().join("\n");
+            Ok(result)
         },
         Some("0") => {
             let err_msg = lines.collect::<Vec<_>>().join("\n");
