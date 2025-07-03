@@ -5,14 +5,13 @@ import { useCartridge } from "../../contexts";
 type ListItemProps = {
   id: string;
   time: string;
+  type: string;
 };
 
-function ListItem( { id, time }: ListItemProps) {
+function ListItem( { id, time, type }: ListItemProps) {
   const { selectedCartridgeList, addCartridge, removeCartridge } = useCartridge()
-   
-  const isChecked = (id: string) => {
-    return selectedCartridgeList.has(id)
-  }
+  const isChecked = (id: string) => { return selectedCartridgeList.has(id) }
+  const [datePart, timePart] = time.split(" ");
 
   return (
     <div className="list_item">
@@ -26,9 +25,15 @@ function ListItem( { id, time }: ListItemProps) {
           {id}
         </p> 
         <p className="list_item_date">
-          {time}
-        </p> 
+          {datePart}
+        </p>
+        <p className="list_item_date">
+          {timePart}
+        </p>
       </div>
+      <p>
+        {type}
+      </p>
     </div>
     
   )
