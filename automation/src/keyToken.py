@@ -1,31 +1,29 @@
 import os
-import json
 from cryptography.fernet import Fernet
 
-# KEY_PATH = os.path.expanduser("~/.yourtool/secret.key")
 PUB_PATH = os.path.expanduser("~/.coat/pub.key")
-
-# def gen_key():
-#     os.makedirs(os.path.dirname(KEY_PATH), exist_ok=True)
-#     key = Fernet().generate_key()
-    
-# def load_key():
-#     if not os.path.exists(KEY_PATH):
-#         gen_key()
-#     with open(KEY_PATH, "w") as f:
-#         return f.read()
+FERNET_KEY = b'Xh4RzRkR1BlOxsib-EeVjFQZ-WTwvvbr3SK0oZmQ3lo='
 
 
+
+fernet = Fernet(FERNET_KEY)
 
 def add_token(user: str, passkey: str):
     os.makedirs(os.path.dirname(PUB_PATH), exist_ok=True)
-    with open(PUB_PATH, mode="w") as f:
-        f.write(f'{user}\n{passkey}')
+    content = f"{user}\n{passkey}".encode('utf-8')
+    encrypted = fernet.encrypt(content)
+    with open(PUB_PATH, "wb") as f:
+        f.write(encrypted)
 
 def load_token() -> tuple[str, str] | None:
-    with open(PUB_PATH, mode="r") as f:
-        user = f.readline().strip()
-        passkey = f.readline().strip()
-
+    try:
+        with open(PUB_PATH, "rb") as f:
+            enc = f.read()
+        content = fernet.decrypt(enc).decode("utf-8")
+        user, passkey = content.strip().split("\n", 1)
         return user, passkey
+    except Exception as e:
+        print(f"Failed to load token: {e}")
+        return None
+
 
