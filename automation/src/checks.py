@@ -1,5 +1,6 @@
 import re, json, pandas as pd
 from util import Pathcr
+from log import get_logger
 
 """
     The following file contains the checks that are done after the mapping and the pdf files are created. 
@@ -26,6 +27,7 @@ from util import Pathcr
     3 - Add your function to the list of functions (assertions) in the bottom of the list
 
 """
+logger = get_logger(__name__)
 
 
 class CheckError(Exception):
@@ -36,6 +38,7 @@ def run_checks(**kwargs):
     """ Helper function from main"""
     for f in ASSERTIONS:
         if not f(**kwargs):
+            logger.error(" The following check failed to pass: " + f.__name__)
             raise CheckError(" The following check failed to pass: " + f.__name__)
     return True
 
