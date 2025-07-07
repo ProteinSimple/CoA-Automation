@@ -1,11 +1,11 @@
 import './TopContainerDates.css';
 import DatePicker from "react-datepicker";
 import { DropdownFilter } from "../../components";
-import { useDate } from '../../contexts';
+import { useFilter } from '../../contexts';
 
 function TopContainerDates() {
   
-  const { startDate, endDate, setStartDate, setEndDate } = useDate()
+  const { startDate, endDate, setStartDate, setEndDate } = useFilter()
 
   return (
     <div className="topContainer-dates">

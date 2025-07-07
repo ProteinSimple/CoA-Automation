@@ -1,7 +1,9 @@
 import './DropdownFilter.css';
 import { MultiSelect } from 'primereact/multiselect';
 import { useEffect, useState } from 'react';
-import { useDate } from '../../contexts';
+import { useFilter } from '../../contexts';
+
+
 
 
 function DropdownFilter() {
@@ -12,7 +14,7 @@ function DropdownFilter() {
     { label: '8', value: 8 }
   ])
   const [selectedOptions, setSelectedOptions] = useState<number[]>([]);
-  const { selectedTypes, setTypes, validTypes } = useDate()
+  const { selectedTypes, setTypes, validTypes, colorMap } = useFilter()
   useEffect(() => {
     setTypes(selectedOptions)
     console.log(selectedTypes)
@@ -23,7 +25,25 @@ function DropdownFilter() {
     console.log(validTypes)
   }, [validTypes]);
 
+  const optionTemplate = (option: { label: string, value: number }) => {
+    const color = colorMap?.[option.value] ?? '#ccc';
+    return (
+      <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+        <span
+          style={{
+            width: '0.75rem',
+            height: '0.75rem',
+            borderRadius: '50%',
+            backgroundColor: color,
+            display: 'inline-block',
+          }}
+        />
+        <span>{option.label}</span>
+      </div>
+    );
+  };
 
+  
   return (
     <div className="dropdown-container">
       <MultiSelect
@@ -34,6 +54,9 @@ function DropdownFilter() {
         display="chip"
         className="p-multiselect-dark"
         showSelectAll={false}
+        optionLabel="label"
+        optionValue="value"
+        itemTemplate={optionTemplate}
       />
     </div>
   );
