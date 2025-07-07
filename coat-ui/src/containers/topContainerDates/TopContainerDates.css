@@ -20,8 +20,6 @@
 .date-wrapper {
   display: inline-flex;
   align-items: center;
-  width: auto;
-  max-width: fit-content;
 }
 
 .date-input {
@@ -36,4 +34,5 @@
   font-weight: 500;
   font-family: inherit;
   color: var(--color-text-primary);
+  max-width: 10em;
 }

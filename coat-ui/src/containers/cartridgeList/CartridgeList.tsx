@@ -3,7 +3,7 @@ import { pythonFetchRange } from "../../services";
 import { useEffect, useRef, useState } from "react";
 import { pythonAuth, pythonCheck } from "../../services";
 import "./cartridgeList.css";
-import { useDate } from "../../contexts";
+import { useFilter } from "../../contexts";
 
 interface CartridgeInfo {
   id: string;
@@ -19,7 +19,7 @@ function CartridgeList({ filterText }: CartridgeListProps) {
   const [cartridgeList, setCartridgeList] = useState<CartridgeInfo[]>([]);
   const [checkDone, setCheckDone] = useState<boolean>(false);
   const [loading, setLoading] = useState<boolean>(false);
-  const {startDate, endDate, selectedTypes, setValidTypes } = useDate()
+  const {startDate, endDate, selectedTypes, setValidTypes } = useFilter()
   const loginInProgress = useRef(false);
 
   useEffect(() => {
