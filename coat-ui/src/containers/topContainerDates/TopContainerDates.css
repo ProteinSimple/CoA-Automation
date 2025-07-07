@@ -1,0 +1,38 @@
+.topContainer-dates {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-evenly;
+  gap: 1.5rem;
+}
+
+.date-group {
+  display: flex;
+  align-items: center;
+}
+
+
+.topContainer-dates > p {
+  margin: 1em 0.5em;
+  white-space: nowrap;
+}
+
+.date-wrapper {
+  display: inline-flex;
+  align-items: center;
+}
+
+.date-input {
+  background-color: black;
+  color: white;
+  padding: 0.5em 0px;
+  border-radius: 8px;
+  border: 1px solid transparent;
+  font-weight: bold;
+  text-align: center;
+  font-size: 0.9em;
+  font-weight: 500;
+  font-family: inherit;
+  color: var(--color-text-primary);
+  max-width: 10em;
+}

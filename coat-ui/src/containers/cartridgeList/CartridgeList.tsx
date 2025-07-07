@@ -3,7 +3,7 @@ import { pythonFetchRange } from "../../services";
 import { useEffect, useRef, useState } from "react";
 import { pythonAuth, pythonCheck } from "../../services";
 import "./cartridgeList.css";
-import { useDate } from "../../contexts";
+import { useFilter } from "../../contexts";
 
 interface CartridgeInfo {
   id: string;
@@ -19,7 +19,7 @@ function CartridgeList({ filterText }: CartridgeListProps) {
   const [cartridgeList, setCartridgeList] = useState<CartridgeInfo[]>([]);
   const [checkDone, setCheckDone] = useState<boolean>(false);
   const [loading, setLoading] = useState<boolean>(false);
-  const {startDate, endDate} = useDate()
+  const {startDate, endDate, selectedTypes, setValidTypes } = useFilter()
   const loginInProgress = useRef(false);
 
   useEffect(() => {
@@ -29,7 +29,6 @@ function CartridgeList({ filterText }: CartridgeListProps) {
       loginInProgress.current = true;
       try {
         let result = await pythonCheck();
-        console.log(result)
         while (!result) {
           const user = prompt("Enter username:", "");
           const pass = prompt("Enter passkey:", "");
@@ -57,10 +56,11 @@ function CartridgeList({ filterText }: CartridgeListProps) {
       setLoading(true)
       try {
         const raw = String(await pythonFetchRange(startDate, endDate)); // returns JSON string
-        console.log(raw)
         const parsed: CartridgeInfo[] = JSON.parse(raw);
+        const uniqueTypes = Array.from(new Set(parsed.map(item => Number(item.type))));
+        console.log("Unique types:" + String(uniqueTypes))
+        setValidTypes(uniqueTypes)
         setCartridgeList(parsed);
-        console.log(parsed)
       } catch (error) {
         console.error("Error fetching/parsing cartridge list:", error);
       }
@@ -73,8 +73,11 @@ function CartridgeList({ filterText }: CartridgeListProps) {
 
   if (cartridgeList.length == 0 || !checkDone || loading) return <div>Loading Cartridge Data...</div>;
 
-  const filteredList = cartridgeList.filter((d) =>
-    d.id.toLowerCase().includes(filterText.toLowerCase())
+  const filteredList = cartridgeList.filter((d) => {
+    const matchesFilter = d.id.toLowerCase().includes(filterText.toLowerCase());
+    const matchesType = selectedTypes.length === 0 || selectedTypes.includes(Number(d.type));
+    return matchesFilter && matchesType;
+  }
   );
 
   return (

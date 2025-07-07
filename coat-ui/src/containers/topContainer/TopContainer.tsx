@@ -1,20 +1,24 @@
 import "./TopContainer.css";
 import { pythonCoa } from "../../services";
-import { useCartridge, useDate, usePopUp } from "../../contexts";
+import  TopContainerDates  from "../topContainerDates/TopContainerDates"
+import { useCartridge, usePopUp } from "../../contexts";
 import { useState } from "react";
 import { DotLoader } from "react-spinners";
-import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
+
 
 interface TopContainerProps {
   setFilter: (given: string) => void;
 }
+
+
+
 function TopContainer({ setFilter }: TopContainerProps) {
   
   const { selectedCartridgeList } = useCartridge();
   const [ isGenerating, setIsGenerating ] = useState(false)
-  const { startDate, endDate, setStartDate, setEndDate } = useDate()
   const { setError } = usePopUp()
+  
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -33,7 +37,7 @@ function TopContainer({ setFilter }: TopContainerProps) {
       }
 
       if (fileList.length > 0) {
-        const message = `Following files were created in the process of generation!\n\n${fileList.join("\n")}`;
+        const message = `${fileList.length - 1} CoA files and 1 mapping file were created.\nFollowing files were created in the process of generation!\n\n${fileList.join("\n")}`;
         alert(message);
       } else {
         alert("No files were created.");
@@ -65,27 +69,7 @@ function TopContainer({ setFilter }: TopContainerProps) {
              )}
         </button>
        </form>
-
-       <div className="topContainer-dates">
-          <p>
-            Start Date:
-          </p>
-          <DatePicker 
-            selected={startDate} 
-            onChange={(date) => setStartDate(date as Date)}
-            dateFormat="yyyy-MM-dd" 
-            customInput={<input readOnly />} 
-          />
-          <p>
-            End Date:
-          </p>
-          <DatePicker 
-            selected={endDate} 
-            onChange={(date) => setEndDate(date as Date)}
-            dateFormat="yyyy-MM-dd" 
-            customInput={<input readOnly />} 
-          />
-        </div>
+       <TopContainerDates/>
     </div>
   );
 }
