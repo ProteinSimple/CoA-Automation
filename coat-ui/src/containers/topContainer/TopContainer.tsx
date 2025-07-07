@@ -37,7 +37,7 @@ function TopContainer({ setFilter }: TopContainerProps) {
       }
 
       if (fileList.length > 0) {
-        const message = `Following files were created in the process of generation!\n\n${fileList.join("\n")}`;
+        const message = `${fileList.length - 1} CoA files and 1 mapping file were created.\nFollowing files were created in the process of generation!\n\n${fileList.join("\n")}`;
         alert(message);
       } else {
         alert("No files were created.");
