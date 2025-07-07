@@ -81,7 +81,8 @@ def saturn_get_cartridge_data_range(start, end, username, passkey):
         for _, d in data.iloc[::-1].iterrows():
             val = {
                 "id": d["_id"],
-                "b_date": datetime.fromtimestamp(int(d["build_completion_date"]["$date"]) / 1000).strftime("%Y-%m-%d %H:%M:%S")
+                "b_date": datetime.fromtimestamp(int(d["build_completion_date"]["$date"]) / 1000).strftime("%Y-%m-%d %H:%M:%S"),
+                "type": d["cartridge_type"]
             }
             yield val
     else:
@@ -110,7 +111,8 @@ def saturn_get_cartridge_data_past(length, limit, username, passkey):
         for _, d in data.iloc[::-1].head(limit).iterrows():
             val = {
                 "id": d["_id"],
-                "b_date": datetime.fromtimestamp(int(d["build_completion_date"]["$date"]) / 1000).strftime("%Y-%m-%d %H:%M:%S")
+                "b_date": datetime.fromtimestamp(int(d["build_completion_date"]["$date"]) / 1000).strftime("%Y-%m-%d %H:%M:%S"),
+                "type": d["cartridge_type"]
             }
             yield val
             
