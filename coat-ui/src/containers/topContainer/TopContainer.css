@@ -1,10 +1,11 @@
-.topContainer input,
+.top-field,
 .topContainer button {
   border-radius: 8px;
   border: 1px solid transparent;
   padding-top: 0.5rem;
   padding-bottom: 0.5rem;
   width: 50%;
+  max-width: 15em;
   font-size: 0.9em;
   font-weight: 500;
   font-family: inherit;
@@ -18,22 +19,13 @@
 
 }
 
-.topContainer-dates {
-  display: flex;
-  flex-direction: row;
-  justify-content: start;
-  align-items: center;
-}
 
-.topContainer-dates > p {
-  margin-left: 1em;
-}
 
 
 .row {
   display: flex;
   flex-direction: row;
-  justify-content: space-between;
+  justify-content: center;
   gap: 5em;
   
 }
@@ -73,3 +65,4 @@
 .topContainer input {
   text-align: center;
 }
+
