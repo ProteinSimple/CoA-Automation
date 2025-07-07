@@ -260,6 +260,7 @@ def output_CoA_mapping(config, mapping: pd.DataFrame, mapping_f_name = "mapping.
     output_paths = []
     for dir in config['mapping_output_dir']:
         dir_path = Path(dir)
+        logger.debug("Outputting mapping to %s", dir_path)
         dir_path.mkdir(parents=True, exist_ok=True)
         write_path = (dir_path / mapping_f_name)
         try:

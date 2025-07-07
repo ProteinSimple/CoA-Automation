@@ -119,7 +119,9 @@ def action_coa(args, config):
 
         logger.info("Creating mapping file")
         mapping = pd.DataFrame(mapping_rows)
+        logger.info("Running check on the data")
         run_checks(config=config, data=data, mapping=mapping)
+        logger.info("outputting CSV mapping!")
         csv_files = output_CoA_mapping(config, mapping, get_mapping_name(args))
         logger.info("COA creation finshed succesfully! ")
         print(1)
@@ -154,10 +156,9 @@ def action_init(args, config):
         logger.info("Template copied to model directory.")
     except Exception as e:
         logger.warning("Failed to copy template: %s", str(e))
-
     try:
         logger.debug("Generating field map from PDF")
-        profile = {'template': template_file.name}
+        profile = { 'template': template_file.name }
         profile['fields'], profile['dates'] = generate_field_map_from_pdf(config, template_file, model)
         profile['PN'] = part_number
         if model not in models:
