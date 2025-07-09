@@ -1,5 +1,4 @@
 // Learn more about Tauri commands at https://tauri.app/develop/calling-rust/
-use dirs::home_dir;
 use std::env;
 use std::fs;
 use std::path::PathBuf;
@@ -52,15 +51,18 @@ async fn run_python_command_with_output(args: Vec<String>) -> Result<String, Str
 
 
 #[tauri::command]
-async fn python_check() -> bool {
-    match run_python_command_with_output(vec!["check".to_string()]).await {
+async fn python_check() -> Result<bool, String> {
+    match run_python_command_with_output(vec![
+        "check".to_string(),
+    ])
+    .await
+    {
         Ok(output) => {
-            println!("python_check output: {}", output);
-            output == "1"
-        }
+            let result = output.trim().starts_with("1");
+            Ok(result)
+        },
         Err(e) => {
-            println!("python_check error: {}", e);
-            false
+            Err(format!("Check failed: {}", e))
         }
     }
 }

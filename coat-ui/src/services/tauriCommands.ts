@@ -11,15 +11,20 @@ export const pythonFetchRange = async (startDate: Date, endDate: Date) => {
 }
 
 export const pythonCheck = async () => {
-  return await invoke("python_check", {})
+  console.log("pythonCheck: about to invoke");
+  const result = await invoke("python_check");
+  console.log("pythonCheck: invoke returned:", result, typeof result);
+  return result;
 }
 
 export const pythonAuth = async (user: string, pass: string) => {
   return await invoke("python_auth", {user, pass})
 }
 
-export const pythonCoa = async (ids: string[]) => {
-  return await invoke("python_call", { args:  ["coa", ...ids] })
+export const pythonCoa = async (ids: string[], name: string, startDate: Date, endDate: Date) => {
+  let start = startDate.toISOString().split('T')[0]
+  let end = endDate.toISOString().split('T')[0]
+  return await invoke("python_call", { args:  ["coa", ...ids, "--name", name, "--start", start, '--end', end] })
 }
 
 export const pythonConfigList = async () => {

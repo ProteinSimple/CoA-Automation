@@ -1,9 +1,8 @@
 import { CartridgeListItem } from "../../components";
 import { pythonFetchRange } from "../../services";
-import { useEffect, useRef, useState } from "react";
-import { pythonAuth, pythonCheck } from "../../services";
+import { useEffect, useState, useMemo, useCallback } from "react";
 import "./cartridgeList.css";
-import { useFilter } from "../../contexts";
+import { useControl, useFilter } from "../../contexts";
 
 interface CartridgeInfo {
   id: string;
@@ -17,68 +16,53 @@ interface CartridgeListProps {
 
 function CartridgeList({ filterText }: CartridgeListProps) {
   const [cartridgeList, setCartridgeList] = useState<CartridgeInfo[]>([]);
-  const [checkDone, setCheckDone] = useState<boolean>(false);
   const [loading, setLoading] = useState<boolean>(false);
+
+
+  const { checkDone } = useControl();
   const {startDate, endDate, selectedTypes, setValidTypes } = useFilter()
-  const loginInProgress = useRef(false);
+
+  const fetchData = useCallback(async () => {
+    setLoading(true);
+    try {
+      const raw = await pythonFetchRange(startDate, endDate);
+      const parsed: CartridgeInfo[] = JSON.parse(String(raw));
+      const uniqueTypes = [...new Set(parsed.map(item => Number(item.type)))];
+      setValidTypes(uniqueTypes);
+      setCartridgeList(parsed);
+    } catch (error) {
+      console.error("Error fetching/parsing cartridge list:", error);
+      setCartridgeList([]); // Reset on error
+    } finally {
+      setLoading(false);
+    }
+  }, [startDate, endDate, setValidTypes]);
+
 
   useEffect(() => {
+    if (checkDone) {
+      fetchData();
+    }
+  }, [checkDone, fetchData]);
 
-    const check = async () => {
-      if (loginInProgress.current) return;
-      loginInProgress.current = true;
-      try {
-        let result = await pythonCheck();
-        while (!result) {
-          const user = prompt("Enter username:", "");
-          const pass = prompt("Enter passkey:", "");
-          if (user === null || pass === null) {
-            alert("Login cancelled.");
-            loginInProgress.current = false;
-            return;
-          }
-          result = await pythonAuth(user, pass);
-        }
-        setCheckDone(true);
-      } catch (err) {
-        console.error("Failed to run python_check:", err);
-      } finally {
-        loginInProgress.current = false;
-      }
-    };
 
-    check();
-  }, []);
-
-  useEffect(() => {
-    if (!checkDone) return;
-    const fetchData = async () => {
-      setLoading(true)
-      try {
-        const raw = String(await pythonFetchRange(startDate, endDate)); // returns JSON string
-        const parsed: CartridgeInfo[] = JSON.parse(raw);
-        const uniqueTypes = Array.from(new Set(parsed.map(item => Number(item.type))));
-        console.log("Unique types:" + String(uniqueTypes))
-        setValidTypes(uniqueTypes)
-        setCartridgeList(parsed);
-      } catch (error) {
-        console.error("Error fetching/parsing cartridge list:", error);
-      }
-      
-      setLoading(false)
-    };
+  const filteredList = useMemo(() => {
+    if (!cartridgeList.length) return [];
     
-    fetchData();
-  }, [checkDone, startDate, endDate]);
+    const lowerFilterText = filterText.toLowerCase();
+    
+    return cartridgeList.filter((item) => {
+      const matchesFilter = item.id.toLowerCase().includes(lowerFilterText);
+      const matchesType = selectedTypes.length === 0 || selectedTypes.includes(Number(item.type));
+      return matchesFilter && matchesType;
+    });
+  }, [cartridgeList, filterText, selectedTypes]);
 
-  if (cartridgeList.length == 0 || !checkDone || loading) return <div>Loading Cartridge Data...</div>;
+  if (!checkDone || loading) { return <div>Loading Cartridge Data...</div>;}
 
-  const filteredList = cartridgeList.filter((d) => {
-    const matchesFilter = d.id.toLowerCase().includes(filterText.toLowerCase());
-    const matchesType = selectedTypes.length === 0 || selectedTypes.includes(Number(d.type));
-    return matchesFilter && matchesType;
-  }
-  );
+  if (cartridgeList.length === 0) { return <div>No cartridge data available.</div>;}
+
+  if (filteredList.length === 0) { return <div>No cartridges match your current filters.</div>; }
 
   return (
     <div className="list_container">

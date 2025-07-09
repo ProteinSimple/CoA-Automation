@@ -4,7 +4,8 @@ import { SettingPathListItem } from '../../components';
 import { useEffect, useState } from 'react';
 import { open  } from '@tauri-apps/plugin-dialog';
 import { pythonConfigAddPdf, pythonConfigList, pythonConfigDeletePdf, pythonConfigAddMapping, pythonConfigDeleteMapping } from '../../services';
-import { usePopUp } from '../../contexts';
+import { useControl, usePopUp } from '../../contexts';
+import { Folder } from 'lucide-react';
 
 
 
@@ -15,6 +16,7 @@ function SettingsContainer() {
   const [pdfPaths, setPdfPaths] = useState<string[]>([])
   const [mappingPaths, setMappingPaths] = useState<string[]>([])
   const { setting: isOpen, hideSettings: onClose} = usePopUp()
+  const { checkDone } = useControl();
 
   const addPdfPath = async (given: string) => {
     try {
@@ -76,6 +78,7 @@ function SettingsContainer() {
 
   useEffect(() => {
     const effect = async () => {
+      if (!checkDone) return
       try {
         const res = await pythonConfigList();
         const config = JSON.parse(res as string) as { [key: string]: any };
@@ -87,7 +90,7 @@ function SettingsContainer() {
       }
     }
     effect()
-  }, [isOpen])
+  }, [isOpen, checkDone])
 
   return (
     <Modal
@@ -115,10 +118,10 @@ function SettingsContainer() {
           COA Output paths
           <div>
               <button onClick={() => handleAddButton(addPdfPath)}>
-                Add button
+                Add path manually
               </button>
               <button onClick={() => handleFolderButton(addPdfPath)}>
-                Folder button
+                <Folder size="1em"/>
               </button>
           </div>
           <div className="settings-modal-message">
@@ -129,10 +132,10 @@ function SettingsContainer() {
           Mapping Output paths
           <div>
               <button onClick={() => handleAddButton(addMappingPath)}>
-                Add button
+                Add path manually
               </button>
               <button onClick={() => handleFolderButton(addMappingPath)}>
-                Folder button
+                <Folder size="1em"/>
               </button>
           </div>
           <div className="settings-modal-message">

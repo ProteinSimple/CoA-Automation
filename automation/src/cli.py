@@ -18,6 +18,8 @@ def get_args():
     # specific argument passed to certain actions:
     coa_sub.add_argument('ids', type=int, nargs='+', help="Id of the cartridge for file generation")
     coa_sub.add_argument('--name', type=str, default="AA")
+    coa_sub.add_argument('--start', type=str, default=None)
+    coa_sub.add_argument('--end', type=str, default=None)
     
     # Case 1: Default fetch with length and limit
     fetch_subparsers = fetch_sub.add_subparsers(dest='fetch_mode', required=False)

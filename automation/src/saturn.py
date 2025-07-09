@@ -3,7 +3,9 @@ from requests.auth import HTTPBasicAuth
 from urllib.parse import urlencode
 from datetime import datetime, timedelta
 import pandas as pd
+from log import get_logger
 
+logger = get_logger(__name__)
 BASE_URL = "https://saturn.proteinsimple.com/api/1/cartridges/"
 
 
@@ -71,7 +73,8 @@ def build_saturn_url(startdate=None, enddate=None, **extra_params):
     return BASE_URL + "?" + urlencode(params)
 
 def saturn_get_cartridge_data_range(start, end, username, passkey):
-    
+    end_dt = datetime.strptime(end, "%Y-%m-%d") + timedelta(days=1)
+    end = end_dt.strftime("%Y-%m-%d")
     url = build_saturn_url(startdate=start, enddate=end)
     response = requests.get(url, auth=HTTPBasicAuth(username, passkey))
 
@@ -93,8 +96,6 @@ def saturn_get_cartridge_data_range(start, end, username, passkey):
 
 
 def saturn_get_cartridge_data_past(length, limit, username, passkey):
-
-
     end_dt = datetime.today() + timedelta(days=1)
     start_dt = end_dt - timedelta(days=length)
 
@@ -121,6 +122,7 @@ def saturn_get_cartridge_data_past(length, limit, username, passkey):
         print(response.text)
         return None
 
+@DeprecationWarning
 def saturn_get_cartridge_data(id, username, passkey) -> CartridgeData | None:
     end_dt = datetime.today() + timedelta(days=1)
     start_dt = end_dt - timedelta(days=5) # TODO: change this to search cartridges form previous days as well!
@@ -144,13 +146,20 @@ def saturn_get_cartridge_data(id, username, passkey) -> CartridgeData | None:
         print(response.text)
         return None
 
-def saturn_get_cartridge_data_bundle(ids, username, passkey) -> list[CartridgeData] | None:
-    end_dt = datetime.today() + timedelta(days=1)
-    start_dt = end_dt - timedelta(days=5) # TODO: change this to search cartridges form previous days as well!
+def saturn_get_cartridge_data_bundle(ids, username, passkey, start=None, end=None) -> list[CartridgeData] | None:
     ids_s = set(ids)
-    startdate = start_dt.strftime("%Y-%m-%d")
-    enddate = end_dt.strftime("%Y-%m-%d")
-    url = build_saturn_url(startdate=startdate, enddate=enddate)
+    
+    if start and end:
+        url = build_saturn_url(startdate=start, enddate=end)
+    else:   
+        # THIS SHOULD NEVER HAPPEN AND IS A BAD IMPLEMENTATION 
+        end_dt = datetime.today() + timedelta(days=1)
+        start_dt = end_dt - timedelta(days=5) # TODO: change this to search cartridges form previous days as well!
+        
+        startdate = start_dt.strftime("%Y-%m-%d")
+        enddate = end_dt.strftime("%Y-%m-%d")
+        url = build_saturn_url(startdate=startdate, enddate=enddate)
+
     response = requests.get(url, auth=HTTPBasicAuth(username, passkey))
 
     if response.status_code == 200:
@@ -174,7 +183,9 @@ def saturn_check_connection(username, passkey) -> bool:
     end_dt = datetime.today()
     enddate = end_dt.strftime("%Y-%m-%d")
     url = build_saturn_url(startdate=enddate, enddate=enddate)
+    logger.debug("Sending an basic request to check connection: %s", url)
     response = requests.get(url, auth=HTTPBasicAuth(username, passkey))
+    logger.debug(str(response))
     if response.status_code == 200:
         return True
     else:
