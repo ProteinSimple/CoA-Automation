@@ -8,7 +8,7 @@ interface SettingPathProp {
 
 function SettingPathListItem( { path, deleteAction } : SettingPathProp) {
   return (
-    <div className="settingPathListItem" key={path}>
+    <div id={"<setting>" + path} className="settingPathListItem" key={path}>
       <p>
         {path}
       </p>
