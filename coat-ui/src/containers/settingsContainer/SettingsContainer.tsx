@@ -5,6 +5,7 @@ import { useEffect, useState } from 'react';
 import { open  } from '@tauri-apps/plugin-dialog';
 import { pythonConfigAddPdf, pythonConfigList, pythonConfigDeletePdf, pythonConfigAddMapping, pythonConfigDeleteMapping } from '../../services';
 import { usePopUp } from '../../contexts';
+import { Folder } from 'lucide-react';
 
 
 
@@ -115,10 +116,10 @@ function SettingsContainer() {
           COA Output paths
           <div>
               <button onClick={() => handleAddButton(addPdfPath)}>
-                Add button
+                Add path manually
               </button>
               <button onClick={() => handleFolderButton(addPdfPath)}>
-                Folder button
+                <Folder size="1em"/>
               </button>
           </div>
           <div className="settings-modal-message">
@@ -129,10 +130,10 @@ function SettingsContainer() {
           Mapping Output paths
           <div>
               <button onClick={() => handleAddButton(addMappingPath)}>
-                Add button
+                Add path manually
               </button>
               <button onClick={() => handleFolderButton(addMappingPath)}>
-                Folder button
+                <Folder size="1em"/>
               </button>
           </div>
           <div className="settings-modal-message">

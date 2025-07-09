@@ -1,7 +1,7 @@
 import "./TopContainer.css";
 import { pythonCoa } from "../../services";
 import  TopContainerDates  from "../topContainerDates/TopContainerDates"
-import { useCartridge, usePopUp } from "../../contexts";
+import { useCartridge, useFilter, usePopUp } from "../../contexts";
 import { useState } from "react";
 import { DotLoader } from "react-spinners";
 import "react-datepicker/dist/react-datepicker.css";
@@ -19,14 +19,19 @@ function TopContainer({ setFilter }: TopContainerProps) {
   const [ isGenerating, setIsGenerating ] = useState(false)
   const { setError } = usePopUp()
   const [ name, setName ] = useState<string>("")
+  const { startDate, endDate } = useFilter()
   
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (name.length == 0) {
+      alert("No name given to sign the mapping file. please provide your name and last name seperated by space")
+      return
+    }
     setIsGenerating(true);
 
     try {
-      const outputed_files = await pythonCoa([...selectedCartridgeList], name);
+      const outputed_files = await pythonCoa([...selectedCartridgeList], name, startDate, endDate);
       let fileList: string[] = [];
 
       if (typeof outputed_files === "string") {
@@ -69,7 +74,7 @@ function TopContainer({ setFilter }: TopContainerProps) {
                placeholder="Enter a name..."
                onChange={(e) => setName(e.target.value)} />
           
-        <button type="submit" disabled={isGenerating}>
+        <button type="submit" disabled={isGenerating || selectedCartridgeList.size == 0}>
             {isGenerating? (
               <DotLoader color="white" loading={isGenerating} size={20} />
              ) : (

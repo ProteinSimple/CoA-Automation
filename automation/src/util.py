@@ -39,7 +39,6 @@ class UtilError(Exception):
     pass
 
 class Pathcr:
-
     def __init__(self, p):
         self.path = Path(p)
     def __str__(self):
@@ -60,13 +59,11 @@ class Pathcr:
         return f"Pathcr({str(self)})"
     
 def exec_c(command: str) -> str:
-    
     if command not in COMMANDS:
         raise UtilError(f"Unknown command: {command}")
     return COMMANDS[command]()
 
 def get_filename(id, profile, extn = ".pdf"):
-    
     template_name = Path(profile['template']).stem
     return "_".join([str(id), template_name]) + extn
 

@@ -75,10 +75,14 @@
   position: absolute;
   top: 0;
   right: 0;
-  padding: 1px 1px;
-  border: 0px solid;
+  padding: 0.1em 0.3em;
+  border-radius: 0.5em;
+  margin: 1em 1em;
   cursor: pointer;
-  background-color: darkgray;
+  border: 2px solid rgba(255, 255, 255, 0.15); /* light translucent border */
+  border-radius: 12px; /* soft round corners */
+  box-shadow: 0 0 8px rgba(0, 0, 0, 0.2); /* subtle shadow */
+  backdrop-filter: blur(2px);
 }
 
 
@@ -88,4 +92,5 @@
   overflow-y: auto;
   text-align: left;
   padding: 0.25em;
+  background-color: var(--color-bg-secondary);
 }
