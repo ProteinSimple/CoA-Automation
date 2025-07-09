@@ -37,7 +37,12 @@ function TopContainer({ setFilter }: TopContainerProps) {
       }
 
       if (fileList.length > 0) {
-        const message = `${fileList.length - 1} CoA files and 1 mapping file were created.\nFollowing files were created in the process of generation!\n\n${fileList.join("\n")}`;
+        let pdf_count = 0; let  csv_count = 0;
+        for (const file of fileList) {
+          if (file.includes(".pdf")) pdf_count++;
+          if (file.includes(".csv")) csv_count++;
+        }
+        const message = `${pdf_count} CoA files and ${csv_count} mapping file were created.\nFollowing files were created in the process of generation!\n\n${fileList.join("\n")}`;
         alert(message);
       } else {
         alert("No files were created.");

@@ -72,7 +72,7 @@ def action_check(args, config):
         traceback.print_exc(file=sys.stdout)
 
 def action_coa(args, config):
-    try: 
+    try:
         logger.info("CoA creation has started, first checking and gathering data!")
         if 'models' not in config:
             raise KeyError("Missing 'models' section in config")
@@ -82,10 +82,9 @@ def action_coa(args, config):
         datas = saturn_get_cartridge_data_bundle(args.ids, user, passkey)
         pdf_outputs = []
         mapping_rows = []
-        created_models = set()
+        mapping_set: dict[str, list] = {}
         prod_map = pd.read_excel(Pathcr(config['prod_code_map']).as_path())
         logger.info("Data gathered sucessfully, now creating CoA")
-
         for _, data in enumerate(datas):
             logger.info("creating CoA for following cartridge: %s", str(data.to_dict()))
             id = data.id
@@ -102,33 +101,37 @@ def action_coa(args, config):
             logger.info("Template filled. now outputing files")
             files = output_CoA(config, profile, temp_file, filename)
             pdf_outputs += files
-            os.remove(temp_file) 
-            
+            os.remove(temp_file)
             # Adding data to the mapping CSV
             logger.debug("Adding mapping data!")
             part_number = profile['PN']
             prod_code = prod_map[prod_map['PartNumber'] == part_number]['ProdCode'].values[0]
             lot_num = id
-            created_models.add(model)
-            mapping_rows.append({
+            if model not in mapping_set:
+                mapping_set[model] = []
+            mapping_set[model].append({
                 "PartNumber": part_number,
                 "ProdCode": prod_code,
                 "LotNumber": lot_num,
                 "FileName": filename
-            }) # TODO: make this robust! should not be creating rows of mapping like this!
-
+            }) # TODO: make this robust! should not be creating rows of mapping like this! 
+        
         logger.info("Creating mapping file")
-        mapping = pd.DataFrame(mapping_rows)
-        logger.info("Running check on the data")
-        run_checks(config=config, data=data, mapping=mapping)
-        logger.info("outputting CSV mapping!")
-        csv_files = output_CoA_mapping(config, mapping, get_mapping_name(args))
+        csv_files = []
+        for model, mapping_rows in mapping_set.items():
+            logger.info("Creating mapping for %s model", model)
+            mapping = pd.DataFrame(mapping_rows)
+            logger.info("Running check on the data")
+            run_checks(config=config, data=data, mapping=mapping)
+            logger.info("outputting CSV mapping!")
+            csv_files.extend(output_CoA_mapping(config, mapping, get_mapping_name(args, model)))
         logger.info("COA creation finshed succesfully! ")
         print(1)
         for f in pdf_outputs:
                 print(f) 
         for c in csv_files:
             print(c)
+
     except Exception as e:
         print(0)
         logger.error("Exception occurred: %s", str(e))
@@ -241,10 +244,10 @@ def action_fetch(args, config):
     try:
         user, passkey = auth(args)
         logger.info("Fetching Ids with the following limit/length: %d/%d", args.length, args.limit)
-        ids = saturn_get_cartridge_data_past(args.length, args.limit, user, passkey)
+        ids = list(saturn_get_cartridge_data_past(args.length, args.limit, user, passkey))
         logger.info("Fetched %d cartridge IDs", len(ids))
         print(1)
-        print(json.dumps(list(ids)))
+        print(json.dumps(ids))
     except Exception as e:
         print(0)
         logger.error("Error in FETCH (past) action: %s", str(e))
@@ -257,10 +260,10 @@ def action_fetch_range(args, config):
     try:
         user, passkey = auth(args)
         logger.info("Fetching Ids from saturn in the range.")
-        ids = saturn_get_cartridge_data_range(args.start, args.end, user, passkey)
+        ids = list(saturn_get_cartridge_data_range(args.start, args.end, user, passkey))
         logger.info("Fetched %d cartridge IDs", len(ids))
         print(1)
-        print(json.dumps(list(ids)))
+        print(json.dumps(ids))
     except Exception as e:
         print(0)
         logger.error("Error in FETCH (range) action: %s", str(e))

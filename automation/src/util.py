@@ -70,12 +70,12 @@ def get_filename(id, profile, extn = ".pdf"):
     template_name = Path(profile['template']).stem
     return "_".join([str(id), template_name]) + extn
 
-def get_mapping_name(args, name_prefix = "coa_mapping", extn: str = ".csv") -> str:
+def get_mapping_name(args, model, name_prefix = "coa_mapping", extn: str = ".csv") -> str:
 
     initials = args.name.lower()
     today = datetime.now().date()
     date = today.strftime('%b').lower() + str(today.day)
-    return "_".join([name_prefix, initials, date]) + extn
+    return "_".join([name_prefix, model, initials, date]) + extn
 
 
 def create_mapping_template(config) -> pd.DataFrame:
