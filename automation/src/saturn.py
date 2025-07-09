@@ -95,8 +95,6 @@ def saturn_get_cartridge_data_range(start, end, username, passkey):
 
 
 def saturn_get_cartridge_data_past(length, limit, username, passkey):
-
-
     end_dt = datetime.today() + timedelta(days=1)
     start_dt = end_dt - timedelta(days=length)
 
@@ -123,6 +121,7 @@ def saturn_get_cartridge_data_past(length, limit, username, passkey):
         print(response.text)
         return None
 
+@DeprecationWarning
 def saturn_get_cartridge_data(id, username, passkey) -> CartridgeData | None:
     end_dt = datetime.today() + timedelta(days=1)
     start_dt = end_dt - timedelta(days=5) # TODO: change this to search cartridges form previous days as well!
@@ -146,13 +145,20 @@ def saturn_get_cartridge_data(id, username, passkey) -> CartridgeData | None:
         print(response.text)
         return None
 
-def saturn_get_cartridge_data_bundle(ids, username, passkey) -> list[CartridgeData] | None:
-    end_dt = datetime.today() + timedelta(days=1)
-    start_dt = end_dt - timedelta(days=5) # TODO: change this to search cartridges form previous days as well!
+def saturn_get_cartridge_data_bundle(ids, username, passkey, start=None, end=None) -> list[CartridgeData] | None:
     ids_s = set(ids)
-    startdate = start_dt.strftime("%Y-%m-%d")
-    enddate = end_dt.strftime("%Y-%m-%d")
-    url = build_saturn_url(startdate=startdate, enddate=enddate)
+    
+    if start and end:
+        url = build_saturn_url(startdate=start, enddate=end)
+    else:   
+        # THIS SHOULD NEVER HAPPEN AND IS A BAD IMPLEMENTATION 
+        end_dt = datetime.today() + timedelta(days=1)
+        start_dt = end_dt - timedelta(days=5) # TODO: change this to search cartridges form previous days as well!
+        
+        startdate = start_dt.strftime("%Y-%m-%d")
+        enddate = end_dt.strftime("%Y-%m-%d")
+        url = build_saturn_url(startdate=startdate, enddate=enddate)
+
     response = requests.get(url, auth=HTTPBasicAuth(username, passkey))
 
     if response.status_code == 200:

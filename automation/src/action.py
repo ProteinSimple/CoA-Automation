@@ -79,7 +79,7 @@ def action_coa(args, config):
         user, passkey = auth(args)
         logger.debug("User: %s, passkey: %s", user, passkey)
         logger.info("Fetching data for the given cartridges")
-        datas = saturn_get_cartridge_data_bundle(args.ids, user, passkey)
+        datas = saturn_get_cartridge_data_bundle(args.ids, user, passkey, args.start, args.end)
         pdf_outputs = []
         mapping_rows = []
         mapping_set: dict[str, list] = {}
