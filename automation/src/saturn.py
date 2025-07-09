@@ -150,6 +150,8 @@ def saturn_get_cartridge_data_bundle(ids, username, passkey, start=None, end=Non
     ids_s = set(ids)
     
     if start and end:
+        end_dt = datetime.strptime(end, "%Y-%m-%d") + timedelta(days=1)
+        end = end_dt.strftime("%Y-%m-%d")
         url = build_saturn_url(startdate=start, enddate=end)
     else:   
         # THIS SHOULD NEVER HAPPEN AND IS A BAD IMPLEMENTATION 
