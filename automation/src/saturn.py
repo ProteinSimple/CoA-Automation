@@ -73,7 +73,8 @@ def build_saturn_url(startdate=None, enddate=None, **extra_params):
     return BASE_URL + "?" + urlencode(params)
 
 def saturn_get_cartridge_data_range(start, end, username, passkey):
-    
+    end_dt = datetime.strptime(end, "%Y-%m-%d") + timedelta(days=1)
+    end = end_dt.strftime("%Y-%m-%d")
     url = build_saturn_url(startdate=start, enddate=end)
     response = requests.get(url, auth=HTTPBasicAuth(username, passkey))
 

@@ -2,7 +2,7 @@
 import { Logo } from "./components";
 import { useState } from "react";
 import { BottomText, CartridgeList, TopContainer, ErrorPopUpContainer, SettingsContainer } from "./containers";
-import { CartridgeProvider, DateProvider, PopUpProvider } from "./contexts";
+import { CartridgeProvider, ControlProvider, DateProvider, PopUpProvider } from "./contexts";
 import Modal  from "react-modal"
 import "./App.css";
 
@@ -17,6 +17,7 @@ function App() {
   return (
     <CartridgeProvider>
     <PopUpProvider>
+    <ControlProvider>
       <main className="container">
         <ErrorPopUpContainer/>
         <SettingsContainer />
@@ -27,6 +28,7 @@ function App() {
         </DateProvider>
         <BottomText/>
       </main>
+    </ControlProvider>
     </PopUpProvider>
     </CartridgeProvider>
   );

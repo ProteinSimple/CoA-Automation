@@ -11,7 +11,10 @@ export const pythonFetchRange = async (startDate: Date, endDate: Date) => {
 }
 
 export const pythonCheck = async () => {
-  return await invoke("python_check", {})
+  console.log("pythonCheck: about to invoke");
+  const result = await invoke("python_check");
+  console.log("pythonCheck: invoke returned:", result, typeof result);
+  return result;
 }
 
 export const pythonAuth = async (user: string, pass: string) => {
