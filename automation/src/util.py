@@ -8,7 +8,9 @@ from typing import Self
 from keyToken import load_token, add_token
 from saturn import saturn_check_connection
 import tempfile
+from log import get_logger
 
+logger = get_logger(__name__)
 MONTH_MAP = { 1: "JAN", 2: "FEB", 3: "MAR", 4: "APR",
               5: "MAY", 6: "JUN", 7: "JUL", 8: "AUG",
               9: "SEP", 10: "OCT", 11: "NOV", 12: "DEC" 
@@ -165,16 +167,19 @@ def fill_CoA(config: dict, info: dict, trav_data: dict, model: str, write_path: 
     doc = fitz.open(template_path)
     fields = info['fields']
     dates = set(info['dates'])
+    logger.info("Filling the CoA fields. saving the result in %s", save_path)
     for page in doc:    
         for name, key in fields.items():
             for field in page.widgets():
                 if (field.field_name == name):
+                    logger.debug("Field is being filled: %s --> %s", name, key)
                     fn: str = field.field_name
                     val = exec_c(key[2:]) if key.startswith("@!") else trav_data[key]
                     if fn in dates: 
                         parts = val.split('/')
                         field.field_value = parts[1] + MONTH_MAP[int(parts[0])] + parts[2]
                     else:
+                        logger.debug("%s was detected as date!", name)
                         field.field_value = str(val)
                 field.text_fontsize =  config['fontsize']
                 field.text_font = config['font']
@@ -227,10 +232,12 @@ def output_CoA(config, info, input_path, dest_filename):
     """ # TODO: Update this
     for dir in config['pdf_output_dir']:
         dir_p = Path(dir)
-        if (not os.path.exists(dir_p)):
-            os.makedirs(dir_p)
+        logger.info("Outputing to: %s", dir_p)
+        os.makedirs(dir_p, exist_ok=True)
+
         try:
             dest_path = (dir_p / dest_filename).with_suffix('.pdf')
+            logger.info("Encrypting following")
             encrypt_pdf_file(input_path, dest_path, config['file_perm'])
             yield str(dest_path.absolute())
         except Exception as e:
@@ -253,6 +260,7 @@ def output_CoA_mapping(config, mapping: pd.DataFrame, mapping_f_name = "mapping.
     output_paths = []
     for dir in config['mapping_output_dir']:
         dir_path = Path(dir)
+        logger.debug("Outputting mapping to %s", dir_path)
         dir_path.mkdir(parents=True, exist_ok=True)
         write_path = (dir_path / mapping_f_name)
         try:
@@ -301,12 +309,18 @@ def load_config(args):
 
     
 def auth(args):
+    logger.info("trying to authenticate to saturn API")
     if hasattr(args, "user") and hasattr(args, "passkey") and args.user and args.passkey:
+        logger.debug("New credentials given for saturn authentication: %s %s", args.user, args.passkey)
         add_token(args.user, args.passkey)
+    else:
+        logger.debug("Creadentials not given in the arguments. trying to load from cache")
     user, passkey = None, None
     try:
+        logger.debug("Loading user/passkey to auth into staurn")
         user, passkey = load_token()
         assert saturn_check_connection(user, passkey)
+        logger.info("Saturn auth was succesful :) !")
         return user, passkey
     except Exception as e:
         raise Exception("Couldn't load saturn API key correctly: " + str(e))

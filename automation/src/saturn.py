@@ -3,7 +3,9 @@ from requests.auth import HTTPBasicAuth
 from urllib.parse import urlencode
 from datetime import datetime, timedelta
 import pandas as pd
+from log import get_logger
 
+logger = get_logger(__name__)
 BASE_URL = "https://saturn.proteinsimple.com/api/1/cartridges/"
 
 
@@ -174,7 +176,9 @@ def saturn_check_connection(username, passkey) -> bool:
     end_dt = datetime.today()
     enddate = end_dt.strftime("%Y-%m-%d")
     url = build_saturn_url(startdate=enddate, enddate=enddate)
+    logger.debug("Sending an basic request to check connection: %s", url)
     response = requests.get(url, auth=HTTPBasicAuth(username, passkey))
+    logger.debug(str(response))
     if response.status_code == 200:
         return True
     else:
