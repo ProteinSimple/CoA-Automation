@@ -1,4 +1,5 @@
 import './SettingPathListItem.css';
+import { Trash2 } from 'lucide-react';
 
 interface SettingPathProp {
   path: string,
@@ -12,7 +13,7 @@ function SettingPathListItem( { path, deleteAction } : SettingPathProp) {
         {path}
       </p>
       <button onClick={() => deleteAction(path)}>
-        delete
+        <Trash2 size="1em"/>
       </button>
     </div>
   );

@@ -69,7 +69,7 @@ function TopContainer({ setFilter }: TopContainerProps) {
                placeholder="Enter a name..."
                onChange={(e) => setName(e.target.value)} />
           
-        <button type="submit" disabled={isGenerating}>
+        <button type="submit" disabled={isGenerating || selectedCartridgeList.size == 0}>
             {isGenerating? (
               <DotLoader color="white" loading={isGenerating} size={20} />
              ) : (
