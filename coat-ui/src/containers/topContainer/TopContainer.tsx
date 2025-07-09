@@ -18,6 +18,7 @@ function TopContainer({ setFilter }: TopContainerProps) {
   const { selectedCartridgeList } = useCartridge();
   const [ isGenerating, setIsGenerating ] = useState(false)
   const { setError } = usePopUp()
+  const [ name, setName ] = useState<string>("")
   
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -25,7 +26,7 @@ function TopContainer({ setFilter }: TopContainerProps) {
     setIsGenerating(true);
 
     try {
-      const outputed_files = await pythonCoa([...selectedCartridgeList]);
+      const outputed_files = await pythonCoa([...selectedCartridgeList], name);
       let fileList: string[] = [];
 
       if (typeof outputed_files === "string") {
@@ -64,7 +65,9 @@ function TopContainer({ setFilter }: TopContainerProps) {
         <input className="top-field" id="SN-search"
                placeholder="Search... 🔍"
                onChange={(e) => setFilter(e.target.value)}/>
-        <input className="top-field" id="greet-input" placeholder="Enter a name..." />
+        <input className="top-field" id="greet-input"
+               placeholder="Enter a name..."
+               onChange={(e) => setName(e.target.value)} />
           
         <button type="submit" disabled={isGenerating}>
             {isGenerating? (
