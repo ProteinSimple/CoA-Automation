@@ -37,13 +37,7 @@ export const ControlProvider = ({ children }: ControlProviderProps) => {
         setAuthError(null)
 
         try {
-            console.log("About to call pythonCheck()...")
             let result = await pythonCheck()
-            console.log("pythonCheck() returned:", result)
-            console.log("Type of result:", typeof result)
-            console.log("Result === true:", result === true)
-            console.log("Result == true:", result == true)
-            console.log("Boolean(result):", Boolean(result))
             
             while (!result) {
                 const user = prompt("Enter username:", "")
