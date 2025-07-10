@@ -82,7 +82,6 @@ function SettingsContainer() {
       try {
         const res = await pythonConfigList();
         const config = JSON.parse(res as string) as { [key: string]: any };
-        console.log(config)
         setPdfPaths(config["pdf_output_dir"]);
         setMappingPaths(config["mapping_output_dir"]);
       } catch (err) {

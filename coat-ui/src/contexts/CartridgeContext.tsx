@@ -4,6 +4,7 @@ interface CartridgeContextType {
   selectedCartridgeList: Set<string>;
   addCartridge: (id: string) => void;
   removeCartridge: (id: string) => void;
+  clearSelected: () => void
 }
 
 const CartridgeContext = createContext<CartridgeContextType | undefined>(undefined)
@@ -33,8 +34,14 @@ export const CartridgeProvider = ({ children }: CartridgeProviderProps) => {
     setCartridgeList(s)
   }
 
+  const  clearSelected = () => {
+    const s = new Set(cartridgeList)
+    s.clear()
+    setCartridgeList(s)
+  }
+
   return (
-    <CartridgeContext.Provider value={{ selectedCartridgeList: cartridgeList, addCartridge, removeCartridge }}>
+    <CartridgeContext.Provider value={{ selectedCartridgeList: cartridgeList, addCartridge, removeCartridge, clearSelected }}>
       {children}
     </CartridgeContext.Provider>
   );
