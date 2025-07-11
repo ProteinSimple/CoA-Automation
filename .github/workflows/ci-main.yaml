@@ -1,0 +1,90 @@
+name: Main Branch CI
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  build-python:
+    runs-on: windows-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        working-directory: ./automation
+        run: |
+          make install
+      
+      - name: Get sample build
+        working-directory: ./automation
+        run: |
+          make build
+
+  test-python:
+    needs: build-python
+    runs-on: windows-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies and build
+        working-directory: ./automation
+        run: |
+          make install
+      
+      - name: run tests
+        working-directory: ./automation
+        run: |
+          make test
+
+
+  build-ui:
+    needs: [test-python, build-python]
+    runs-on: windows-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+      
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        working-directory: ./automation
+        run: |
+          make install
+      
+      - name: Build using PyInstaller
+        shell: pwsh
+        run: ./buildPy.ps1
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+
+      - name: Install UI dependencies
+        run: |
+          cd coat-ui
+          npm install
+
+      - name: Build Tauri App
+        run: |
+          cd coat-ui
+          npm run tauri build
