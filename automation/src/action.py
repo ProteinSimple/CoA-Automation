@@ -1,8 +1,16 @@
-from util import fill_CoA, output_CoA_mapping, get_filename, get_mapping_name, Pathcr, generate_field_map_from_pdf,auth, output_CoA
-from saturn import saturn_get_cartridge_data_past , saturn_get_cartridge_data_bundle, saturn_get_cartridge_data_range
+from util import fill_CoA, output_CoA_mapping, \
+    get_filename, get_mapping_name, Pathcr, \
+    generate_field_map_from_pdf, auth, output_CoA
+from saturn import saturn_get_cartridge_data_past, \
+     saturn_get_cartridge_data_bundle, saturn_get_cartridge_data_range
 from checks import run_checks
 from pathlib import Path
-import json, yaml, shutil, os, traceback, sys
+import json
+import yaml
+import shutil
+import os
+import traceback
+import sys
 from enum import Enum
 import pandas as pd
 from log import get_logger
