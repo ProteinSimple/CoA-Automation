@@ -1,8 +1,10 @@
+from datetime import datetime, timedelta
+from urllib.parse import urlencode
+
+import pandas as pd
 import requests
 from requests.auth import HTTPBasicAuth
-from urllib.parse import urlencode
-from datetime import datetime, timedelta
-import pandas as pd
+
 from log import get_logger
 
 logger = get_logger(__name__)
@@ -11,15 +13,15 @@ BASE_URL = "https://saturn.proteinsimple.com/api/1/cartridges/"
 
 class CartridgeData:
     code_map: dict[int, str] = {
-        1: 'cIEF 200',
-        2: 'cIEF 200',
-        8: 'SDSTurbo',
-        6: 'SDS+',
-        5: 'Flex',
-    } # TODO: change this to accomodate for future additions!
-    
-    def __init__(self, sat_data: pd.DataFrame =None):
-        self.id : int = None
+        1: "cIEF 200",
+        2: "cIEF 200",
+        8: "SDSTurbo",
+        6: "SDS+",
+        5: "Flex",
+    }  # TODO: change this to accomodate for future additions!
+
+    def __init__(self, sat_data: pd.DataFrame = None):
+        self.id: int = None
         self.build_date: str = None
         self.build_time: str = None
         self.exp_date: str = None
@@ -30,9 +32,20 @@ class CartridgeData:
         if sat_data is not None:
             d = sat_data
             self.id = int(d["_id"])
-            self.build_date = f"{d['b_date'].month}/{d['b_date'].day}/{d['b_date'].year}"
-            self.build_time = f"{d['b_date'].minute}:{d['b_date'].hour}"
-            self.exp_date = f"{d['exp_date'].month}/{d['exp_date'].day}/{d['exp_date'].year}"
+            self.build_date = "%s/%s/%s" % (
+                d["b_date"].month,
+                d["b_date"].day,
+                d["b_date"].year,
+            )
+            self.build_time = "%s:%s" % (
+                d["b_date"].minute,
+                d["b_date"].hour,
+            )
+            self.exp_date = "%s/%s/%s" % (
+                d["exp_date"].month,
+                d["exp_date"].day,
+                d["exp_date"].year,
+            )
             self.class_name = d["_cls"]
             self.class_code = int(d["cartridge_type"])
             if self.class_code in [1, 2, 5]:
@@ -41,23 +54,20 @@ class CartridgeData:
                 self.batch_num = d["size_insert_lot"]
             if self.class_code == 8:
                 self.batch_num = d["pn702_0013_lot"]
-            
 
     def to_dict(self):
         return {
-            "id" : self.id,
+            "id": self.id,
             "build_date": self.build_date,
             "build_time": self.build_time,
             "exp_date": self.exp_date,
             "class_name": self.class_name,
             "class_code": self.class_code,
-            "batch_num": self.batch_num
+            "batch_num": self.batch_num,
         }
-    
-    
+
     def model_name(self) -> str:
         return CartridgeData.code_map[self.class_code]
-        
 
 
 def build_saturn_url(startdate=None, enddate=None, **extra_params):
@@ -72,6 +82,7 @@ def build_saturn_url(startdate=None, enddate=None, **extra_params):
 
     return BASE_URL + "?" + urlencode(params)
 
+
 def saturn_get_cartridge_data_range(start, end, username, passkey):
     end_dt = datetime.strptime(end, "%Y-%m-%d") + timedelta(days=1)
     end = end_dt.strftime("%Y-%m-%d")
@@ -84,15 +95,16 @@ def saturn_get_cartridge_data_range(start, end, username, passkey):
         for _, d in data.iloc[::-1].iterrows():
             val = {
                 "id": d["_id"],
-                "b_date": datetime.fromtimestamp(int(d["build_completion_date"]["$date"]) / 1000).strftime("%Y-%m-%d %H:%M:%S"),
-                "type": d["cartridge_type"]
+                "b_date": datetime.fromtimestamp(
+                    int(d["build_completion_date"]["$date"]) / 1000
+                ).strftime("%Y-%m-%d %H:%M:%S"),
+                "type": d["cartridge_type"],
             }
             yield val
     else:
         print(f"Request failed with status code {response.status_code}")
         print(response.text)
         return None
-
 
 
 def saturn_get_cartridge_data_past(length, limit, username, passkey):
@@ -103,7 +115,7 @@ def saturn_get_cartridge_data_past(length, limit, username, passkey):
     enddate = end_dt.strftime("%Y-%m-%d")
     url = build_saturn_url(startdate=startdate, enddate=enddate)
     response = requests.get(url, auth=HTTPBasicAuth(username, passkey))
-    
+
     if response.status_code == 200:
         data = pd.DataFrame(response.json())
         data.to_csv("out.csv")
@@ -112,20 +124,25 @@ def saturn_get_cartridge_data_past(length, limit, username, passkey):
         for _, d in data.iloc[::-1].head(limit).iterrows():
             val = {
                 "id": d["_id"],
-                "b_date": datetime.fromtimestamp(int(d["build_completion_date"]["$date"]) / 1000).strftime("%Y-%m-%d %H:%M:%S"),
-                "type": d["cartridge_type"]
+                "b_date": datetime.fromtimestamp(
+                    int(d["build_completion_date"]["$date"]) / 1000
+                ).strftime("%Y-%m-%d %H:%M:%S"),
+                "type": d["cartridge_type"],
             }
             yield val
-            
+
     else:
         print(f"Request failed with status code {response.status_code}")
         print(response.text)
         return None
 
+
 @DeprecationWarning
 def saturn_get_cartridge_data(id, username, passkey) -> CartridgeData | None:
     end_dt = datetime.today() + timedelta(days=1)
-    start_dt = end_dt - timedelta(days=5) # TODO: change this to search cartridges form previous days as well!
+    start_dt = end_dt - timedelta(
+        days=5
+    )  # TODO: change this to search cartridges form previous days as well!
 
     startdate = start_dt.strftime("%Y-%m-%d")
     enddate = end_dt.strftime("%Y-%m-%d")
@@ -134,9 +151,15 @@ def saturn_get_cartridge_data(id, username, passkey) -> CartridgeData | None:
 
     if response.status_code == 200:
         df = pd.DataFrame(response.json())
-        df["b_date_ts"] = df["build_completion_date"].apply(lambda x: x["$date"])
+        df["b_date_ts"] = df["build_completion_date"].apply(
+            lambda x: x["$date"]
+        )
         df["b_date"] = pd.to_datetime(df["b_date_ts"], unit="ms")
-        df["exp_date"] = (df["b_date"] + pd.DateOffset(months=12)).dt.to_period("M").dt.to_timestamp("M")
+        df["exp_date"] = (
+            (df["b_date"] + pd.DateOffset(months=12))
+            .dt.to_period("M")
+            .dt.to_timestamp("M")
+        )
         df.to_csv("out.csv")
         for _, d in df.iloc[::-1].iterrows():
             if int(d["_id"]) == id:
@@ -146,18 +169,23 @@ def saturn_get_cartridge_data(id, username, passkey) -> CartridgeData | None:
         print(response.text)
         return None
 
-def saturn_get_cartridge_data_bundle(ids, username, passkey, start=None, end=None) -> list[CartridgeData] | None:
+
+def saturn_get_cartridge_data_bundle(
+    ids, username, passkey, start=None, end=None
+) -> list[CartridgeData] | None:
     ids_s = set(ids)
-    
+
     if start and end:
         end_dt = datetime.strptime(end, "%Y-%m-%d") + timedelta(days=1)
         end = end_dt.strftime("%Y-%m-%d")
         url = build_saturn_url(startdate=start, enddate=end)
-    else:   
-        # THIS SHOULD NEVER HAPPEN AND IS A BAD IMPLEMENTATION 
+    else:
+        # THIS SHOULD NEVER HAPPEN AND IS A BAD IMPLEMENTATION
         end_dt = datetime.today() + timedelta(days=1)
-        start_dt = end_dt - timedelta(days=5) # TODO: change this to search cartridges form previous days as well!
-        
+        start_dt = end_dt - timedelta(
+            days=5
+        )  # TODO: change this to search cartridges form previous days as well!
+
         startdate = start_dt.strftime("%Y-%m-%d")
         enddate = end_dt.strftime("%Y-%m-%d")
         url = build_saturn_url(startdate=startdate, enddate=enddate)
@@ -166,9 +194,15 @@ def saturn_get_cartridge_data_bundle(ids, username, passkey, start=None, end=Non
 
     if response.status_code == 200:
         df = pd.DataFrame(response.json())
-        df["b_date_ts"] = df["build_completion_date"].apply(lambda x: x["$date"])
+        df["b_date_ts"] = df["build_completion_date"].apply(
+            lambda x: x["$date"]
+        )
         df["b_date"] = pd.to_datetime(df["b_date_ts"], unit="ms")
-        df["exp_date"] = (df["b_date"] + pd.DateOffset(months=12)).dt.to_period("M").dt.to_timestamp("M")
+        df["exp_date"] = (
+            (df["b_date"] + pd.DateOffset(months=12))
+            .dt.to_period("M")
+            .dt.to_timestamp("M")
+        )
         df.to_csv("out.csv")
         retVal = []
         for _, d in df.iloc[::-1].iterrows():

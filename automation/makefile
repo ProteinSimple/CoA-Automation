@@ -17,7 +17,7 @@ install:
 
 lint:
 	@echo "Linting with flake8..."
-	flake8 $(SRC) $(TESTS)
+	flake8 $(SRC) $(SRC)/$(TESTS)
 
 test:
 	@echo "Running unit tests"

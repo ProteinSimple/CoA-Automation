@@ -32,7 +32,6 @@ jobs:
           make build
 
   test-python:
-    needs: build-python
     runs-on: windows-latest
 
     steps:
@@ -53,10 +52,33 @@ jobs:
         working-directory: ./automation
         run: |
           make test
+  
+  lint-python:
+    runs-on: windows-latest
 
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install linting tool
+        working-directory: ./automation
+        run: |
+          pip install --upgrade pip
+          pip install flake8
+          
+      
+      - name: run lint
+        working-directory: ./automation
+        run: |
+          make lint
 
   build-ui:
-    needs: [test-python, build-python]
+    needs: [test-python, build-python, lint-python]
     runs-on: windows-latest
 
     steps:
