@@ -68,8 +68,8 @@ jobs:
       - name: Install linting tool
         working-directory: ./automation
         run: |
-          $(PYTHON) -m pip install --upgrade pip
-          $(PYTHON) -m pip install flake8
+          pip install --upgrade pip
+          pip install flake8
           
       
       - name: run lint
