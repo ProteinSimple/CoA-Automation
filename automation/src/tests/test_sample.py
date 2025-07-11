@@ -1,4 +1,5 @@
 import unittest
+
 import util
 
 
@@ -9,6 +10,6 @@ class TestSum(unittest.TestCase):
 
     def test_util(self):
         self.assertEqual(util.exec_c("TEST"), "Filled")
-    
+
     def test_wrong(self):
         self.assertTrue(False)
