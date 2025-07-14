@@ -14,15 +14,13 @@ function DropdownFilter() {
     { label: '8', value: 8 }
   ])
   const [selectedOptions, setSelectedOptions] = useState<number[]>([]);
-  const { selectedTypes, setTypes, validTypes, colorMap } = useFilter()
+  const { setTypes, validTypes, colorMap } = useFilter()
   useEffect(() => {
     setTypes(selectedOptions)
-    console.log(selectedTypes)
   }, [selectedOptions])
 
   useEffect(() => {
     setOptions(validTypes.map(v => ({ label: String(v), value: v})))
-    console.log(validTypes)
   }, [validTypes]);
 
   const optionTemplate = (option: { label: string, value: number }) => {

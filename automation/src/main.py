@@ -1,20 +1,23 @@
-from cli import get_args
-from action import dispatch_action
-from util import load_config
-import sys, os
-from log import get_logger
 import logging
+import os
+import sys
 from datetime import datetime
 
+from action import dispatch_action
+from cli import get_args
+from log import get_logger
+from util import load_config
 
 
 def setup(args):
     log_dir = os.path.expanduser("~/.coat/logfile")
     os.makedirs(log_dir, exist_ok=True)
     log_path = os.path.join(log_dir, "run.log")
-    
+
     handle = logging.FileHandler(log_path)
-    handle.setFormatter(logging.Formatter('[%(levelname)s] %(name)s - %(message)s'))
+    handle.setFormatter(
+        logging.Formatter("[%(levelname)s] %(name)s - %(message)s")
+    )
     root = logging.getLogger()
     root.handlers = []  # ✅ Clear existing handlers
     root.addHandler(handle)
@@ -25,6 +28,7 @@ def setup(args):
     if not os.path.exists(args.output):
         os.makedirs(os.path.dirname(args.output), exist_ok=True)
     sys.stdout = open(args.output, "w")
+
 
 def main():
     # Arg Init
@@ -42,5 +46,6 @@ def main():
     logger.info("Program finished at %s", datetime.now().isoformat())
     logger.info("==============================================")
 
-if __name__ == "__main__":    
+
+if __name__ == "__main__":
     main()
