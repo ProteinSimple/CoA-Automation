@@ -1,10 +1,9 @@
 from datetime import datetime, timedelta
 from urllib.parse import urlencode
-
 import pandas as pd
 import requests
 from requests.auth import HTTPBasicAuth
-
+from keyToken import add_token, load_token
 from log import get_logger
 
 logger = get_logger(__name__)
@@ -18,7 +17,7 @@ class CartridgeData:
         8: "SDSTurbo",
         6: "SDS+",
         5: "Flex",
-    }  # TODO: change this to accomodate for future additions!
+    }
 
     def __init__(self, sat_data: pd.DataFrame = None):
         self.id: int = None
@@ -83,7 +82,7 @@ def build_saturn_url(startdate=None, enddate=None, **extra_params):
     return BASE_URL + "?" + urlencode(params)
 
 
-def saturn_get_cartridge_data_range(start, end, username, passkey):
+def saturn_get(start, end, username, passkey):
     end_dt = datetime.strptime(end, "%Y-%m-%d") + timedelta(days=1)
     end = end_dt.strftime("%Y-%m-%d")
     url = build_saturn_url(startdate=start, enddate=end)
@@ -107,70 +106,7 @@ def saturn_get_cartridge_data_range(start, end, username, passkey):
         return None
 
 
-def saturn_get_cartridge_data_past(length, limit, username, passkey):
-    end_dt = datetime.today() + timedelta(days=1)
-    start_dt = end_dt - timedelta(days=length)
-
-    startdate = start_dt.strftime("%Y-%m-%d")
-    enddate = end_dt.strftime("%Y-%m-%d")
-    url = build_saturn_url(startdate=startdate, enddate=enddate)
-    response = requests.get(url, auth=HTTPBasicAuth(username, passkey))
-
-    if response.status_code == 200:
-        data = pd.DataFrame(response.json())
-        data.to_csv("out.csv")
-        if limit == -1:
-            limit = len(data)
-        for _, d in data.iloc[::-1].head(limit).iterrows():
-            val = {
-                "id": d["_id"],
-                "b_date": datetime.fromtimestamp(
-                    int(d["build_completion_date"]["$date"]) / 1000
-                ).strftime("%Y-%m-%d %H:%M:%S"),
-                "type": d["cartridge_type"],
-            }
-            yield val
-
-    else:
-        print(f"Request failed with status code {response.status_code}")
-        print(response.text)
-        return None
-
-
-@DeprecationWarning
-def saturn_get_cartridge_data(id, username, passkey) -> CartridgeData | None:
-    end_dt = datetime.today() + timedelta(days=1)
-    start_dt = end_dt - timedelta(
-        days=5
-    )  # TODO: change this to search cartridges form previous days as well!
-
-    startdate = start_dt.strftime("%Y-%m-%d")
-    enddate = end_dt.strftime("%Y-%m-%d")
-    url = build_saturn_url(startdate=startdate, enddate=enddate)
-    response = requests.get(url, auth=HTTPBasicAuth(username, passkey))
-
-    if response.status_code == 200:
-        df = pd.DataFrame(response.json())
-        df["b_date_ts"] = df["build_completion_date"].apply(
-            lambda x: x["$date"]
-        )
-        df["b_date"] = pd.to_datetime(df["b_date_ts"], unit="ms")
-        df["exp_date"] = (
-            (df["b_date"] + pd.DateOffset(months=12))
-            .dt.to_period("M")
-            .dt.to_timestamp("M")
-        )
-        df.to_csv("out.csv")
-        for _, d in df.iloc[::-1].iterrows():
-            if int(d["_id"]) == id:
-                return CartridgeData(d)
-    else:
-        print(f"Request failed with status code {response.status_code}")
-        print(response.text)
-        return None
-
-
-def saturn_get_cartridge_data_bundle(
+def saturn_get_bundle(
     ids, username, passkey, start=None, end=None
 ) -> list[CartridgeData] | None:
     ids_s = set(ids)
@@ -215,7 +151,8 @@ def saturn_get_cartridge_data_bundle(
         return None
 
 
-def saturn_check_connection(username, passkey) -> bool:
+def saturn_check(username, passkey) -> bool:
+    # TODO: add comments here ?!
     end_dt = datetime.today()
     enddate = end_dt.strftime("%Y-%m-%d")
     url = build_saturn_url(startdate=enddate, enddate=enddate)
@@ -226,3 +163,34 @@ def saturn_check_connection(username, passkey) -> bool:
         return True
     else:
         return False
+
+
+
+def auth(args):
+    logger.info("trying to authenticate to saturn API")
+    if (
+        hasattr(args, "user")
+        and hasattr(args, "passkey")
+        and args.user
+        and args.passkey
+    ):
+        logger.debug(
+            "New credentials given for saturn authentication: %s %s",
+            args.user,
+            args.passkey,
+        )
+        add_token(args.user, args.passkey)
+    else:
+        logger.debug(
+            "Creadentials not given in the arguments." +
+            " trying to load from cache"
+        )
+    user, passkey = None, None
+    try:
+        logger.debug("Loading user/passkey to auth into staurn")
+        user, passkey = load_token()
+        assert saturn_check(user, passkey)
+        logger.info("Saturn auth was succesful :) !")
+        return user, passkey
+    except Exception as e:
+        raise Exception("Couldn't load saturn API key correctly: " + str(e))

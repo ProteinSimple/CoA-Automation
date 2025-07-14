@@ -11,12 +11,13 @@ import yaml
 
 from checks import run_checks
 from log import get_logger
-from saturn import (saturn_get_cartridge_data_bundle,
-                    saturn_get_cartridge_data_past,
-                    saturn_get_cartridge_data_range)
-from util import (Pathcr, auth, fill_CoA, generate_field_map_from_pdf,
-                  get_filename, get_mapping_name, output_CoA,
-                  output_CoA_mapping)
+from saturn import (saturn_get_bundle,
+                    saturn_get)
+from util import (Pathcr, auth, fill_template, generate_field_map_from_pdf,
+                  get_coa_filename, get_mapping_name, format_date,
+                  output_CoA_mapping, encrypt_pdf, exec_c)
+
+from pypdf import PdfReader
 
 
 class CoatActions(Enum):
@@ -95,10 +96,10 @@ def action_coa(args, config):
         )
         if "models" not in config:
             raise KeyError("Missing 'models' section in config")
+        
         user, passkey = auth(args)
-        logger.debug("User: %s, passkey: %s", user, passkey)
         logger.info("Fetching data for the given cartridges")
-        datas = saturn_get_cartridge_data_bundle(
+        datas = saturn_get_bundle(
             args.ids, user, passkey, args.start, args.end
         )
         pdf_outputs = []
@@ -108,13 +109,11 @@ def action_coa(args, config):
         logger.info(
             "Data gathered sucessfully, now creating CoA"
         )
-        for _, data in enumerate(datas):
+        for data in datas:
             logger.info(
                 "creating CoA for following cartridge: %s",
                 str(data.to_dict())
             )
-            id = data.id
-            model = data.model_name()
             if model not in config["models"]:
                 logger.error(
                     "Given model configuration is not setup. use 'init'\
@@ -124,22 +123,56 @@ def action_coa(args, config):
                     "Given model configuration is not setup. use 'init'\
                       action to setup the model"
                 )
+            
             logger.debug("loading profile for cartridge ")
             profile_path = (
                 Pathcr(config["model_dir"]) / model / config["profile"]
             ).as_path()
             profile = yaml.safe_load(open(profile_path))
-            filename = get_filename(id, profile)
+            filename = get_coa_filename(id, profile)
+            dates = set(profile["dates"])
+            fields = profile["fields"]
+            id = data.id
+            model = data.model_name()
+            data_d = data.to_dict()
+
             # CoA Creation
             logger.info(
                 "filling CoA template. template path: %s",
                 profile["template"]
             )
-            temp_file = fill_CoA(config, profile, data.to_dict(), model)
-            logger.info("Template filled. now outputing files")
-            files = output_CoA(config, profile, temp_file, filename)
-            pdf_outputs += files
-            os.remove(temp_file)
+            model_dir_path = Path(config["model_dir"]) / Path(model)
+            template_path = (Pathcr(model_dir_path) / profile["template"]).as_path()
+            reader = PdfReader(template_path)
+            
+            # Data used to fill the values of the template file.
+            fill_data = {}
+            for rf in reader.get_form_text_fields():
+                key = fields[rf]
+                val: str
+                if (key.startswith("@!")):
+                    val = exec_c(key[2:])
+                else:
+                    val = data_d[key]
+                
+                if rf in dates:
+                    val = format_date(val)
+                fill_data[rf] = val
+
+            res = fill_template(reader, fill_data, config["fontsize"])
+            encrypted = encrypt_pdf(res, config["file_perm"])
+            logger.info("Template filled and Encrypted. now outputing files")
+
+            # Output Coa Files
+            for dir in config["pdf_output_dir"]:
+                dir_p = Path(dir)
+                logger.info("Outputing to: %s", dir_p)
+                os.makedirs(dir_p, exist_ok=True)
+                dest_path = (dir_p / filename).with_suffix(".pdf").absolute()
+                pdf_outputs.append(str(dest_path))
+                with open(dest_path, "wb") as f:
+                    encrypted.write(f)
+            
             # Adding data to the mapping CSV
             logger.debug("Adding mapping data!")
             part_number = profile["PN"]
@@ -158,7 +191,7 @@ def action_coa(args, config):
                 }
             )  # TODO: make this robust
 
-        logger.info("Creating mapping file")
+        logger.info("Coa creation done. Now creating mapping files!")
         csv_files = []
         for model, mapping_rows in mapping_set.items():
             logger.info("Creating mapping for %s model", model)
@@ -187,27 +220,34 @@ def action_coa(args, config):
 
 
 def action_init(args, config):
+    raise NotImplementedError(" INIT ACTION IS UNDER DEVELOPMENT")
     logger.info("INIT action started for model: %s", args.model)
     models = config.setdefault("models", [])
     model = args.model
     run_mode = args.rm
     template_file = Path(args.template)
     part_number = args.part_number
-
     dir_path = Pathcr(Path(config["model_dir"]) / model).as_path()
     if os.path.exists(dir_path) and os.path.isfile(dir_path):
         logger.debug("Removing existing file at model dir path: %s", dir_path)
         os.remove(dir_path)
     dir_path.mkdir(parents=True, exist_ok=True)
 
+        
     try:
         shutil.copy(template_file, dir_path)
         logger.info("Template copied to model directory.")
-    except Exception as e:
-        logger.warning("Failed to copy template: %s", str(e))
-    try:
+        
         logger.debug("Generating field map from PDF")
         profile = {"template": template_file.name}
+        reader = PdfReader(template_file)
+        fill_data = {}
+        for rf in reader.get_form_text_fields():
+            fill_data[rf] = rf
+
+        
+
+        res = fill_template(reader, fill_data, config["fontsize"])
         profile["fields"], profile["dates"] = generate_field_map_from_pdf(
             config, template_file, model
         )
@@ -283,35 +323,8 @@ def action_config(args, config):
         traceback.print_exc(file=sys.stdout)
 
 
+
 def action_fetch(args, config):
-    logger.info("FETCH action started in mode: %s", args.fetch_mode)
-    if args.fetch_mode == "range":
-        return action_fetch_range(args, config)
-
-    try:
-        user, passkey = auth(args)
-        logger.info(
-            "Fetching Ids with the following limit/length: %d/%d",
-            args.length,
-            args.limit,
-        )
-        ids = list(
-            saturn_get_cartridge_data_past(
-                args.length, args.limit, user, passkey
-            )
-        )
-        logger.info("Fetched %d cartridge IDs", len(ids))
-        print(1)
-        print(json.dumps(ids))
-    except Exception as e:
-        print(0)
-        logger.error("Error in FETCH (past) action: %s", str(e))
-        logger.error("Traceback:\n%s", traceback.format_exc())
-        sys.stdout.flush()
-        traceback.print_exc(file=sys.stdout)
-
-
-def action_fetch_range(args, config):
     logger.info(
         "FETCH action started in RANGE mode: %s -> %s",
         args.start,
@@ -321,7 +334,7 @@ def action_fetch_range(args, config):
         user, passkey = auth(args)
         logger.info("Fetching Ids from saturn in the range.")
         ids = list(
-            saturn_get_cartridge_data_range(args.start, args.end,
+            saturn_get(args.start, args.end,
                                             user, passkey)
         )
         logger.info("Fetched %d cartridge IDs", len(ids))

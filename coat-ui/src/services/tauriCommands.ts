@@ -7,7 +7,7 @@ export const pythonTestCom = async () => {
 export const pythonFetchRange = async (startDate: Date, endDate: Date) => {
   let start = startDate.toISOString().split('T')[0]
   let end = endDate.toISOString().split('T')[0]
-  return await invoke("python_call", { args: ["fetch", "range", start,  end]})
+  return await invoke("python_call", { args: ["fetch" , start,  end]})
 }
 
 export const pythonCheck = async () => {
