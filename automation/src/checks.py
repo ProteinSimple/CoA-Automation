@@ -4,7 +4,7 @@ import re
 import pandas as pd
 
 from log import get_logger
-from util import Pathcr
+from util import PathCorrection
 
 """
     The following file contains the checks that are done after the
@@ -71,7 +71,7 @@ def check_columns(**kwargs) -> bool:
     config: dict = kwargs["config"]
     mapping: pd.DataFrame = kwargs["mapping"]
 
-    with open(Pathcr(config["mapping_columns"]).as_path()) as f:
+    with open(PathCorrection(config["mapping_columns"]).as_path()) as f:
         if json.load(f) != sorted(mapping.columns.values):
             return False
 
@@ -93,7 +93,7 @@ def check_prodcode_matching(**kwargs):
 
     config: dict = kwargs["config"]
     mapping: pd.DataFrame = kwargs["mapping"]
-    prod_path = Pathcr(config["prod_code_map"]).as_path()
+    prod_path = PathCorrection(config["prod_code_map"]).as_path()
     prod_code = pd.read_excel(prod_path)
     expected = prod_code[
         prod_code["PartNumber"] == mapping["PartNumber"].values[0]

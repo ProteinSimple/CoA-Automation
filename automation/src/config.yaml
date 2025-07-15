@@ -1,5 +1,4 @@
 prod:
-  default_fields: fields.yaml
   file_perm:
     accessibility: true
     annotate: false
@@ -14,23 +13,19 @@ prod:
   mapping_columns: res/mapping_columns.json
   mapping_dir: res/mappings
   mapping_output_dir:
-  - Z:/Private/arvin.asgharian/mapping
+  - ./output/
   model_dir: res/models
   models:
-    CE-SDS:
-      mapping: coa_mapping_cief_400_template.csv
-      template: 046-317 CofA_Maurice-CE-SDS_Cartridge_090-100_revE.pdf
-    SDS+:
-      mapping: coa_mapping_flex.csv
-      template: Q51-0003_CofA_090-157_Maurice-CE-SDS_PLUS_Cartridge_RevD.pdf
-    cIEF 200:
-      fields: fields.yaml
-      mapping: coa_mapping_template.csv
-      template: 046-329_CofA_Maurice_cIEF_Cartridge_090-101_RevF.pdf
+  - SDS+
+  - SDSTurbo
+  - cIEF 200
+  - CE-SDS
+  - CE-SDS 50
+  - Flex
   pdf_output_dir:
-  - Z:/Private/arvin.asgharian/CoAs
-  - Z:/Private/arvin.asgharian/Coa2
+  - ./output/`
   prod_code_map: res/Western-Biologics Part Number to ProdCode.xlsx
+  profile: profile.yaml
 test:
   file_perm:
     accessibility: true
@@ -56,6 +51,6 @@ test:
   - CE-SDS 50
   - Flex
   pdf_output_dir:
-  - ./output/
+  - ./output/`
   prod_code_map: res/Western-Biologics Part Number to ProdCode.xlsx
   profile: profile.yaml

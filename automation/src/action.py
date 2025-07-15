@@ -5,20 +5,16 @@ import sys
 import traceback
 from enum import Enum
 from pathlib import Path
-
 import pandas as pd
 import yaml
-
 from checks import run_checks
 from log import get_logger
-from saturn import (saturn_get_bundle,
-                    saturn_get)
-from util import (Pathcr, auth, fill_template, generate_field_map_from_pdf,
-                  get_coa_filename, get_mapping_name, format_date,
-                  output_CoA_mapping, encrypt_pdf, exec_c)
-
+from saturn import (saturn_get_bundle, saturn_get,auth)
+from util import (PathCorrection, format_date, encrypt_pdf, save_config,
+                  init_dates, init_fields)
+from coa import (get_coa_filename, fill_template, get_mapping_name,
+                 exec_c)
 from pypdf import PdfReader
-
 
 class CoatActions(Enum):
     COA = (1,)
@@ -105,7 +101,8 @@ def action_coa(args, config):
         pdf_outputs = []
         mapping_rows = []
         mapping_set: dict[str, list] = {}
-        prod_map = pd.read_excel(Pathcr(config["prod_code_map"]).as_path())
+        prod_map = pd.read_excel(PathCorrection(config["prod_code_map"]).as_path())
+
         logger.info(
             "Data gathered sucessfully, now creating CoA"
         )
@@ -126,7 +123,7 @@ def action_coa(args, config):
             
             logger.debug("loading profile for cartridge ")
             profile_path = (
-                Pathcr(config["model_dir"]) / model / config["profile"]
+                PathCorrection(config["model_dir"]) / model / config["profile"]
             ).as_path()
             profile = yaml.safe_load(open(profile_path))
             filename = get_coa_filename(id, profile)
@@ -142,7 +139,7 @@ def action_coa(args, config):
                 profile["template"]
             )
             model_dir_path = Path(config["model_dir"]) / Path(model)
-            template_path = (Pathcr(model_dir_path) / profile["template"]).as_path()
+            template_path = (PathCorrection(model_dir_path) / profile["template"]).as_path()
             reader = PdfReader(template_path)
             
             # Data used to fill the values of the template file.
@@ -196,14 +193,18 @@ def action_coa(args, config):
         for model, mapping_rows in mapping_set.items():
             logger.info("Creating mapping for %s model", model)
             mapping = pd.DataFrame(mapping_rows)
+            mapping_f_name = get_mapping_name(args, model)
             logger.info("Running check on the data")
             run_checks(config=config, data=data, mapping=mapping)
             logger.info("outputting CSV mapping!")
-            csv_files.extend(
-                output_CoA_mapping(config,
-                                   mapping,
-                                   get_mapping_name(args, model))
-            )
+            for dir in config["mapping_output_dir"]:
+                mapping_d_path = Path(dir)
+                logger.debug("Outputing mapping to %s", mapping_d_path)
+                mapping_d_path.mkdir(parents=True, exist_ok=True)
+                write_path = dir_p / mapping_f_name
+                mapping.to_csv(write_path, index=False)
+                csv_files.append(write_path.absolute)
+
         logger.info("COA creation finshed succesfully! ")
         print(1)
         for f in pdf_outputs:
@@ -220,14 +221,18 @@ def action_coa(args, config):
 
 
 def action_init(args, config):
-    raise NotImplementedError(" INIT ACTION IS UNDER DEVELOPMENT")
     logger.info("INIT action started for model: %s", args.model)
     models = config.setdefault("models", [])
     model = args.model
-    run_mode = args.rm
-    template_file = Path(args.template)
+    run_mode = args.run_mode
+    template_path = PathCorrection(args.template).as_path()
     part_number = args.part_number
-    dir_path = Pathcr(Path(config["model_dir"]) / model).as_path()
+    profile = {"template": template_path.name}
+    dir_path = PathCorrection(config["model_dir"]) / model
+    save_path = (PathCorrection(dir_path) / "filled.pdf").as_path()
+    
+    # Create mapping directory if it doesn't exist
+    dir_path = PathCorrection(Path(config["model_dir"]) / model).as_path()
     if os.path.exists(dir_path) and os.path.isfile(dir_path):
         logger.debug("Removing existing file at model dir path: %s", dir_path)
         os.remove(dir_path)
@@ -235,32 +240,34 @@ def action_init(args, config):
 
         
     try:
-        shutil.copy(template_file, dir_path)
+        if model not in models:
+            models.append(model)
+
+        shutil.copy(template_path, dir_path)
         logger.info("Template copied to model directory.")
         
         logger.debug("Generating field map from PDF")
-        profile = {"template": template_file.name}
-        reader = PdfReader(template_file)
+        reader = PdfReader(template_path)
         fill_data = {}
         for rf in reader.get_form_text_fields():
             fill_data[rf] = rf
 
-        
 
         res = fill_template(reader, fill_data, config["fontsize"])
-        profile["fields"], profile["dates"] = generate_field_map_from_pdf(
-            config, template_file, model
-        )
+        res.write(save_path)
+        profile['fields'] = init_fields()
+        profile['dates'] = init_dates()
         profile["PN"] = part_number
-        if model not in models:
-            models.append(model)
+        # profile["fields"], profile["dates"] = generate_field_map_from_pdf(
+        #     config, template_file, model
+        # )
 
         profile_path = dir_path / config["profile"]
         with open(profile_path, mode="w") as f:
             f.write(profile_comment + "\n")
             yaml.safe_dump(profile, f)
 
-        config_path = Pathcr(args.config).as_path()
+        config_path = PathCorrection(args.config).as_path()
         full_config = yaml.safe_load(open(config_path, mode="r"))
         full_config[run_mode] = config
         with open(config_path, mode="w+") as f:
@@ -280,38 +287,34 @@ def action_init(args, config):
         sys.stdout.flush()
         traceback.print_exc(file=sys.stdout)
 
+def action_config_add(args, config):
+    pdf_paths = args.pdf if args.pdf is not None else []
+    csv_paths = args.csv if args.csv is not None else []
+    logger.debug("Adding paths to config")
+    prev_pdf = config["pdf_output_dir"]
+    prev_csv = config["mapping_output_dir"]
+    config["pdf_output_dir"] = list(set(pdf_paths) | set(prev_pdf))
+    config["mapping_output_dir"] = list(set(csv_paths) | set(prev_csv))
+
+def action_config_del(args, config):
+    pdf_paths = args.pdf if args.pdf is not None else []
+    csv_paths = args.csv if args.csv is not None else []
+    logger.debug("Deleting paths from config")
+    prev_pdf = config["pdf_output_dir"]
+    prev_csv = config["mapping_output_dir"]
+    config["pdf_output_dir"] = list(set(prev_pdf) - set(pdf_paths))
+    config["mapping_output_dir"] = list(set(prev_csv) - set(csv_paths))
 
 def action_config(args, config):
     logger.info("CONFIG action started with mode: %s", args.config_mode)
     try:
-        pdf_paths = args.pdf if args.pdf is not None else []
-        csv_paths = args.csv if args.csv is not None else []
-
         if args.config_mode == "add":
-            logger.debug("Adding paths to config")
-            prev_pdf = config["pdf_output_dir"]
-            prev_csv = config["mapping_output_dir"]
-            config["pdf_output_dir"] = list(set(pdf_paths) | set(prev_pdf))
-            config["mapping_output_dir"] = list(set(csv_paths) | set(prev_csv))
-
+            action_config_add(args, config)
         elif args.config_mode == "delete":
-            logger.debug("Deleting paths from config")
-            prev_pdf = config["pdf_output_dir"]
-            prev_csv = config["mapping_output_dir"]
-            config["pdf_output_dir"] = list(set(prev_pdf) - set(pdf_paths))
-            config["mapping_output_dir"] = list(set(prev_csv) - set(csv_paths))
-
-        config_path = args.config
-        p = Pathcr(config_path).as_path()
-        logger.debug("Writing config file to %s", p)
-
+            action_config_del(args, config)
         if args.config_mode != "list":
-            full_config = yaml.safe_load(open(p, mode="r"))
-            full_config[args.rm] = config
-            with open(p, mode="w+") as f:
-                yaml.safe_dump(full_config, f)
-
-        logger.info("CONFIG updated successfully")
+            save_config(args, config)
+            logger.info("CONFIG updated successfully")
         print(1)
         json.dump(config, sys.stdout)
 

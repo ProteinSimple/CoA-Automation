@@ -76,7 +76,7 @@ def get_args():
     list_config.add_argument("--csv", type=str, nargs="+", help="TODO")
 
     for sub in sub_list:
-        sub.add_argument("--rm", type=str, default="test", help="Run mode")
+        sub.add_argument("--run_mode", type=str, default="test", help="Run mode")
         sub.add_argument(
             "--verbose",
             action="store_true",

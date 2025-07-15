@@ -2,7 +2,7 @@ from pypdf import PdfReader, PdfWriter
 import pandas as pd
 from datetime import datetime
 from pathlib import Path
-from util import Pathcr, get_initial, predict_mapping
+from util import PathCorrection, get_initial, predict_mapping
 from log import get_logger
 import fitz
 
@@ -61,8 +61,8 @@ def generate_field_map_from_pdf(config, template, model):
     """
 
     dir_path = Path(config["model_dir"]) / Path(model)
-    template_path = Pathcr(template).as_path()
-    save_path = (Pathcr(dir_path) / "filled.pdf").as_path()
+    template_path = PathCorrection(template).as_path()
+    save_path = (PathCorrection(dir_path) / "filled.pdf").as_path()
 
     try:
         doc = fitz.open(template_path)

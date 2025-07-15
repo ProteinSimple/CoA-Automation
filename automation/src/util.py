@@ -1,16 +1,15 @@
 import os
 import sys
-from datetime import datetime
+import yaml
 from pathlib import Path
 from typing import Self
-
-import pandas as pd
-import yaml
-from pypdf import PdfReader, PdfWriter
+from pypdf import PdfWriter
 from pypdf.constants import UserAccessPermissions
-
 from log import get_logger
+
 logger = get_logger(__name__)
+
+
 MONTH_MAP = {
     1: "JAN",
     2: "FEB",
@@ -38,17 +37,10 @@ PERM_MAP = {
     "extract": UserAccessPermissions.EXTRACT,
 }
 
-COMMANDS = {
-    "TIME": lambda: datetime.now().strftime("%m/%d/%Y"),
-    "TEST": lambda: "Filled",
-}
-
-
 class UtilError(Exception):
     """Custom exception for PDF processing errors"""
 
-
-class Pathcr:
+class PathCorrection:
     def __init__(self, p):
         self.path = Path(p)
 
@@ -56,7 +48,7 @@ class Pathcr:
         return str(self._get_p())
 
     def __truediv__(self, p2) -> Self:
-        return Pathcr(self.path / str(p2))
+        return PathCorrection(self.path / str(p2))
 
     def _get_p(self):
         if hasattr(sys, "_MEIPASS"):
@@ -71,6 +63,7 @@ class Pathcr:
 
 
 def get_initial(args):
+    "TODO"
     name: str = args.name.lower()
     return "".join([s[0].lower() for s in name.split(" ")])
 
@@ -80,6 +73,7 @@ def predict_mapping(x: str, ys: list[str]):
     return ""
 
 def format_date(given: str):
+    "TODO"
     parts = given.split("/") 
     return parts[1] + MONTH_MAP[int(parts[0])] + parts[2]
 
@@ -106,12 +100,12 @@ def encrypt_pdf(writer: PdfWriter, permissions: dict) -> PdfWriter:
     return writer
 
 
-def load_config(args):
+def load_config(args: dict) -> dict:
     """Load configuration settings from a YAML file based on specified run
        mode.
 
     Args:
-        args: Parsed command line arguments with config and rm attributes
+        args: Parsed command line arguments with config and run_mode attributes
 
     Returns:
         dict: Configuration dictionary for the specified run mode
@@ -123,8 +117,8 @@ def load_config(args):
     """
 
     config_path = args.config
-    run_mode = args.rm
-    path = Pathcr(config_path).as_path()
+    run_mode = args.run_mode
+    path = PathCorrection(config_path).as_path()
     full_config = None
 
     if not path.exists():
@@ -144,3 +138,54 @@ def load_config(args):
         )
     return full_config[run_mode]
 
+def save_config(args, new_config):
+    """
+        TODO
+    """
+
+    config_path = args.config
+    run_mode = args.run_mode
+    path = PathCorrection(config_path).as_path()
+    full_config = None
+
+    if not path.exists():
+        raise FileNotFoundError(f"Config not found: {path}")
+
+    try:
+        with open(path, "r", encoding="utf-8") as f:
+            full_config = yaml.safe_load(f)
+    except yaml.YAMLError as e:
+        raise yaml.YAMLError(f"Failed to parse YAML file: {e}")
+
+    if run_mode not in full_config:
+        available_modes = list(full_config.keys())
+        raise ValueError(
+            f"""Run mode '{run_mode}' not found.
+              Available modes: {available_modes}"""
+        )
+    
+    logger.debug("Writing config file to %s", path)
+    full_config[run_mode] = new_config
+    with open(path, mode="w+") as f:
+        yaml.safe_dump(full_config, f)
+    
+def get_config_path(args):
+    config_path = args.config
+    path = PathCorrection(config_path).as_path()
+
+
+
+        
+def init_fields(fill_data: dict[str, str]):
+    retVal = {}
+    for val in fill_data.keys():
+        retVal[val] = predict_mapping(val, val)
+    return retVal
+
+    
+def init_dates(fill_data: dict[str, str]):
+    retVal = []
+    for f in fill_data.keys():
+        if "date" in f.lower():
+            retVal.append(f)
+    return retVal
