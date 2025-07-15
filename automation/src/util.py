@@ -173,8 +173,6 @@ def get_config_path(args):
     config_path = args.config
     path = PathCorrection(config_path).as_path()
 
-
-
         
 def init_fields(fill_data: dict[str, str]):
     retVal = {}

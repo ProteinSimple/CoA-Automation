@@ -1,6 +1,8 @@
 import unittest
-from tests import TestSum
+from tests import *
+from dotenv import load_dotenv
 
 
 if __name__ == "__main__":
+    load_dotenv()
     unittest.main()

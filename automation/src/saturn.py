@@ -69,7 +69,7 @@ class CartridgeData:
         return CartridgeData.code_map[self.class_code]
 
 
-def build_saturn_url(startdate=None, enddate=None, **extra_params):
+def build_saturn_url(startdate=None, enddate=None, **extra_params) -> str:
     params = {}
 
     if startdate:
@@ -90,7 +90,6 @@ def saturn_get(start, end, username, passkey):
 
     if response.status_code == 200:
         data = pd.DataFrame(response.json())
-        data.to_csv("out.csv")
         for _, d in data.iloc[::-1].iterrows():
             val = {
                 "id": d["_id"],
@@ -175,11 +174,10 @@ def auth(args):
         and args.passkey
     ):
         logger.debug(
-            "New credentials given for saturn authentication: %s %s",
-            args.user,
-            args.passkey,
+            "New credentials given for saturn authentication"
         )
         add_token(args.user, args.passkey)
+        
     else:
         logger.debug(
             "Creadentials not given in the arguments." +
@@ -190,7 +188,7 @@ def auth(args):
         logger.debug("Loading user/passkey to auth into staurn")
         user, passkey = load_token()
         assert saturn_check(user, passkey)
-        logger.info("Saturn auth was succesful :) !")
+        logger.info("Saturn auth was succesful !")
         return user, passkey
     except Exception as e:
         raise Exception("Couldn't load saturn API key correctly: " + str(e))
