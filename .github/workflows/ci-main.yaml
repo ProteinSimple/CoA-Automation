@@ -8,6 +8,10 @@ on:
     branches:
       - main
 
+env:
+  API_USER: ${{ secrets.SATURN_API_USER }}
+  API_PASS: ${{ secrets.SATURN_API_PASS }}
+
 jobs:
   build-python-windows:
     runs-on: windows-latest
