@@ -22,6 +22,7 @@ prod:
   - CE-SDS
   - CE-SDS 50
   - Flex
+  - cIEF 400
   pdf_output_dir:
   - ./output/`
   prod_code_map: res/Western-Biologics Part Number to ProdCode.xlsx
@@ -41,7 +42,7 @@ test:
   mapping_columns: res/mapping_columns.json
   mapping_dir: res/mappings
   mapping_output_dir:
-  - ./output/
+  - ./src/tests/output/
   model_dir: res/models
   models:
   - SDS+
@@ -50,7 +51,9 @@ test:
   - CE-SDS
   - CE-SDS 50
   - Flex
+  - cIEF 400
   pdf_output_dir:
-  - ./output/`
+  - ./src/tests/output/
   prod_code_map: res/Western-Biologics Part Number to ProdCode.xlsx
   profile: profile.yaml
+  test_coa_exp_dir: ./tests/res

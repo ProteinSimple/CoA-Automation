@@ -5,6 +5,10 @@ from pathlib import Path
 from util import PathCorrection, get_initial, predict_mapping
 from log import get_logger
 import fitz
+import warnings
+
+
+warnings.filterwarnings("ignore")
 
 logger = get_logger(__name__)
 
@@ -99,7 +103,7 @@ def fill_template(reader: PdfReader, fill_data: dict, fontsize: float = 12.0) ->
     for rf in reader_fields:
         val = fill_data[rf]
         logger.debug("Field is being filled: %s --> %s", rf, val)
-        reader_fields[rf] = (val , "", fontsize)
+        reader_fields[rf] = (val , "Helv", fontsize)
     page = reader.pages[0]
     writer.append(reader)
     writer.update_page_form_field_values(
@@ -112,7 +116,7 @@ def fill_template(reader: PdfReader, fill_data: dict, fontsize: float = 12.0) ->
 
 def get_mapping_name(args, model, name_prefix="coa_mapping",
                      extn: str = ".csv") -> str:
-    initials = get_initial(args)
+    initials = get_initial(args.name)
     today = datetime.now().date()
     date = today.strftime("%b").lower() + str(today.day)
     return "_".join([name_prefix, model, initials, date]) + extn

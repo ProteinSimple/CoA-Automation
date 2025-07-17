@@ -13,7 +13,7 @@ BASE_URL = "https://saturn.proteinsimple.com/api/1/cartridges/"
 class CartridgeData:
     code_map: dict[int, str] = {
         1: "cIEF 200",
-        2: "cIEF 200",
+        2: "cIEF 400",
         8: "SDSTurbo",
         6: "SDS+",
         5: "Flex",
@@ -47,12 +47,14 @@ class CartridgeData:
             )
             self.class_name = d["_cls"]
             self.class_code = int(d["cartridge_type"])
-            if self.class_code in [1, 2, 5]:
+            if self.class_code == 1:
                 self.batch_num = d["membrane_lot"]
             if self.class_code == 6:
                 self.batch_num = d["size_insert_lot"]
             if self.class_code == 8:
                 self.batch_num = d["pn702_0013_lot"]
+            if self.class_code in set([2, 5]):
+                self.batch_num = d["center_cap_lot"]
 
     def to_dict(self):
         return {
@@ -81,73 +83,58 @@ def build_saturn_url(startdate=None, enddate=None, **extra_params) -> str:
 
     return BASE_URL + "?" + urlencode(params)
 
-
-def saturn_get(start, end, username, passkey):
-    end_dt = datetime.strptime(end, "%Y-%m-%d") + timedelta(days=1)
+def _saturn_get_response(start, end, username, passkey):
+    end_dt = datetime.strptime(end, "%Y-%m-%d")
+    end_dt = end_dt + timedelta(days=1)
     end = end_dt.strftime("%Y-%m-%d")
     url = build_saturn_url(startdate=start, enddate=end)
     response = requests.get(url, auth=HTTPBasicAuth(username, passkey))
 
     if response.status_code == 200:
-        data = pd.DataFrame(response.json())
-        for _, d in data.iloc[::-1].iterrows():
-            val = {
-                "id": d["_id"],
-                "b_date": datetime.fromtimestamp(
-                    int(d["build_completion_date"]["$date"]) / 1000
-                ).strftime("%Y-%m-%d %H:%M:%S"),
-                "type": d["cartridge_type"],
-            }
-            yield val
+        return response
     else:
         print(f"Request failed with status code {response.status_code}")
         print(response.text)
         return None
+    
 
 
+
+ 
 def saturn_get_bundle(
-    ids, username, passkey, start=None, end=None
-) -> list[CartridgeData] | None:
-    ids_s = set(ids)
-
-    if start and end:
-        end_dt = datetime.strptime(end, "%Y-%m-%d") + timedelta(days=1)
-        end = end_dt.strftime("%Y-%m-%d")
-        url = build_saturn_url(startdate=start, enddate=end)
-    else:
+    username, passkey,
+    start=None, end=None
+) -> list[CartridgeData]:
+    
+    if start is None or end is None:
         # THIS SHOULD NEVER HAPPEN AND IS A BAD IMPLEMENTATION
         end_dt = datetime.today() + timedelta(days=1)
         start_dt = end_dt - timedelta(
             days=5
         )  # TODO: change this to search cartridges form previous days as well!
 
-        startdate = start_dt.strftime("%Y-%m-%d")
-        enddate = end_dt.strftime("%Y-%m-%d")
-        url = build_saturn_url(startdate=startdate, enddate=enddate)
+        start = start_dt.strftime("%Y-%m-%d")
+        end = end_dt.strftime("%Y-%m-%d")
 
-    response = requests.get(url, auth=HTTPBasicAuth(username, passkey))
-
-    if response.status_code == 200:
-        df = pd.DataFrame(response.json())
-        df["b_date_ts"] = df["build_completion_date"].apply(
-            lambda x: x["$date"]
-        )
-        df["b_date"] = pd.to_datetime(df["b_date_ts"], unit="ms")
-        df["exp_date"] = (
-            (df["b_date"] + pd.DateOffset(months=12))
-            .dt.to_period("M")
-            .dt.to_timestamp("M")
-        )
-        df.to_csv("out.csv")
-        retVal = []
-        for _, d in df.iloc[::-1].iterrows():
-            if int(d["_id"]) in ids_s:
-                retVal.append(CartridgeData(d))
-        return retVal
-    else:
-        print(f"Request failed with status code {response.status_code}")
-        print(response.text)
-        return None
+    response = _saturn_get_response(start, end, username, passkey)
+    
+    df = pd.DataFrame(response.json())
+    df["b_date_ts"] = df["build_completion_date"].apply(
+        lambda x: x["$date"]
+    )
+    df["b_date"] = pd.to_datetime(df["b_date_ts"], unit="ms")
+    df["exp_date"] = (
+        (df["b_date"] + pd.DateOffset(months=12))
+        .dt.to_period("M")
+        .dt.to_timestamp("M")
+    )
+    df.to_csv("out.csv")
+    
+    retVal = []
+    for _, d in df.iloc[::-1].iterrows():
+        retVal.append(CartridgeData(d))
+    return retVal
+    
 
 
 def saturn_check(username, passkey) -> bool:
@@ -162,7 +149,6 @@ def saturn_check(username, passkey) -> bool:
         return True
     else:
         return False
-
 
 
 def auth(args):

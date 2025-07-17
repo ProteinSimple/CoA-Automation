@@ -9,7 +9,7 @@ import pandas as pd
 import yaml
 from checks import run_checks
 from log import get_logger
-from saturn import (saturn_get_bundle, saturn_get,auth)
+from saturn import (saturn_get_bundle, auth)
 from util import (PathCorrection, format_date, encrypt_pdf, save_config,
                   init_dates, init_fields)
 from coa import (get_coa_filename, fill_template, get_mapping_name,
@@ -34,8 +34,7 @@ ACTION_MAP = {
     "init": CoatActions.INIT,
     "check": CoatActions.CHECK,
     "fetch": CoatActions.FETCH,
-    "config": CoatActions.CONFIG,
-    "none": CoatActions.NONE,
+    "config": CoatActions.CONFIG
 }
 
 profile_comment = """\
@@ -64,8 +63,6 @@ def dispatch_action(args, config):
         action_fetch(args, config)
     elif action == CoatActions.CONFIG:
         action_config(args, config)
-    elif action == CoatActions.NONE:
-        pass
     elif action == CoatActions.CHECK:
         action_check(args, config)
     else:
@@ -80,9 +77,9 @@ def action_check(args, config):
     except Exception as e:
         print(0)
         logger.error("Error in CHECK action: %s", str(e))
-        logger.error("Traceback:\n%s", traceback.format_exc())
+        logger.error(traceback.format_exc())
         sys.stdout.flush()
-        traceback.print_exc(file=sys.stdout)
+        # traceback.print_exc(file=sys.stdout)
 
 
 def action_coa(args, config):
@@ -95,9 +92,10 @@ def action_coa(args, config):
         
         user, passkey = auth(args)
         logger.info("Fetching data for the given cartridges")
-        datas = saturn_get_bundle(
-            args.ids, user, passkey, args.start, args.end
+        res = saturn_get_bundle(
+            user, passkey, args.start, args.end
         )
+        datas = list(filter(lambda v: v.id in set(args.ids), res))
         pdf_outputs = []
         mapping_rows = []
         mapping_set: dict[str, list] = {}
@@ -111,7 +109,7 @@ def action_coa(args, config):
                 "creating CoA for following cartridge: %s",
                 str(data.to_dict())
             )
-            if model not in config["models"]:
+            if data.model_name() not in config["models"]:
                 logger.error(
                     "Given model configuration is not setup. use 'init'\
                       action to setup the model"
@@ -122,16 +120,19 @@ def action_coa(args, config):
                 )
             
             logger.debug("loading profile for cartridge ")
+            model = data.model_name()
+            data_d = data.to_dict()
+            id = data.id
             profile_path = (
                 PathCorrection(config["model_dir"]) / model / config["profile"]
             ).as_path()
-            profile = yaml.safe_load(open(profile_path))
+            profile: dict
+            with open(profile_path) as f:
+                profile = yaml.safe_load(f)
             filename = get_coa_filename(id, profile)
             dates = set(profile["dates"])
             fields = profile["fields"]
-            id = data.id
-            model = data.model_name()
-            data_d = data.to_dict()
+            
 
             # CoA Creation
             logger.info(
@@ -203,7 +204,7 @@ def action_coa(args, config):
                 mapping_d_path.mkdir(parents=True, exist_ok=True)
                 write_path = dir_p / mapping_f_name
                 mapping.to_csv(write_path, index=False)
-                csv_files.append(write_path.absolute)
+                csv_files.append(write_path.absolute())
 
         logger.info("COA creation finshed succesfully! ")
         print(1)
@@ -228,8 +229,8 @@ def action_init(args, config):
     template_path = PathCorrection(args.template).as_path()
     part_number = args.part_number
     profile = {"template": template_path.name}
-    dir_path = PathCorrection(config["model_dir"]) / model
-    save_path = (PathCorrection(dir_path) / "filled.pdf").as_path()
+    dir_path = (PathCorrection(config["model_dir"]) / model).as_path()
+    save_path = dir_path / "filled.pdf"
     
     # Create mapping directory if it doesn't exist
     dir_path = PathCorrection(Path(config["model_dir"]) / model).as_path()
@@ -238,7 +239,6 @@ def action_init(args, config):
         os.remove(dir_path)
     dir_path.mkdir(parents=True, exist_ok=True)
 
-        
     try:
         if model not in models:
             models.append(model)
@@ -250,17 +250,14 @@ def action_init(args, config):
         reader = PdfReader(template_path)
         fill_data = {}
         for rf in reader.get_form_text_fields():
-            fill_data[rf] = rf
+            fill_data[str(rf)] = str(rf)
 
 
         res = fill_template(reader, fill_data, config["fontsize"])
         res.write(save_path)
-        profile['fields'] = init_fields()
-        profile['dates'] = init_dates()
+        profile['fields'] = init_fields(fill_data)
+        profile['dates'] = init_dates(fill_data)
         profile["PN"] = part_number
-        # profile["fields"], profile["dates"] = generate_field_map_from_pdf(
-        #     config, template_file, model
-        # )
 
         profile_path = dir_path / config["profile"]
         with open(profile_path, mode="w") as f:
@@ -313,7 +310,7 @@ def action_config(args, config):
         elif args.config_mode == "delete":
             action_config_del(args, config)
         if args.config_mode != "list":
-            save_config(args, config)
+            save_config(args.config, args.run_mode, config)
             logger.info("CONFIG updated successfully")
         print(1)
         json.dump(config, sys.stdout)
@@ -336,13 +333,19 @@ def action_fetch(args, config):
     try:
         user, passkey = auth(args)
         logger.info("Fetching Ids from saturn in the range.")
-        ids = list(
-            saturn_get(args.start, args.end,
-                                            user, passkey)
-        )
-        logger.info("Fetched %d cartridge IDs", len(ids))
+        data = saturn_get_bundle(user, passkey, args.start, args.end)
+        res = []
+        for d in data:
+            res.append({
+                "id": d.id,
+                "b_date": d.build_date,
+                "exp_date": d.exp_date,
+                "type": d.class_code
+            })
+        
+        logger.info("Fetched %d cartridge IDs", len(res))
         print(1)
-        print(json.dumps(ids))
+        print(json.dumps(res))
     except Exception as e:
         print(0)
         logger.error("Error in FETCH (range) action: %s", str(e))

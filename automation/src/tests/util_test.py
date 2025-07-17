@@ -5,15 +5,13 @@ from unittest.mock import Mock
 class UtilTest(unittest.TestCase):
     def test_get_initial(self):
         """Test get_initial function with various scenarios"""
-        args = Mock()
         cases = [
             ("John Doe", "jd"),
             ("John Michael Smith", "jms"),
             ("JOHN DOE", "jd")
         ]
         for name, exp in cases:
-            args.name = name
-            self.assertEqual(util.get_initial(args), exp)
+            self.assertEqual(util.get_initial(name), exp)
 
     def test_format_date(self):
         cases = [

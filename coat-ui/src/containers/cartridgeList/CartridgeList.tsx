@@ -5,7 +5,7 @@ import "./cartridgeList.css";
 import { useCartridge, useControl, useFilter } from "../../contexts";
 
 interface CartridgeInfo {
-  id: string;
+  id: number;
   b_date: string;
   type: string;
 }
@@ -62,7 +62,8 @@ function CartridgeList({ filterText }: CartridgeListProps) {
     const lowerFilterText = filterText.toLowerCase();
     
     return cartridgeList.filter((item) => {
-      const matchesFilter = item.id.toLowerCase().includes(lowerFilterText);
+      const id_str = String(item.id)
+      const matchesFilter = id_str.toLowerCase().includes(lowerFilterText);
       const matchesType = selectedTypes.length === 0 || selectedTypes.includes(Number(item.type));
       return matchesFilter && matchesType;
     });

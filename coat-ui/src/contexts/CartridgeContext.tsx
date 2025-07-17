@@ -1,9 +1,9 @@
 import {useState, createContext, useContext, ReactNode} from 'react';
 
 interface CartridgeContextType {
-  selectedCartridgeList: Set<string>;
-  addCartridge: (id: string) => void;
-  removeCartridge: (id: string) => void;
+  selectedCartridgeList: Set<number>;
+  addCartridge: (id: number) => void;
+  removeCartridge: (id: number) => void;
   clearSelected: () => void
 }
 
@@ -23,12 +23,12 @@ interface CartridgeProviderProps {
 
 
 export const CartridgeProvider = ({ children }: CartridgeProviderProps) => {
-  const [cartridgeList, setCartridgeList] = useState<Set<string>>(new Set());
+  const [cartridgeList, setCartridgeList] = useState<Set<number>>(new Set());
   
-  const addCartridge = (id: string) => {
+  const addCartridge = (id: number) => {
     setCartridgeList(prev => new Set(prev).add(id))
   };
-  const removeCartridge = (id: string) => {
+  const removeCartridge = (id: number) => {
     const s = new Set(cartridgeList)
     s.delete(id)
     setCartridgeList(s)

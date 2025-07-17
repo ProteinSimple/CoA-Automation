@@ -56,7 +56,7 @@ def get_args():
     fetch_sub.add_argument("start", type=str, help="Start of the range")
     fetch_sub.add_argument("end", type=str, help="End of the range")
 
-    init_sub.add_argument("model", type=str, help="Model number of cartridge")
+    init_sub.add_argument("model", type=str, help="Model name of cartridge")
     init_sub.add_argument("template", type=str)
     init_sub.add_argument("part_number", type=str)
 
@@ -76,7 +76,7 @@ def get_args():
     list_config.add_argument("--csv", type=str, nargs="+", help="TODO")
 
     for sub in sub_list:
-        sub.add_argument("--run_mode", type=str, default="test", help="Run mode")
+        sub.add_argument("--run_mode", type=str, default="prod", help="Run mode")
         sub.add_argument(
             "--verbose",
             action="store_true",

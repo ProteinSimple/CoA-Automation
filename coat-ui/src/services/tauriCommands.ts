@@ -19,10 +19,11 @@ export const pythonAuth = async (user: string, pass: string) => {
   return await invoke("python_auth", {user, pass})
 }
 
-export const pythonCoa = async (ids: string[], name: string, startDate: Date, endDate: Date) => {
-  let start = startDate.toISOString().split('T')[0]
-  let end = endDate.toISOString().split('T')[0]
-  return await invoke("python_call", { args:  ["coa", ...ids, "--name", name, "--start", start, '--end', end] })
+export const pythonCoa = async (ids: number[], name: string, startDate: Date, endDate: Date) => {
+  const start = startDate.toISOString().split('T')[0]
+  const end = endDate.toISOString().split('T')[0]
+  const ids_str = ids.map(String);
+  return await invoke("python_call", { args:  ["coa", ...ids_str, "--name", name, "--start", start, '--end', end] })
 }
 
 export const pythonConfigList = async () => {

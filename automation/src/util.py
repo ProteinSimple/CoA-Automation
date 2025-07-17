@@ -7,6 +7,7 @@ from pypdf import PdfWriter
 from pypdf.constants import UserAccessPermissions
 from log import get_logger
 
+
 logger = get_logger(__name__)
 
 
@@ -62,9 +63,9 @@ class PathCorrection:
         return f"Pathcr({str(self)})"
 
 
-def get_initial(args):
+def get_initial(name: str):
     "TODO"
-    name: str = args.name.lower()
+    # name: str = args.name.lower()
     return "".join([s[0].lower() for s in name.split(" ")])
 
 def predict_mapping(x: str, ys: list[str]):
@@ -74,7 +75,7 @@ def predict_mapping(x: str, ys: list[str]):
 
 def format_date(given: str):
     "TODO"
-    parts = given.split("/") 
+    parts = given.split("/")
     return parts[1] + MONTH_MAP[int(parts[0])] + parts[2]
 
 def encrypt_pdf(writer: PdfWriter, permissions: dict) -> PdfWriter:
@@ -100,7 +101,7 @@ def encrypt_pdf(writer: PdfWriter, permissions: dict) -> PdfWriter:
     return writer
 
 
-def load_config(args: dict) -> dict:
+def load_config(config_path, run_mode) -> dict:
     """Load configuration settings from a YAML file based on specified run
        mode.
 
@@ -116,8 +117,8 @@ def load_config(args: dict) -> dict:
         yaml.YAMLError: If the YAML file is malformed
     """
 
-    config_path = args.config
-    run_mode = args.run_mode
+    # config_path = args.config
+    # run_mode = args.run_mode
     path = PathCorrection(config_path).as_path()
     full_config = None
 
@@ -138,13 +139,11 @@ def load_config(args: dict) -> dict:
         )
     return full_config[run_mode]
 
-def save_config(args, new_config):
+def save_config(config_path, run_mode, new_config):
     """
         TODO
     """
-
-    config_path = args.config
-    run_mode = args.run_mode
+    
     path = PathCorrection(config_path).as_path()
     full_config = None
 
@@ -172,7 +171,6 @@ def save_config(args, new_config):
 def get_config_path(args):
     config_path = args.config
     path = PathCorrection(config_path).as_path()
-
         
 def init_fields(fill_data: dict[str, str]):
     retVal = {}
