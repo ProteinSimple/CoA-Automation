@@ -44,14 +44,8 @@ def run_checks(**kwargs):
     """Helper function from main"""
     for f in ASSERTIONS:
         if not f(**kwargs):
-            logger.error(
-                " The following check failed to pass: " +
-                f.__name__
-            )
-            raise CheckError(
-                " The following check failed to pass: " +
-                f.__name__
-            )
+            logger.error(" The following check failed to pass: " + f.__name__)
+            raise CheckError(" The following check failed to pass: " + f.__name__)
     return True
 
 
@@ -95,9 +89,9 @@ def check_prodcode_matching(**kwargs):
     mapping: pd.DataFrame = kwargs["mapping"]
     prod_path = PathCorrection(config["prod_code_map"]).as_path()
     prod_code = pd.read_excel(prod_path)
-    expected = prod_code[
-        prod_code["PartNumber"] == mapping["PartNumber"].values[0]
-    ]["ProdCode"]
+    expected = prod_code[prod_code["PartNumber"] == mapping["PartNumber"].values[0]][
+        "ProdCode"
+    ]
     actual = mapping["ProdCode"]
     if expected.values[0].strip() != actual.values[0].strip():
         return False

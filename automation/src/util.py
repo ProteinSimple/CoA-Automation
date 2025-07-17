@@ -1,12 +1,13 @@
 import os
 import sys
-import yaml
 from pathlib import Path
 from typing import Self
+
+import yaml
 from pypdf import PdfWriter
 from pypdf.constants import UserAccessPermissions
-from log import get_logger
 
+from log import get_logger
 
 logger = get_logger(__name__)
 
@@ -38,8 +39,10 @@ PERM_MAP = {
     "extract": UserAccessPermissions.EXTRACT,
 }
 
+
 class UtilError(Exception):
     """Custom exception for PDF processing errors"""
+
 
 class PathCorrection:
     def __init__(self, p):
@@ -68,15 +71,18 @@ def get_initial(name: str):
     # name: str = args.name.lower()
     return "".join([s[0].lower() for s in name.split(" ")])
 
+
 def predict_mapping(x: str, ys: list[str]):
     """TODO: This function is incomplete"""
 
     return ""
 
+
 def format_date(given: str):
     "TODO"
     parts = given.split("/")
     return parts[1] + MONTH_MAP[int(parts[0])] + parts[2]
+
 
 def encrypt_pdf(writer: PdfWriter, permissions: dict) -> PdfWriter:
     """Writes the given file to specified path, with the given permissions
@@ -139,11 +145,12 @@ def load_config(config_path, run_mode) -> dict:
         )
     return full_config[run_mode]
 
+
 def save_config(config_path, run_mode, new_config):
     """
-        TODO
+    TODO
     """
-    
+
     path = PathCorrection(config_path).as_path()
     full_config = None
 
@@ -162,23 +169,25 @@ def save_config(config_path, run_mode, new_config):
             f"""Run mode '{run_mode}' not found.
               Available modes: {available_modes}"""
         )
-    
+
     logger.debug("Writing config file to %s", path)
     full_config[run_mode] = new_config
     with open(path, mode="w+") as f:
         yaml.safe_dump(full_config, f)
-    
+
+
 def get_config_path(args):
     config_path = args.config
-    path = PathCorrection(config_path).as_path()
-        
+    PathCorrection(config_path).as_path()
+
+
 def init_fields(fill_data: dict[str, str]):
     retVal = {}
     for val in fill_data.keys():
         retVal[val] = predict_mapping(val, val)
     return retVal
 
-    
+
 def init_dates(fill_data: dict[str, str]):
     retVal = []
     for f in fill_data.keys():

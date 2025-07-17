@@ -7,6 +7,6 @@ class TestContext:
 
     def set_config(given):
         TestContext._test_config = given
-    
+
     def get_config():
         return deepcopy(TestContext._test_config)

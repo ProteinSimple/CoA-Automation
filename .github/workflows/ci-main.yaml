@@ -82,7 +82,7 @@ jobs:
           make lint
 
   build-ui:
-    needs: [test-python, build-python-windows, lint-python]
+    needs: [test-python, build-python-windows]
     runs-on: windows-latest
 
     steps:

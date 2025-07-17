@@ -1,8 +1,10 @@
 from datetime import datetime, timedelta
 from urllib.parse import urlencode
+
 import pandas as pd
 import requests
 from requests.auth import HTTPBasicAuth
+
 from keyToken import add_token, load_token
 from log import get_logger
 
@@ -83,6 +85,7 @@ def build_saturn_url(startdate=None, enddate=None, **extra_params) -> str:
 
     return BASE_URL + "?" + urlencode(params)
 
+
 def _saturn_get_response(start, end, username, passkey):
     end_dt = datetime.strptime(end, "%Y-%m-%d")
     end_dt = end_dt + timedelta(days=1)
@@ -96,16 +99,10 @@ def _saturn_get_response(start, end, username, passkey):
         print(f"Request failed with status code {response.status_code}")
         print(response.text)
         return None
-    
 
 
-
- 
-def saturn_get_bundle(
-    username, passkey,
-    start=None, end=None
-) -> list[CartridgeData]:
-    
+def saturn_get_bundle(username, passkey,
+                      start=None, end=None) -> list[CartridgeData]:
     if start is None or end is None:
         # THIS SHOULD NEVER HAPPEN AND IS A BAD IMPLEMENTATION
         end_dt = datetime.today() + timedelta(days=1)
@@ -117,24 +114,22 @@ def saturn_get_bundle(
         end = end_dt.strftime("%Y-%m-%d")
 
     response = _saturn_get_response(start, end, username, passkey)
-    
+
     df = pd.DataFrame(response.json())
-    df["b_date_ts"] = df["build_completion_date"].apply(
-        lambda x: x["$date"]
-    )
+    df["b_date_ts"] = df["build_completion_date"].apply(lambda x: x["$date"])
     df["b_date"] = pd.to_datetime(df["b_date_ts"], unit="ms")
     df["exp_date"] = (
-        (df["b_date"] + pd.DateOffset(months=12))
-        .dt.to_period("M")
-        .dt.to_timestamp("M")
+        (df["b_date"] + 
+         pd.DateOffset(months=12))
+            .dt.to_period("M")
+            .dt.to_timestamp("M")
     )
     df.to_csv("out.csv")
-    
+
     retVal = []
     for _, d in df.iloc[::-1].iterrows():
         retVal.append(CartridgeData(d))
     return retVal
-    
 
 
 def saturn_check(username, passkey) -> bool:
@@ -159,11 +154,9 @@ def auth(args):
         and args.user
         and args.passkey
     ):
-        logger.debug(
-            "New credentials given for saturn authentication"
-        )
+        logger.debug("New credentials given for saturn authentication")
         add_token(args.user, args.passkey)
-        
+
     else:
         logger.debug(
             "Creadentials not given in the arguments." +

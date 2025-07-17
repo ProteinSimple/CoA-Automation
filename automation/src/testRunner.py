@@ -1,6 +1,8 @@
 import unittest
-from tests import *
+
 from dotenv import load_dotenv
+from tests import *
+from tests.context import TestContext
 from util import load_config
 
 CONFIG_PATH = "config.yaml"

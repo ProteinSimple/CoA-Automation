@@ -28,8 +28,8 @@ def get_args():
         )
     )
     sub_list.append(fetch_sub := subparsers.add_parser(
-        "fetch",
-        help="Fetches")
+            "fetch", help="Fetches"
+        )
     )
     sub_list.append(
         _ := subparsers.add_parser(
@@ -46,8 +46,7 @@ def get_args():
 
     # specific argument passed to certain actions:
     coa_sub.add_argument(
-        "ids", type=int, nargs="+",
-        help="Id of the cartridge for file generation"
+        "ids", type=int, nargs="+", help="Id of the cartridge for file generation"
     )
     coa_sub.add_argument("--name", type=str, default="AA")
     coa_sub.add_argument("--start", type=str, default=None)
@@ -60,9 +59,7 @@ def get_args():
     init_sub.add_argument("template", type=str)
     init_sub.add_argument("part_number", type=str)
 
-    config_subparser = config_sub.add_subparsers(
-        dest="config_mode", required=True
-    )
+    config_subparser = config_sub.add_subparsers(dest="config_mode", required=True)
     sub_list.append(add_config := config_subparser.add_parser("add"))
     add_config.add_argument("--pdf", type=str, nargs="+", help="TODO")
     add_config.add_argument("--csv", type=str, nargs="+", help="TODO")
@@ -78,9 +75,7 @@ def get_args():
     for sub in sub_list:
         sub.add_argument("--run_mode", type=str, default="prod", help="Run mode")
         sub.add_argument(
-            "--verbose",
-            action="store_true",
-            help="Print comments as process goes on"
+            "--verbose", action="store_true", help="Print comments as process goes on"
         )
         sub.add_argument(
             "--config",
