@@ -8,6 +8,7 @@ interface CartridgeInfo {
   id: number;
   b_date: string;
   type: string;
+  passed_qc: boolean
 }
 
 interface CartridgeListProps {
@@ -20,7 +21,7 @@ function CartridgeList({ filterText }: CartridgeListProps) {
 
   const { addCartridge, clearSelected, selectedCartridgeList } = useCartridge()
   const { checkDone } = useControl();
-  const {startDate, endDate, selectedTypes, setValidTypes } = useFilter()
+  const {startDate, endDate, selectedTypes, setValidTypes, showOnlyPassed } = useFilter()
   const [selectAll, setSelectAll] = useState<boolean>(true)
 
   const fetchData = useCallback(async () => {
@@ -28,6 +29,7 @@ function CartridgeList({ filterText }: CartridgeListProps) {
     try {
       const raw = await pythonFetchRange(startDate, endDate);
       const parsed: CartridgeInfo[] = JSON.parse(String(raw));
+      console.log(parsed)
       const uniqueTypes = [...new Set(parsed.map(item => Number(item.type)))];
       setValidTypes(uniqueTypes);
       setCartridgeList(parsed);
@@ -58,16 +60,16 @@ function CartridgeList({ filterText }: CartridgeListProps) {
 
   const filteredList = useMemo(() => {
     if (!cartridgeList.length) return [];
-    
     const lowerFilterText = filterText.toLowerCase();
     
     return cartridgeList.filter((item) => {
       const id_str = String(item.id)
       const matchesFilter = id_str.toLowerCase().includes(lowerFilterText);
       const matchesType = selectedTypes.length === 0 || selectedTypes.includes(Number(item.type));
-      return matchesFilter && matchesType;
+      const passedQc = item.passed_qc
+      return matchesFilter && matchesType && (!showOnlyPassed || passedQc);
     });
-  }, [cartridgeList, filterText, selectedTypes]);
+  }, [cartridgeList, filterText, selectedTypes, showOnlyPassed]);
 
   
   
@@ -100,7 +102,7 @@ function CartridgeList({ filterText }: CartridgeListProps) {
       </div>
     <div className="list_container">
       {filteredList.map((d) => (
-        <CartridgeListItem key={d.id} id={d.id} time={d.b_date} type={d.type} />
+        <CartridgeListItem key={d.id} id={d.id} time={d.b_date} type={d.type} passed={d.passed_qc}/>
       ))}
     </div>
     </div>

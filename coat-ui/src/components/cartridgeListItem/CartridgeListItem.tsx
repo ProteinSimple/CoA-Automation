@@ -2,20 +2,21 @@ import "./cartridgeListItem.css"
 import Checkbox from "../checkbox/Checkbox"
 import { useCartridge } from "../../contexts";
 import { useFilter } from "../../contexts";
+import { Check, X } from "lucide-react";
 
 type ListItemProps = {
   id: number;
   time: string;
   type: string;
+  passed: boolean
 };
 
-function ListItem( { id, time, type }: ListItemProps) {
+function ListItem( { id, time, type, passed }: ListItemProps) {
   const { selectedCartridgeList, addCartridge, removeCartridge } = useCartridge()
   const isChecked = () => { return selectedCartridgeList.has(id) }
   const onChecked = () => { addCartridge(id) }
   const onUnchecked = () => { removeCartridge(id) }
-  const [datePart, timePart] = time.split(" ");
-  const { colorMap } = useFilter()
+  const { colorMap, showOnlyPassed } = useFilter()
   return (
     <div className="list_item">
       <Checkbox  id={id}
@@ -28,11 +29,9 @@ function ListItem( { id, time, type }: ListItemProps) {
           {id}
         </p> 
         <p className="list_item_date">
-          {datePart}
+          {time}
         </p>
-        <p className="list_item_date">
-          {timePart}
-        </p>
+          {!showOnlyPassed && passed? <Check size="1em"/> : !showOnlyPassed && !passed? <X size="1em"/> : <p></p>}
       </div>
       <p className="list_item_type">
       <span

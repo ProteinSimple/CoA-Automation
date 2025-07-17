@@ -66,7 +66,7 @@ class ActionTest(unittest.TestCase):
             parsed = json.loads(data)
             self.assertIsInstance(parsed, list)
             for val in parsed:
-                for f in ["id", "b_date", "type"]:
+                for f in ["id", "b_date", "type", "passed_qc"]:
                     self.assertIn(f, val)
                 self.assertIsInstance(int(val["id"]), int)
                 self.assertIsInstance(val["type"], int)

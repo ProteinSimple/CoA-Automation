@@ -5,6 +5,8 @@ import chroma from 'chroma-js';
 interface FilterContextType {
     startDate: Date;
     endDate: Date;
+    showOnlyPassed: boolean;
+    setShowOnlyPassed: (_: boolean) => void;
     setStartDate: (_: Date) => void;
     setEndDate: (_: Date) => void;
     selectedTypes: number[]
@@ -41,6 +43,7 @@ export const FilterProvider = ({ children }: FilterProviderProps) => {
   const [selectedTypes, setTypes] = useState<number[]>([])
   const [validTypes, setValidTypes] = useState<number[]>([])
   const [colorMap, setColorMap] = useState<Record<number, string>>({});
+  const [showOnlyPassed, setShowOnlyPassed] = useState<boolean>(true)
   
   useEffect(() => {
     if (prev_valid === validTypes) {
@@ -63,6 +66,8 @@ export const FilterProvider = ({ children }: FilterProviderProps) => {
     <FilterContext.Provider value={{ 
       startDate,
       endDate,
+      showOnlyPassed,
+      setShowOnlyPassed,
       setStartDate, 
       setEndDate, 
       selectedTypes, 

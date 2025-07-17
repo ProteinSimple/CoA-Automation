@@ -2,7 +2,7 @@
 import { Logo } from "./components";
 import { useState } from "react";
 import { BottomText, CartridgeList, TopContainer, ErrorPopUpContainer, SettingsContainer } from "./containers";
-import { CartridgeProvider, ControlProvider, DateProvider, PopUpProvider } from "./contexts";
+import { CartridgeProvider, ControlProvider, FilterProvider, PopUpProvider } from "./contexts";
 import Modal  from "react-modal"
 import "./App.css";
 
@@ -20,12 +20,13 @@ function App() {
     <ControlProvider>
       <main className="container">
         <ErrorPopUpContainer/>
-        <SettingsContainer />
+        
         <Logo/>
-        <DateProvider>
+        <FilterProvider>
+          <SettingsContainer />
           <TopContainer setFilter={setFilter}/>
           <CartridgeList filterText={idFilter}/>
-        </DateProvider>
+        </FilterProvider>
         <BottomText/>
       </main>
     </ControlProvider>

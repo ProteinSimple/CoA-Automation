@@ -29,6 +29,7 @@ class CartridgeData:
         self.class_name: str = None
         self.class_code: int = None
         self.batch_num: int = None
+        self.passed_qc: bool = None
 
         if sat_data is not None:
             d = sat_data
@@ -57,6 +58,8 @@ class CartridgeData:
                 self.batch_num = d["pn702_0013_lot"]
             if self.class_code in set([2, 5]):
                 self.batch_num = d["center_cap_lot"]
+            pass_fail = str(d.get("cartridge_pass_fail", "")).strip().lower()
+            self.passed_qc = pass_fail == "pass"
 
     def to_dict(self):
         return {
@@ -67,6 +70,7 @@ class CartridgeData:
             "class_name": self.class_name,
             "class_code": self.class_code,
             "batch_num": self.batch_num,
+            "passed_qc": self.passed_qc
         }
 
     def model_name(self) -> str:
@@ -124,7 +128,6 @@ def saturn_get_bundle(username, passkey,
             .dt.to_period("M")
             .dt.to_timestamp("M")
     )
-    df.to_csv("out.csv")
 
     retVal = []
     for _, d in df.iloc[::-1].iterrows():
