@@ -33,6 +33,7 @@ clean:
 	@if exist dist rmdir /s /q dist
 	@if exist "src/output" rmdir /s /q "src/output"
 	@if exist "src/log1.txt" del /q "src\log1.txt"
+	@if exist ".pytest_cache" rmdir /s /q ".pytest_cache"
 	
 help:
 	@echo "Makefile commands:"

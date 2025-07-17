@@ -8,8 +8,12 @@ on:
     branches:
       - main
 
+env:
+  API_USER: ${{ secrets.SATURN_API_USER }}
+  API_PASS: ${{ secrets.SATURN_API_PASS }}
+
 jobs:
-  build-python:
+  build-python-windows:
     runs-on: windows-latest
 
     steps:
@@ -32,7 +36,7 @@ jobs:
           make build
 
   test-python:
-    runs-on: windows-latest
+    runs-on: ubuntu-latest
 
     steps:
       - name: Checkout code
@@ -54,7 +58,7 @@ jobs:
           make test
   
   lint-python:
-    runs-on: windows-latest
+    runs-on: ubuntu-latest
 
     steps:
       - name: Checkout code
@@ -78,7 +82,7 @@ jobs:
           make lint
 
   build-ui:
-    needs: [test-python, build-python, lint-python]
+    needs: [test-python, build-python-windows]
     runs-on: windows-latest
 
     steps:

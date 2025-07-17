@@ -8,15 +8,14 @@ from pathlib import Path
 
 import pandas as pd
 import yaml
+from pypdf import PdfReader
 
 from checks import run_checks
+from coa import exec_c, fill_template, get_coa_filename, get_mapping_name
 from log import get_logger
-from saturn import (saturn_get_cartridge_data_bundle,
-                    saturn_get_cartridge_data_past,
-                    saturn_get_cartridge_data_range)
-from util import (Pathcr, auth, fill_CoA, generate_field_map_from_pdf,
-                  get_filename, get_mapping_name, output_CoA,
-                  output_CoA_mapping)
+from saturn import auth, saturn_get_bundle
+from util import (PathCorrection, encrypt_pdf, format_date, init_dates,
+                  init_fields, save_config)
 
 
 class CoatActions(Enum):
@@ -38,7 +37,6 @@ ACTION_MAP = {
     "check": CoatActions.CHECK,
     "fetch": CoatActions.FETCH,
     "config": CoatActions.CONFIG,
-    "none": CoatActions.NONE,
 }
 
 profile_comment = """\
@@ -67,8 +65,6 @@ def dispatch_action(args, config):
         action_fetch(args, config)
     elif action == CoatActions.CONFIG:
         action_config(args, config)
-    elif action == CoatActions.NONE:
-        pass
     elif action == CoatActions.CHECK:
         action_check(args, config)
     else:
@@ -83,39 +79,32 @@ def action_check(args, config):
     except Exception as e:
         print(0)
         logger.error("Error in CHECK action: %s", str(e))
-        logger.error("Traceback:\n%s", traceback.format_exc())
+        logger.error(traceback.format_exc())
         sys.stdout.flush()
-        traceback.print_exc(file=sys.stdout)
+        # traceback.print_exc(file=sys.stdout)
 
 
 def action_coa(args, config):
     try:
-        logger.info(
-            "CoA creation has started, first checking and gathering data!"
-        )
+        logger.info("CoA creation has started, checking and gathering data!")
         if "models" not in config:
             raise KeyError("Missing 'models' section in config")
+
         user, passkey = auth(args)
-        logger.debug("User: %s, passkey: %s", user, passkey)
         logger.info("Fetching data for the given cartridges")
-        datas = saturn_get_cartridge_data_bundle(
-            args.ids, user, passkey, args.start, args.end
-        )
+        res = saturn_get_bundle(user, passkey, args.start, args.end)
+        datas = list(filter(lambda v: v.id in set(args.ids), res))
         pdf_outputs = []
         mapping_rows = []
         mapping_set: dict[str, list] = {}
-        prod_map = pd.read_excel(Pathcr(config["prod_code_map"]).as_path())
-        logger.info(
-            "Data gathered sucessfully, now creating CoA"
+        prod_map = pd.read_excel(
+            PathCorrection(config["prod_code_map"]).as_path()
         )
-        for _, data in enumerate(datas):
-            logger.info(
-                "creating CoA for following cartridge: %s",
-                str(data.to_dict())
-            )
-            id = data.id
-            model = data.model_name()
-            if model not in config["models"]:
+        logger.info("Data gathered sucessfully, now creating CoA")
+        for data in datas:
+            logger.info("creating CoA for following cartridge: %s",
+                         str(data.to_dict()))
+            if data.model_name() not in config["models"]:
                 logger.error(
                     "Given model configuration is not setup. use 'init'\
                       action to setup the model"
@@ -124,22 +113,57 @@ def action_coa(args, config):
                     "Given model configuration is not setup. use 'init'\
                       action to setup the model"
                 )
+
             logger.debug("loading profile for cartridge ")
+            model = data.model_name()
+            data_d = data.to_dict()
+            id = data.id
             profile_path = (
-                Pathcr(config["model_dir"]) / model / config["profile"]
+                PathCorrection(config["model_dir"]) / model / config["profile"]
             ).as_path()
-            profile = yaml.safe_load(open(profile_path))
-            filename = get_filename(id, profile)
+            profile: dict
+            with open(profile_path) as f:
+                profile = yaml.safe_load(f)
+            filename = get_coa_filename(id, profile)
+            dates = set(profile["dates"])
+            fields = profile["fields"]
+
             # CoA Creation
-            logger.info(
-                "filling CoA template. template path: %s",
-                profile["template"]
-            )
-            temp_file = fill_CoA(config, profile, data.to_dict(), model)
-            logger.info("Template filled. now outputing files")
-            files = output_CoA(config, profile, temp_file, filename)
-            pdf_outputs += files
-            os.remove(temp_file)
+            logger.info("filling CoA template. template path: %s", profile["template"])
+            model_dir_path = Path(config["model_dir"]) / Path(model)
+            template_path = (
+                PathCorrection(model_dir_path) / profile["template"]
+            ).as_path()
+            reader = PdfReader(template_path)
+
+            # Data used to fill the values of the template file.
+            fill_data = {}
+            for rf in reader.get_form_text_fields():
+                key = fields[rf]
+                val: str
+                if key.startswith("@!"):
+                    val = exec_c(key[2:])
+                else:
+                    val = data_d[key]
+
+                if rf in dates:
+                    val = format_date(val)
+                fill_data[rf] = val
+
+            res = fill_template(reader, fill_data, config["fontsize"])
+            encrypted = encrypt_pdf(res, config["file_perm"])
+            logger.info("Template filled and Encrypted. now outputing files")
+
+            # Output Coa Files
+            for dir in config["pdf_output_dir"]:
+                dir_p = Path(dir)
+                logger.info("Outputing to: %s", dir_p)
+                os.makedirs(dir_p, exist_ok=True)
+                dest_path = (dir_p / filename).with_suffix(".pdf").absolute()
+                pdf_outputs.append(str(dest_path))
+                with open(dest_path, "wb") as f:
+                    encrypted.write(f)
+
             # Adding data to the mapping CSV
             logger.debug("Adding mapping data!")
             part_number = profile["PN"]
@@ -158,19 +182,23 @@ def action_coa(args, config):
                 }
             )  # TODO: make this robust
 
-        logger.info("Creating mapping file")
+        logger.info("Coa creation done. Now creating mapping files!")
         csv_files = []
         for model, mapping_rows in mapping_set.items():
             logger.info("Creating mapping for %s model", model)
             mapping = pd.DataFrame(mapping_rows)
+            mapping_f_name = get_mapping_name(args, model)
             logger.info("Running check on the data")
             run_checks(config=config, data=data, mapping=mapping)
             logger.info("outputting CSV mapping!")
-            csv_files.extend(
-                output_CoA_mapping(config,
-                                   mapping,
-                                   get_mapping_name(args, model))
-            )
+            for dir in config["mapping_output_dir"]:
+                mapping_d_path = Path(dir)
+                logger.debug("Outputing mapping to %s", mapping_d_path)
+                mapping_d_path.mkdir(parents=True, exist_ok=True)
+                write_path = dir_p / mapping_f_name
+                mapping.to_csv(write_path, index=False)
+                csv_files.append(write_path.absolute())
+
         logger.info("COA creation finshed succesfully! ")
         print(1)
         for f in pdf_outputs:
@@ -190,37 +218,45 @@ def action_init(args, config):
     logger.info("INIT action started for model: %s", args.model)
     models = config.setdefault("models", [])
     model = args.model
-    run_mode = args.rm
-    template_file = Path(args.template)
+    run_mode = args.run_mode
+    template_path = PathCorrection(args.template).as_path()
     part_number = args.part_number
+    profile = {"template": template_path.name}
+    dir_path = (PathCorrection(config["model_dir"]) / model).as_path()
+    save_path = dir_path / "filled.pdf"
 
-    dir_path = Pathcr(Path(config["model_dir"]) / model).as_path()
+    # Create mapping directory if it doesn't exist
+    dir_path = PathCorrection(Path(config["model_dir"]) / model).as_path()
     if os.path.exists(dir_path) and os.path.isfile(dir_path):
         logger.debug("Removing existing file at model dir path: %s", dir_path)
         os.remove(dir_path)
     dir_path.mkdir(parents=True, exist_ok=True)
 
     try:
-        shutil.copy(template_file, dir_path)
-        logger.info("Template copied to model directory.")
-    except Exception as e:
-        logger.warning("Failed to copy template: %s", str(e))
-    try:
-        logger.debug("Generating field map from PDF")
-        profile = {"template": template_file.name}
-        profile["fields"], profile["dates"] = generate_field_map_from_pdf(
-            config, template_file, model
-        )
-        profile["PN"] = part_number
         if model not in models:
             models.append(model)
+
+        shutil.copy(template_path, dir_path)
+        logger.info("Template copied to model directory.")
+
+        logger.debug("Generating field map from PDF")
+        reader = PdfReader(template_path)
+        fill_data = {}
+        for rf in reader.get_form_text_fields():
+            fill_data[str(rf)] = str(rf)
+
+        res = fill_template(reader, fill_data, config["fontsize"])
+        res.write(save_path)
+        profile["fields"] = init_fields(fill_data)
+        profile["dates"] = init_dates(fill_data)
+        profile["PN"] = part_number
 
         profile_path = dir_path / config["profile"]
         with open(profile_path, mode="w") as f:
             f.write(profile_comment + "\n")
             yaml.safe_dump(profile, f)
 
-        config_path = Pathcr(args.config).as_path()
+        config_path = PathCorrection(args.config).as_path()
         full_config = yaml.safe_load(open(config_path, mode="r"))
         full_config[run_mode] = config
         with open(config_path, mode="w+") as f:
@@ -241,37 +277,36 @@ def action_init(args, config):
         traceback.print_exc(file=sys.stdout)
 
 
+def action_config_add(args, config):
+    pdf_paths = args.pdf if args.pdf is not None else []
+    csv_paths = args.csv if args.csv is not None else []
+    logger.debug("Adding paths to config")
+    prev_pdf = config["pdf_output_dir"]
+    prev_csv = config["mapping_output_dir"]
+    config["pdf_output_dir"] = list(set(pdf_paths) | set(prev_pdf))
+    config["mapping_output_dir"] = list(set(csv_paths) | set(prev_csv))
+
+
+def action_config_del(args, config):
+    pdf_paths = args.pdf if args.pdf is not None else []
+    csv_paths = args.csv if args.csv is not None else []
+    logger.debug("Deleting paths from config")
+    prev_pdf = config["pdf_output_dir"]
+    prev_csv = config["mapping_output_dir"]
+    config["pdf_output_dir"] = list(set(prev_pdf) - set(pdf_paths))
+    config["mapping_output_dir"] = list(set(prev_csv) - set(csv_paths))
+
+
 def action_config(args, config):
     logger.info("CONFIG action started with mode: %s", args.config_mode)
     try:
-        pdf_paths = args.pdf if args.pdf is not None else []
-        csv_paths = args.csv if args.csv is not None else []
-
         if args.config_mode == "add":
-            logger.debug("Adding paths to config")
-            prev_pdf = config["pdf_output_dir"]
-            prev_csv = config["mapping_output_dir"]
-            config["pdf_output_dir"] = list(set(pdf_paths) | set(prev_pdf))
-            config["mapping_output_dir"] = list(set(csv_paths) | set(prev_csv))
-
+            action_config_add(args, config)
         elif args.config_mode == "delete":
-            logger.debug("Deleting paths from config")
-            prev_pdf = config["pdf_output_dir"]
-            prev_csv = config["mapping_output_dir"]
-            config["pdf_output_dir"] = list(set(prev_pdf) - set(pdf_paths))
-            config["mapping_output_dir"] = list(set(prev_csv) - set(csv_paths))
-
-        config_path = args.config
-        p = Pathcr(config_path).as_path()
-        logger.debug("Writing config file to %s", p)
-
+            action_config_del(args, config)
         if args.config_mode != "list":
-            full_config = yaml.safe_load(open(p, mode="r"))
-            full_config[args.rm] = config
-            with open(p, mode="w+") as f:
-                yaml.safe_dump(full_config, f)
-
-        logger.info("CONFIG updated successfully")
+            save_config(args.config, args.run_mode, config)
+            logger.info("CONFIG updated successfully")
         print(1)
         json.dump(config, sys.stdout)
 
@@ -284,49 +319,25 @@ def action_config(args, config):
 
 
 def action_fetch(args, config):
-    logger.info("FETCH action started in mode: %s", args.fetch_mode)
-    if args.fetch_mode == "range":
-        return action_fetch_range(args, config)
-
-    try:
-        user, passkey = auth(args)
-        logger.info(
-            "Fetching Ids with the following limit/length: %d/%d",
-            args.length,
-            args.limit,
-        )
-        ids = list(
-            saturn_get_cartridge_data_past(
-                args.length, args.limit, user, passkey
-            )
-        )
-        logger.info("Fetched %d cartridge IDs", len(ids))
-        print(1)
-        print(json.dumps(ids))
-    except Exception as e:
-        print(0)
-        logger.error("Error in FETCH (past) action: %s", str(e))
-        logger.error("Traceback:\n%s", traceback.format_exc())
-        sys.stdout.flush()
-        traceback.print_exc(file=sys.stdout)
-
-
-def action_fetch_range(args, config):
-    logger.info(
-        "FETCH action started in RANGE mode: %s -> %s",
-        args.start,
-        args.end
-    )
+    logger.info("FETCH action started in RANGE mode: %s -> %s", args.start, args.end)
     try:
         user, passkey = auth(args)
         logger.info("Fetching Ids from saturn in the range.")
-        ids = list(
-            saturn_get_cartridge_data_range(args.start, args.end,
-                                            user, passkey)
-        )
-        logger.info("Fetched %d cartridge IDs", len(ids))
+        data = saturn_get_bundle(user, passkey, args.start, args.end)
+        res = []
+        for d in data:
+            res.append(
+                {
+                    "id": d.id,
+                    "b_date": d.build_date,
+                    "exp_date": d.exp_date,
+                    "type": d.class_code,
+                }
+            )
+
+        logger.info("Fetched %d cartridge IDs", len(res))
         print(1)
-        print(json.dumps(ids))
+        print(json.dumps(res))
     except Exception as e:
         print(0)
         logger.error("Error in FETCH (range) action: %s", str(e))

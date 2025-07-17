@@ -4,21 +4,23 @@ import { useCartridge } from "../../contexts";
 import { useFilter } from "../../contexts";
 
 type ListItemProps = {
-  id: string;
+  id: number;
   time: string;
   type: string;
 };
 
 function ListItem( { id, time, type }: ListItemProps) {
   const { selectedCartridgeList, addCartridge, removeCartridge } = useCartridge()
-  const isChecked = (id: string) => { return selectedCartridgeList.has(id) }
+  const isChecked = () => { return selectedCartridgeList.has(id) }
+  const onChecked = () => { addCartridge(id) }
+  const onUnchecked = () => { removeCartridge(id) }
   const [datePart, timePart] = time.split(" ");
   const { colorMap } = useFilter()
   return (
     <div className="list_item">
       <Checkbox  id={id}
-                 onChecked={addCartridge}
-                 onUnchecked={removeCartridge}
+                 onChecked={onChecked}
+                 onUnchecked={onUnchecked}
                  isChecked={isChecked}>
       </Checkbox>
       <div className="list_item_infobox">

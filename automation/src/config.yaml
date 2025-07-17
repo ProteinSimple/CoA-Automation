@@ -1,37 +1,4 @@
 prod:
-  default_fields: fields.yaml
-  file_perm:
-    accessibility: true
-    annotate: false
-    assemble: false
-    copy: true
-    extract: false
-    form_fill: false
-    modify: false
-    print: true
-  font: Helv
-  fontsize: 8
-  mapping_columns: res/mapping_columns.json
-  mapping_dir: res/mappings
-  mapping_output_dir:
-  - Z:/Private/arvin.asgharian/mapping
-  model_dir: res/models
-  models:
-    CE-SDS:
-      mapping: coa_mapping_cief_400_template.csv
-      template: 046-317 CofA_Maurice-CE-SDS_Cartridge_090-100_revE.pdf
-    SDS+:
-      mapping: coa_mapping_flex.csv
-      template: Q51-0003_CofA_090-157_Maurice-CE-SDS_PLUS_Cartridge_RevD.pdf
-    cIEF 200:
-      fields: fields.yaml
-      mapping: coa_mapping_template.csv
-      template: 046-329_CofA_Maurice_cIEF_Cartridge_090-101_RevF.pdf
-  pdf_output_dir:
-  - Z:/Private/arvin.asgharian/CoAs
-  - Z:/Private/arvin.asgharian/Coa2
-  prod_code_map: res/Western-Biologics Part Number to ProdCode.xlsx
-test:
   file_perm:
     accessibility: true
     annotate: false
@@ -55,7 +22,38 @@ test:
   - CE-SDS
   - CE-SDS 50
   - Flex
+  - cIEF 400
   pdf_output_dir:
-  - ./output/
+  - ./output/`
   prod_code_map: res/Western-Biologics Part Number to ProdCode.xlsx
   profile: profile.yaml
+test:
+  file_perm:
+    accessibility: true
+    annotate: false
+    assemble: false
+    copy: true
+    extract: false
+    form_fill: false
+    modify: false
+    print: true
+  font: Helv
+  fontsize: 8
+  mapping_columns: res/mapping_columns.json
+  mapping_dir: res/mappings
+  mapping_output_dir:
+  - ./src/tests/output/
+  model_dir: res/models
+  models:
+  - SDS+
+  - SDSTurbo
+  - cIEF 200
+  - CE-SDS
+  - CE-SDS 50
+  - Flex
+  - cIEF 400
+  pdf_output_dir:
+  - ./src/tests/output/
+  prod_code_map: res/Western-Biologics Part Number to ProdCode.xlsx
+  profile: profile.yaml
+  test_coa_exp_dir: ./tests/res
