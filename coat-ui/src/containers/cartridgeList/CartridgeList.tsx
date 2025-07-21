@@ -7,8 +7,9 @@ import { useCartridge, useControl, useFilter } from "../../contexts";
 interface CartridgeInfo {
   id: number;
   b_date: string;
+  b_time: string;
   type: string;
-  passed_qc: boolean
+  passed_qc: string
 }
 
 interface CartridgeListProps {
@@ -29,9 +30,9 @@ function CartridgeList({ filterText }: CartridgeListProps) {
     try {
       const raw = await pythonFetchRange(startDate, endDate);
       const parsed: CartridgeInfo[] = JSON.parse(String(raw));
-      console.log(parsed)
       const uniqueTypes = [...new Set(parsed.map(item => Number(item.type)))];
       setValidTypes(uniqueTypes);
+      setCartridgeList([])
       setCartridgeList(parsed);
     } catch (error) {
       console.error("Error fetching/parsing cartridge list:", error);
@@ -65,6 +66,7 @@ function CartridgeList({ filterText }: CartridgeListProps) {
     return cartridgeList.filter((item) => {
       const id_str = String(item.id)
       const matchesFilter = id_str.toLowerCase().includes(lowerFilterText);
+      
       const matchesType = selectedTypes.length === 0 || selectedTypes.includes(Number(item.type));
       const passedQc = item.passed_qc
       return matchesFilter && matchesType && (!showOnlyPassed || passedQc);
@@ -102,7 +104,7 @@ function CartridgeList({ filterText }: CartridgeListProps) {
       </div>
     <div className="list_container">
       {filteredList.map((d) => (
-        <CartridgeListItem key={d.id} id={d.id} time={d.b_date} type={d.type} passed={d.passed_qc}/>
+        <CartridgeListItem key={d.id} id={d.id} time={d.b_time} date={d.b_date} type={d.type} status={d.passed_qc}/>
       ))}
     </div>
     </div>

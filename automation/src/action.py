@@ -331,9 +331,10 @@ def action_fetch(args, config):
                 {
                     "id": d.id,
                     "b_date": d.build_date,
+                    "b_time": d.build_time,
                     "exp_date": d.exp_date,
                     "type": d.class_code,
-                    "passed_qc": d.passed_qc
+                    "passed_qc": d.qc_status
                 }
             )
 
