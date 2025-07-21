@@ -7,14 +7,10 @@ import { useFilter } from '../../contexts';
 
 
 function DropdownFilter() {
-  const [options, setOptions] = useState([
-    { label: '1', value: 1 },
-    { label: '2', value: 2 },
-    { label: '6', value: 6 },
-    { label: '8', value: 8 }
-  ])
+  const [options, setOptions] = useState<{ label: string; value: number; }[]>([])
   const [selectedOptions, setSelectedOptions] = useState<number[]>([]);
   const { setTypes, validTypes, colorMap } = useFilter()
+  
   useEffect(() => {
     setTypes(selectedOptions)
   }, [selectedOptions])

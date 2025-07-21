@@ -19,7 +19,7 @@ function TopContainer({ setFilter }: TopContainerProps) {
   const [ isGenerating, setIsGenerating ] = useState(false)
   const { setError } = usePopUp()
   const [ name, setName ] = useState<string>("")
-  const { startDate, endDate } = useFilter()
+  const { prodDateRange } = useFilter()
   
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -31,7 +31,7 @@ function TopContainer({ setFilter }: TopContainerProps) {
     setIsGenerating(true);
 
     try {
-      const outputed_files = await pythonCoa([...selectedCartridgeList], name, startDate, endDate);
+      const outputed_files = await pythonCoa([...selectedCartridgeList], name, prodDateRange[0], prodDateRange[1]);
       let fileList: string[] = [];
 
       if (typeof outputed_files === "string") {

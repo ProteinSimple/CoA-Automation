@@ -2,12 +2,14 @@ import "./cartridgeListItem.css"
 import Checkbox from "../checkbox/Checkbox"
 import { useCartridge } from "../../contexts";
 import { useFilter } from "../../contexts";
-import { Check, X, Info  } from "lucide-react";
+import { Check, X  } from "lucide-react";
 
 type ListItemProps = {
   id: number;
-  date: string;
-  time: string;
+  prod_date: string;
+  prod_time: string;
+  qc_date: string;
+  qc_time: string;
   type: string;
   status: string
 };
@@ -22,12 +24,12 @@ function StatusIcon({ status }: { status : string }) {
     </div>
 }
 
-function ListItem( { id, date, time, type, status }: ListItemProps) {
+function ListItem( { id, prod_date, prod_time, qc_date, qc_time, type, status }: ListItemProps) {
   const { selectedCartridgeList, addCartridge, removeCartridge } = useCartridge()
   const isChecked = () => { return selectedCartridgeList.has(id) }
   const onChecked = () => { addCartridge(id) }
   const onUnchecked = () => { removeCartridge(id) }
-  const { colorMap, showOnlyPassed } = useFilter()
+  const { colorMap, showOnlyPassed, showProdTime } = useFilter()
   return (
     <div className="list_item">
       <Checkbox  id={id}
@@ -38,10 +40,21 @@ function ListItem( { id, date, time, type, status }: ListItemProps) {
       <div className="list_item_infobox">
         <p>
           {id}
-        </p> 
-        <p className="list_item_date">
-          {date} {time}
         </p>
+        {showProdTime?
+          <p className="list_item_date">
+            {prod_date} {prod_time}
+          </p>
+          : qc_date && qc_time ? 
+          <p className="list_item_date">
+            {qc_date} {qc_time} 
+          </p>
+          :
+          <p className="list_item_date">
+            NA 
+          </p>
+        } 
+        
           {!showOnlyPassed ? <StatusIcon status={status}/> : <p></p>}
       </div>
       <p className="list_item_type">

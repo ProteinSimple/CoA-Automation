@@ -1,13 +1,13 @@
 from datetime import datetime, timedelta
 from urllib.parse import urlencode
-
+import json
 import pandas as pd
 import requests
 from requests.auth import HTTPBasicAuth
 
 from keyToken import add_token, load_token
 from log import get_logger
-
+import math
 logger = get_logger(__name__)
 BASE_URL = "https://saturn.proteinsimple.com/api/1/cartridges/"
 
@@ -30,6 +30,8 @@ class CartridgeData:
         self.class_code: int = None
         self.batch_num: int = None
         self.qc_status: bool = None
+        self.qc_date: str = None
+        self.qc_time: str = None
 
         if sat_data is not None:
             d = sat_data
@@ -61,6 +63,29 @@ class CartridgeData:
             pass_fail = str(d.get("latest_assay_analysis_pass_fail", "")).strip().lower()
             self.qc_status = "P" if pass_fail == "pass" else "F" if pass_fail == "fail" else "NA"
 
+            qc_data = d.get("qc_results")
+            if pd.isna(qc_data) is not True:
+                data =  qc_data[0]
+    #             df["b_date_ts"] = df["build_completion_date"].apply(lambda x: x["$date"])
+    # df["b_date"] = pd.to_datetime(df["b_date_ts"], unit="ms")
+    # df["exp_date"] = (
+    #     (df["b_date"] + 
+    #     pd.DateOffset(months=12))
+    #         .dt.to_period("M")
+    #         .dt.to_timestamp("M")
+    # )
+                qc_time_dt = data["analysis_timestamp"]
+                qc_timestampt = pd.to_datetime(qc_time_dt, unit="s")
+                self.qc_date = "%s/%s/%s" % (
+                    qc_timestampt.month,
+                    qc_timestampt.day,
+                    qc_timestampt.year,
+                )
+                self.qc_time = "%d:%02d" % (
+                    qc_timestampt.hour,
+                    qc_timestampt.minute,
+                )
+
     def to_dict(self):
         return {
             "id": self.id,
@@ -70,6 +95,9 @@ class CartridgeData:
             "class_name": self.class_name,
             "class_code": self.class_code,
             "batch_num": self.batch_num,
+            "qc_date": self.qc_date,
+            "qc_time": self.qc_time,
+            "qc_status": self.qc_status
         }
 
     def model_name(self) -> str:
@@ -103,35 +131,21 @@ def _saturn_get_response(start, end, username, passkey):
         print(response.text)
         return None
 
-
-def saturn_get_bundle(username, passkey,
-                      start=None, end=None) -> list[CartridgeData]:
-    if start is None or end is None:
-        # THIS SHOULD NEVER HAPPEN AND IS A BAD IMPLEMENTATION
-        end_dt = datetime.today() + timedelta(days=1)
-        start_dt = end_dt - timedelta(
-            days=5
-        )  # TODO: change this to search cartridges form previous days as well!
-
-        start = start_dt.strftime("%Y-%m-%d")
-        end = end_dt.strftime("%Y-%m-%d")
-
-    response = _saturn_get_response(start, end, username, passkey)
-
-    df = pd.DataFrame(response.json())
+def preprocess_cartridge_data(df: pd.DataFrame):
     df["b_date_ts"] = df["build_completion_date"].apply(lambda x: x["$date"])
     df["b_date"] = pd.to_datetime(df["b_date_ts"], unit="ms")
     df["exp_date"] = (
         (df["b_date"] + 
-         pd.DateOffset(months=12))
+        pd.DateOffset(months=12))
             .dt.to_period("M")
             .dt.to_timestamp("M")
     )
 
-    retVal = []
-    for _, d in df.iloc[::-1].iterrows():
-        retVal.append(CartridgeData(d))
-    return retVal
+def saturn_get_bundle(username, passkey,
+                      start, end) -> list[CartridgeData]:
+    response = _saturn_get_response(start, end, username, passkey)
+    preprocess_cartridge_data(df := pd.DataFrame(response.json()))
+    return [CartridgeData(d) for _, d in df.iloc[::-1].iterrows()]
 
 
 def saturn_check(username, passkey) -> bool:

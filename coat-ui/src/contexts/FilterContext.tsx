@@ -1,14 +1,18 @@
+
 import { useState, useEffect, createContext, useContext, ReactNode } from 'react';
 import chroma from 'chroma-js';
 
 
 interface FilterContextType {
-    startDate: Date;
-    endDate: Date;
+    
     showOnlyPassed: boolean;
     setShowOnlyPassed: (_: boolean) => void;
-    setStartDate: (_: Date) => void;
-    setEndDate: (_: Date) => void;
+    showProdTime: boolean;
+    setShowProdTime: (_: boolean) => void;
+    prodDateRange: [Date, Date];
+    setProdDateRange: (range: [Date, Date]) => void;
+    qcDateRange: [Date, Date]
+    setQCDateRange: (_: [Date, Date]) => void
     selectedTypes: number[]
     setTypes: (_: number[]) => void
     validTypes: number[]
@@ -33,17 +37,21 @@ interface FilterProviderProps {
 
 export const FilterProvider = ({ children }: FilterProviderProps) => {
   let prev_valid: number[] = []
-  const [endDate, setEndDate] = useState<Date>(new Date());
-  const [startDate, setStartDate] = useState<Date>(() => {
+  const [prodEndDate, setProdEndDate] = useState<Date>(new Date());
+  const [prodStartDate, setProdStartDate] = useState<Date>(() => {
     const d = new Date();
     d.setDate(d.getDate() - 1);
     return d;
   });
 
-  const [selectedTypes, setTypes] = useState<number[]>([])
-  const [validTypes, setValidTypes] = useState<number[]>([])
+  const [qcDateRange, setQCDateRange] = useState<[Date, Date]>([prodStartDate, prodEndDate])
+
+  const [selectedTypes, setTypes] = useState<number[]>([]);
+  const [validTypes, setValidTypes] = useState<number[]>([]);
   const [colorMap, setColorMap] = useState<Record<number, string>>({});
-  const [showOnlyPassed, setShowOnlyPassed] = useState<boolean>(true)
+  const [showOnlyPassed, setShowOnlyPassed] = useState<boolean>(true);
+  const [showProdTime, setShowProdTime] = useState<boolean>(false);
+  
   
   useEffect(() => {
     if (prev_valid === validTypes) {
@@ -60,20 +68,35 @@ export const FilterProvider = ({ children }: FilterProviderProps) => {
     setColorMap(newColorMap);
   }, [validTypes]);
 
+  useEffect(() =>{
+    setQCDateRange([prodStartDate, prodEndDate])
+  }, [prodEndDate, prodStartDate])
 
+  const setProdDateRange = (range: [Date, Date]) => {
+    setProdStartDate(range[0]);
+    setProdEndDate(range[1]);
+  };
 
   return (
     <FilterContext.Provider value={{ 
-      startDate,
-      endDate,
+      // showing only cartridges with QC passed
       showOnlyPassed,
       setShowOnlyPassed,
-      setStartDate, 
-      setEndDate, 
+      // Whether to show prod or QC time
+      showProdTime,
+      setShowProdTime,
+      // Prod Date filter
+      prodDateRange: [prodStartDate, prodEndDate],
+      setProdDateRange, 
+      // QC Date filter
+      qcDateRange,
+      setQCDateRange,
+      // filtering cartridges by their type
       selectedTypes, 
       setTypes, 
       validTypes, 
       setValidTypes,
+      // color map for assigning color. This should be changed!
       colorMap
     }}>
       {children}

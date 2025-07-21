@@ -17,7 +17,7 @@ function SettingsContainer() {
   const [mappingPaths, setMappingPaths] = useState<string[]>([])
   const { setting: isOpen, hideSettings: onClose} = usePopUp()
   const { checkDone } = useControl();
-  const { showOnlyPassed, setShowOnlyPassed } = useFilter();
+  const { showOnlyPassed, setShowOnlyPassed, showProdTime, setShowProdTime } = useFilter();
 
   const addPdfPath = async (given: string) => {
     try {
@@ -120,6 +120,14 @@ function SettingsContainer() {
               onChange={(e) => setShowOnlyPassed(e.target.checked)}
             />
             Show only cartridges that passed QC
+          </label>
+          <label>
+            <input
+              type="checkbox"
+              checked={showProdTime}
+              onChange={(e) => setShowProdTime(e.target.checked)}
+            />
+            Show Production time instead of QC time
           </label>
         </div>
         <div className="settings-path-container">
