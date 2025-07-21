@@ -9,10 +9,8 @@ interface FilterContextType {
     setShowOnlyPassed: (_: boolean) => void;
     showProdTime: boolean;
     setShowProdTime: (_: boolean) => void;
-    prodStartDate: Date;
-    prodEndDate: Date;
-    setProdStartDate: (_: Date) => void;
-    setProdEndDate: (_: Date) => void;
+    prodDateRange: [Date, Date];
+    setProdDateRange: (range: [Date, Date]) => void;
     qcDateRange: [Date, Date]
     setQCDateRange: (_: [Date, Date]) => void
     selectedTypes: number[]
@@ -74,7 +72,10 @@ export const FilterProvider = ({ children }: FilterProviderProps) => {
     setQCDateRange([prodStartDate, prodEndDate])
   }, [prodEndDate, prodStartDate])
 
-
+  const setProdDateRange = (range: [Date, Date]) => {
+    setProdStartDate(range[0]);
+    setProdEndDate(range[1]);
+  };
 
   return (
     <FilterContext.Provider value={{ 
@@ -85,10 +86,8 @@ export const FilterProvider = ({ children }: FilterProviderProps) => {
       showProdTime,
       setShowProdTime,
       // Prod Date filter
-      prodStartDate,
-      prodEndDate,
-      setProdStartDate, 
-      setProdEndDate, 
+      prodDateRange: [prodStartDate, prodEndDate],
+      setProdDateRange, 
       // QC Date filter
       qcDateRange,
       setQCDateRange,

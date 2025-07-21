@@ -25,7 +25,7 @@ function CartridgeList({ filterText }: CartridgeListProps) {
   const { addCartridge, clearSelected, selectedCartridgeList } = useCartridge()
   const { checkDone } = useControl();
   const {
-    prodStartDate, prodEndDate, selectedTypes,
+    prodDateRange, selectedTypes,
     setValidTypes, showOnlyPassed, qcDateRange 
   } = useFilter()
   const [selectAll, setSelectAll] = useState<boolean>(true)
@@ -33,7 +33,7 @@ function CartridgeList({ filterText }: CartridgeListProps) {
   const fetchData = useCallback(async () => {
     setLoading(true);
     try {
-      const raw = await pythonFetchRange(prodStartDate, prodEndDate);
+      const raw = await pythonFetchRange(prodDateRange[0], prodDateRange[1]);
       const parsed: CartridgeInfo[] = JSON.parse(String(raw));
       const uniqueTypes = [...new Set(parsed.map(item => Number(item.class_code)))];
       setValidTypes(uniqueTypes);
@@ -45,7 +45,7 @@ function CartridgeList({ filterText }: CartridgeListProps) {
     } finally {
       setLoading(false);
     }
-  }, [prodStartDate, prodEndDate, setValidTypes]);
+  }, [prodDateRange[0], prodDateRange[1], setValidTypes]);
 
 
   useEffect(() => {
@@ -76,7 +76,6 @@ function CartridgeList({ filterText }: CartridgeListProps) {
       const passedQc = item.qc_status === "P"
 
       const qcDate = new Date(item.qc_date);
-      console.log("QC Date:", item.qc_date)
       const [qcStart, qcEnd] = qcDateRange
       const matchesQCDate = qcDate >= qcStart && qcDate <= qcEnd || item.qc_date == null;
 

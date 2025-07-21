@@ -6,20 +6,17 @@ import { useFilter } from '../../contexts';
 function TopContainerDates() {
   
   const {
-    prodStartDate, prodEndDate, setProdStartDate, setProdEndDate,
+    prodDateRange, setProdDateRange,
     qcDateRange, setQCDateRange
   } = useFilter();
   
 
   const handleProdRangeChange = (dates: [Date | null, Date | null]) => {
-    const [start, end] = dates;
-    setProdStartDate(start as Date);
-    setProdEndDate(end as Date);
+    setProdDateRange([dates[0] as Date, dates[1] as Date])
   };
 
   const handleQCRangeChange = (dates: [Date | null, Date | null]) => {
-    const [start, end] = dates
-    setQCDateRange([start as Date, end as Date]);
+    setQCDateRange([dates[0] as Date, dates[1] as Date]);
   };
 
   return (
@@ -30,8 +27,8 @@ function TopContainerDates() {
         </p>
         <DatePicker
           selectsRange
-          startDate={prodStartDate}
-          endDate={prodEndDate}
+          startDate={prodDateRange[0]}
+          endDate={prodDateRange[1]}
           onChange={handleProdRangeChange}
           dateFormat="yyyy-MM-dd"
           customInput={<input readOnly className='date-input' />}
