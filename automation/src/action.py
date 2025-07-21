@@ -48,6 +48,7 @@ profile_comment = """\
 # class_name : Name of classification
 # class_code : Code of classification
 # batch_num  : Batch number
+# passed_qc  : Cartridge QC results
 # Possilbe actions: @!TEST, @!TIME
 """
 
@@ -332,6 +333,7 @@ def action_fetch(args, config):
                     "b_date": d.build_date,
                     "exp_date": d.exp_date,
                     "type": d.class_code,
+                    "passed_qc": d.passed_qc
                 }
             )
 

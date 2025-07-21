@@ -4,7 +4,7 @@ import { SettingPathListItem } from '../../components';
 import { useEffect, useState } from 'react';
 import { open  } from '@tauri-apps/plugin-dialog';
 import { pythonConfigAddPdf, pythonConfigList, pythonConfigDeletePdf, pythonConfigAddMapping, pythonConfigDeleteMapping } from '../../services';
-import { useControl, usePopUp } from '../../contexts';
+import { useControl, useFilter, usePopUp } from '../../contexts';
 import { Folder } from 'lucide-react';
 
 
@@ -17,6 +17,7 @@ function SettingsContainer() {
   const [mappingPaths, setMappingPaths] = useState<string[]>([])
   const { setting: isOpen, hideSettings: onClose} = usePopUp()
   const { checkDone } = useControl();
+  const { showOnlyPassed, setShowOnlyPassed } = useFilter();
 
   const addPdfPath = async (given: string) => {
     try {
@@ -109,11 +110,19 @@ function SettingsContainer() {
       closeTimeoutMS={300}
       ariaHideApp={false}
     >
-      
-      
-      <h2>Settings</h2>
+      <h4>Settings</h4>
       <div className="settings-content-container">
-        <div>
+        <div className="settings-toggle-container">
+          <label>
+            <input
+              type="checkbox"
+              checked={showOnlyPassed}
+              onChange={(e) => setShowOnlyPassed(e.target.checked)}
+            />
+            Show only cartridges that passed QC
+          </label>
+        </div>
+        <div className="settings-path-container">
           COA Output paths
           <div>
               <button onClick={() => handleAddButton(addPdfPath)}>
@@ -127,7 +136,7 @@ function SettingsContainer() {
             {pdfPaths.map((val) => <SettingPathListItem path={val} deleteAction={removePdfPath}/>)}
           </div>
         </div>
-        <div>
+        <div className="settings-path-container">
           Mapping Output paths
           <div>
               <button onClick={() => handleAddButton(addMappingPath)}>
