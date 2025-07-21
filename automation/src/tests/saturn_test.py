@@ -46,4 +46,4 @@ class TestSaturn(unittest.TestCase):
             self.assertIsNotNone(val.class_name)
             self.assertIsNotNone(val.class_code)
             self.assertIsNotNone(val.id)
-            self.assertIsNotNone(val.passed_qc)
+            self.assertIsNotNone(val.qc_status)

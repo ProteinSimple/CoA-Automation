@@ -2,16 +2,27 @@ import "./cartridgeListItem.css"
 import Checkbox from "../checkbox/Checkbox"
 import { useCartridge } from "../../contexts";
 import { useFilter } from "../../contexts";
-import { Check, X } from "lucide-react";
+import { Check, X, Info  } from "lucide-react";
 
 type ListItemProps = {
   id: number;
+  date: string;
   time: string;
   type: string;
-  passed: boolean
+  status: string
 };
 
-function ListItem( { id, time, type, passed }: ListItemProps) {
+function StatusIcon({ status }: { status : string }) {
+  const PASS = "P"
+  const FAIL = "F"
+  return   <div>
+      {status === PASS ? <Check size="1em"/>
+       : status === FAIL ? <X size="1em"/> 
+       : <span>?</span> }
+    </div>
+}
+
+function ListItem( { id, date, time, type, status }: ListItemProps) {
   const { selectedCartridgeList, addCartridge, removeCartridge } = useCartridge()
   const isChecked = () => { return selectedCartridgeList.has(id) }
   const onChecked = () => { addCartridge(id) }
@@ -29,9 +40,9 @@ function ListItem( { id, time, type, passed }: ListItemProps) {
           {id}
         </p> 
         <p className="list_item_date">
-          {time}
+          {date} {time}
         </p>
-          {!showOnlyPassed && passed? <Check size="1em"/> : !showOnlyPassed && !passed? <X size="1em"/> : <p></p>}
+          {!showOnlyPassed ? <StatusIcon status={status}/> : <p></p>}
       </div>
       <p className="list_item_type">
       <span

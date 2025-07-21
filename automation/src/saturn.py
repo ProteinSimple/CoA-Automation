@@ -29,7 +29,7 @@ class CartridgeData:
         self.class_name: str = None
         self.class_code: int = None
         self.batch_num: int = None
-        self.passed_qc: bool = None
+        self.qc_status: bool = None
 
         if sat_data is not None:
             d = sat_data
@@ -39,9 +39,9 @@ class CartridgeData:
                 d["b_date"].day,
                 d["b_date"].year,
             )
-            self.build_time = "%s:%s" % (
-                d["b_date"].minute,
+            self.build_time = "%d:%02d" % (
                 d["b_date"].hour,
+                d["b_date"].minute,
             )
             self.exp_date = "%s/%s/%s" % (
                 d["exp_date"].month,
@@ -58,8 +58,8 @@ class CartridgeData:
                 self.batch_num = d["pn702_0013_lot"]
             if self.class_code in set([2, 5]):
                 self.batch_num = d["center_cap_lot"]
-            pass_fail = str(d.get("cartridge_pass_fail", "")).strip().lower()
-            self.passed_qc = pass_fail == "pass"
+            pass_fail = str(d.get("latest_assay_analysis_pass_fail", "")).strip().lower()
+            self.qc_status = "P" if pass_fail == "pass" else "F" if pass_fail == "fail" else "NA"
 
     def to_dict(self):
         return {
@@ -70,7 +70,6 @@ class CartridgeData:
             "class_name": self.class_name,
             "class_code": self.class_code,
             "batch_num": self.batch_num,
-            "passed_qc": self.passed_qc
         }
 
     def model_name(self) -> str:
