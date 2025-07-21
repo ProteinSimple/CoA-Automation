@@ -3,7 +3,7 @@
   flex-direction: row;
   align-items: center;
   justify-content: center;
-  gap: 1rem;
+  gap: 3em;
 }
 
 .date-group {
@@ -34,5 +34,5 @@
   font-weight: 500;
   font-family: inherit;
   color: var(--color-text-primary);
-  max-width: 10em;
+  max-width: 15em;
 }

@@ -6,10 +6,12 @@ import { useCartridge, useControl, useFilter } from "../../contexts";
 
 interface CartridgeInfo {
   id: number;
-  b_date: string;
-  b_time: string;
-  type: string;
-  passed_qc: string
+  build_date: string;
+  build_time: string;
+  class_code: string;
+  qc_status: string;
+  qc_date: string;
+  qc_time: string
 }
 
 interface CartridgeListProps {
@@ -22,17 +24,20 @@ function CartridgeList({ filterText }: CartridgeListProps) {
 
   const { addCartridge, clearSelected, selectedCartridgeList } = useCartridge()
   const { checkDone } = useControl();
-  const {startDate, endDate, selectedTypes, setValidTypes, showOnlyPassed } = useFilter()
+  const {
+    prodStartDate, prodEndDate, selectedTypes,
+    setValidTypes, showOnlyPassed, qcDateRange 
+  } = useFilter()
   const [selectAll, setSelectAll] = useState<boolean>(true)
 
   const fetchData = useCallback(async () => {
     setLoading(true);
     try {
-      const raw = await pythonFetchRange(startDate, endDate);
+      const raw = await pythonFetchRange(prodStartDate, prodEndDate);
       const parsed: CartridgeInfo[] = JSON.parse(String(raw));
-      const uniqueTypes = [...new Set(parsed.map(item => Number(item.type)))];
+      const uniqueTypes = [...new Set(parsed.map(item => Number(item.class_code)))];
       setValidTypes(uniqueTypes);
-      setCartridgeList([])
+      setCartridgeList([]);
       setCartridgeList(parsed);
     } catch (error) {
       console.error("Error fetching/parsing cartridge list:", error);
@@ -40,7 +45,7 @@ function CartridgeList({ filterText }: CartridgeListProps) {
     } finally {
       setLoading(false);
     }
-  }, [startDate, endDate, setValidTypes]);
+  }, [prodStartDate, prodEndDate, setValidTypes]);
 
 
   useEffect(() => {
@@ -67,11 +72,17 @@ function CartridgeList({ filterText }: CartridgeListProps) {
       const id_str = String(item.id)
       const matchesFilter = id_str.toLowerCase().includes(lowerFilterText);
       
-      const matchesType = selectedTypes.length === 0 || selectedTypes.includes(Number(item.type));
-      const passedQc = item.passed_qc
-      return matchesFilter && matchesType && (!showOnlyPassed || passedQc);
+      const matchesType = selectedTypes.length === 0 || selectedTypes.includes(Number(item.class_code));
+      const passedQc = item.qc_status === "P"
+
+      const qcDate = new Date(item.qc_date);
+      console.log("QC Date:", item.qc_date)
+      const [qcStart, qcEnd] = qcDateRange
+      const matchesQCDate = qcDate >= qcStart && qcDate <= qcEnd || item.qc_date == null;
+
+      return matchesFilter && matchesQCDate && matchesType && (!showOnlyPassed || passedQc);
     });
-  }, [cartridgeList, filterText, selectedTypes, showOnlyPassed]);
+  }, [cartridgeList, filterText, selectedTypes, showOnlyPassed, qcDateRange]);
 
   
   
@@ -85,28 +96,32 @@ function CartridgeList({ filterText }: CartridgeListProps) {
   }, [filteredList, selectedCartridgeList]);
 
 
-  if (!checkDone || loading) { return <div>Loading Cartridge Data...</div>;}
+  if (!checkDone || loading) { return <div> Loading Cartridge Data...</div>;}
 
-  if (cartridgeList.length === 0) { return <div>No cartridge data available.</div>;}
+  if (cartridgeList.length === 0) { return <div> No cartridge data available.</div>;}
 
-  if (filteredList.length === 0) { return <div>No cartridges match your current filters.</div>; }
+  if (filteredList.length === 0) { return <div> No cartridges match your current filters.</div>; }
 
   return (
     <div>
       <div style={{display: "flex"}}>
-      <button style={{
-          margin: "0.5em",
-          padding: "0.5em"
-      }}
-              onClick={handleSelectAll}>
+        <button style={{ margin: "0.5em", padding: "0.5em"}}
+                onClick={handleSelectAll}>
         { selectAll ? "select all" : "de-select all" }
-      </button>
+        </button>
       </div>
-    <div className="list_container">
-      {filteredList.map((d) => (
-        <CartridgeListItem key={d.id} id={d.id} time={d.b_time} date={d.b_date} type={d.type} status={d.passed_qc}/>
-      ))}
-    </div>
+      <div className="list_container">
+        {filteredList.map(d =>
+          <CartridgeListItem
+           key={d.id} id={d.id}
+           prod_time={d.build_time}
+           prod_date={d.build_date}
+           qc_date={d.qc_date}
+           qc_time={d.qc_time}
+           type={d.class_code}
+           status={d.qc_status}/>
+        )}
+      </div>
     </div>
   );
 }

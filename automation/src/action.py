@@ -325,18 +325,18 @@ def action_fetch(args, config):
         user, passkey = auth(args)
         logger.info("Fetching Ids from saturn in the range.")
         data = saturn_get_bundle(user, passkey, args.start, args.end)
-        res = []
-        for d in data:
-            res.append(
-                {
-                    "id": d.id,
-                    "b_date": d.build_date,
-                    "b_time": d.build_time,
-                    "exp_date": d.exp_date,
-                    "type": d.class_code,
-                    "passed_qc": d.qc_status
-                }
-            )
+        res = [d.to_dict() for d in data]
+        # for d in data:
+        #     res.append(
+        #         {
+        #             "id": d.id,
+        #             "b_date": d.build_date,
+        #             "b_time": d.build_time,
+        #             "exp_date": d.exp_date,
+        #             "type": d.class_code,
+        #             "passed_qc": d.qc_status
+        #         }
+        #     )
 
         logger.info("Fetched %d cartridge IDs", len(res))
         print(1)

@@ -19,7 +19,7 @@ function TopContainer({ setFilter }: TopContainerProps) {
   const [ isGenerating, setIsGenerating ] = useState(false)
   const { setError } = usePopUp()
   const [ name, setName ] = useState<string>("")
-  const { startDate, endDate } = useFilter()
+  const { ProdstartDate: startDate, ProdendDate: endDate } = useFilter()
   
 
   const handleSubmit = async (e: React.FormEvent) => {

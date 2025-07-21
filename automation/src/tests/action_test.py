@@ -61,18 +61,16 @@ class ActionTest(unittest.TestCase):
         args.end = "2025-07-15"
         action.action_fetch(args, config)
         self.assertEqual(out.getvalue().strip()[0], "1")
-        try:
-            data = out.getvalue()[1:].strip()
-            parsed = json.loads(data)
-            self.assertIsInstance(parsed, list)
-            for val in parsed:
-                for f in ["id", "b_date", "type", "passed_qc"]:
-                    self.assertIn(f, val)
-                self.assertIsInstance(int(val["id"]), int)
-                self.assertIsInstance(val["type"], int)
-                self.assertIn(val["type"], saturn.CartridgeData.code_map)
-        except Exception:
-            self.fail()
+        data = out.getvalue()[1:].strip()
+        parsed = json.loads(data)
+        self.assertIsInstance(parsed, list)
+        for val in parsed:
+            for f in ["id", "build_date", "build_time", "class_code", "qc_status"]:
+                self.assertIn(f, val)
+            self.assertIsInstance(int(val["id"]), int)
+            self.assertIsInstance(val["class_code"], int)
+            self.assertIn(val["class_code"], saturn.CartridgeData.code_map)
+    
 
     def test_config_add_action(self):
         config = TestContext.get_config()
@@ -169,6 +167,7 @@ class ActionTest(unittest.TestCase):
         args.name = "TESTER"
         action.action_coa(args, config)
         res = out.getvalue().strip()
+
         self.assertEqual(res[0], "1")
 
         files = res[1:].split("\n")

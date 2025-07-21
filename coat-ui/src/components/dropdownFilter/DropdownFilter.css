@@ -16,7 +16,8 @@
 }
 
 .dropdown-container {
-  width: 30%;
+  max-width: 11em; /* or whatever value fits your layout */
+  width: 100%;
   text-align: start;
   align-items: center;
   justify-content: center;
@@ -24,4 +25,8 @@
 }
 .dropdown-container > * {
   padding-left: 5px
+}
+
+.p-multiselect-dark {
+  width: 100%;
 }

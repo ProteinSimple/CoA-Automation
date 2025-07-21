@@ -5,31 +5,56 @@ import { useFilter } from '../../contexts';
 
 function TopContainerDates() {
   
-  const { startDate, endDate, setStartDate, setEndDate } = useFilter()
+  const {
+    prodStartDate, prodEndDate, setProdStartDate, setProdEndDate,
+    qcDateRange, setQCDateRange
+  } = useFilter();
+  
+
+  const handleProdRangeChange = (dates: [Date | null, Date | null]) => {
+    const [start, end] = dates;
+    setProdStartDate(start as Date);
+    setProdEndDate(end as Date);
+  };
+
+  const handleQCRangeChange = (dates: [Date | null, Date | null]) => {
+    const [start, end] = dates
+    setQCDateRange([start as Date, end as Date]);
+  };
 
   return (
     <div className="topContainer-dates">
+      <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+        <p>
+          Production Date:
+        </p>
+        <DatePicker
+          selectsRange
+          startDate={prodStartDate}
+          endDate={prodEndDate}
+          onChange={handleProdRangeChange}
+          dateFormat="yyyy-MM-dd"
+          customInput={<input readOnly className='date-input' />}
+          wrapperClassName="date-picker-wrapper"
+          placeholderText="Select a date range"
+        />  
+      </div>
+      <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
           <p>
-            Start Date:
+            QC Date:
           </p>
-          <DatePicker 
-            selected={startDate} 
-            onChange={(date) => setStartDate(date as Date)}
-            dateFormat="yyyy-MM-dd" 
-            customInput={<input readOnly  className='date-input'/>}
-            wrapperClassName="date-picker-wrapper" 
-          />
-          <p>
-            End Date:
-          </p>
-          <DatePicker 
-            selected={endDate} 
-            onChange={(date) => setEndDate(date as Date)}
-            dateFormat="yyyy-MM-dd" 
-            customInput={<input readOnly className='date-input'/>} 
+          <DatePicker
+            selectsRange
+            startDate={qcDateRange[0]}
+            endDate={qcDateRange[1]}
+            onChange={handleQCRangeChange}
+            dateFormat="yyyy-MM-dd"
+            customInput={<input readOnly className='date-input' />}
             wrapperClassName="date-picker-wrapper"
+            placeholderText="Select a date range"
           />
-          <DropdownFilter/>
+      </div>
+      <DropdownFilter/>
     </div>
   );
 };
