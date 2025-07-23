@@ -1,7 +1,5 @@
 
 import { useState, useEffect, createContext, useContext, ReactNode } from 'react';
-import chroma from 'chroma-js';
-
 
 interface FilterContextType {
     showOnlyPassed: boolean;
@@ -16,7 +14,8 @@ interface FilterContextType {
     setTypes: (_: number[]) => void
     validTypes: number[]
     setValidTypes: (_: number[]) => void
-    colorMap: Record<number, string>
+    colorMap: Record<number, string>,
+    setColorMap: (_: Record<number, string>) => void,
     selectedUsers: string[]
     setSelectedUsers: (_: string[]) => void
     validUsers: string[]
@@ -70,10 +69,6 @@ export const FilterProvider = ({ children }: FilterProviderProps) => {
       setColorMap({});
       return;
     }
-    const colors = chroma.scale('Set3').mode('lch').colors(validTypes.length);
-    const newColorMap: Record<number, string> = {};
-    validTypes.forEach((type, idx) => { newColorMap[type] = colors[idx] });
-    setColorMap(newColorMap);
   }, [validTypes]);
 
   function setQCDateRange(given: [Date, Date]) {
@@ -107,6 +102,7 @@ export const FilterProvider = ({ children }: FilterProviderProps) => {
       setValidUsers,
       // color map for assigning color. This should be changed!
       colorMap,
+      setColorMap,
       // Filter Text
       filterText,
       setFilterText

@@ -58,6 +58,8 @@ def get_args():
     init_sub.add_argument("model", type=str, help="Model name of cartridge")
     init_sub.add_argument("template", type=str)
     init_sub.add_argument("part_number", type=str)
+    init_sub.add_argument("color", type=str)
+    init_sub.add_argument("code", type=int)
 
     config_subparser = config_sub.add_subparsers(dest="config_mode", required=True)
     sub_list.append(add_config := config_subparser.add_parser("add"))

@@ -3,12 +3,10 @@ from urllib.parse import urlencode
 import json
 import pandas as pd
 import requests
+from copy import deepcopy
 from requests.auth import HTTPBasicAuth
-from unittest.mock import Mock 
 from keyToken import add_token, load_token
 from log import get_logger
-import math
-from collections import defaultdict
 logger = get_logger(__name__)
 BASE_URL = "https://saturn.proteinsimple.com/api/1/cartridges/"
 
@@ -16,13 +14,7 @@ QC_RUN_URL = "https://saturn.proteinsimple.com/api/1/mauriceqcruns/"
 
 
 class CartridgeData:
-    code_map: dict[int, str] = {
-        1: "cIEF 200",
-        2: "cIEF 400",
-        8: "SDSTurbo",
-        6: "SDS+",
-        5: "Flex",
-    }
+    code_map: dict[int, str] = None
 
     def __init__(self, sat_data: pd.DataFrame = None):
         self.id: int = None
@@ -85,7 +77,18 @@ class CartridgeData:
                     qc_timestampt.hour,
                     qc_timestampt.minute,
                 )
-                
+
+    @staticmethod
+    def load_code_map(path: str):
+        with open(path) as f:
+            res = json.load(f)
+            CartridgeData.code_map = {int(k): v for k, v in res.items()}
+    
+    @staticmethod
+    def add_code2map(path: str, code: int, val: str):
+        CartridgeData.code_map[code] = val
+        with open(path, mode="w+") as f:
+            json.dump(CartridgeData.code_map[code], f)
 
     def to_dict(self):
         return {

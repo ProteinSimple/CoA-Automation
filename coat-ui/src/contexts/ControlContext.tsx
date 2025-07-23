@@ -23,6 +23,7 @@ interface CartridgeInfo {
   qc_date: string;
   qc_time: string;
   qc_user: string;
+  color: string;
 }
 
 
@@ -58,7 +59,7 @@ export const ControlProvider = ({ children }: ControlProviderProps) => {
     const { setCartridgeList } = useCartridge()
     const {
         setValidUsers, setValidTypes, qcDateRange,
-        setProdDateRange,
+        setProdDateRange, colorMap
     } = useFilter()
     
     const fetchData = useCallback(async () => {
@@ -74,6 +75,12 @@ export const ControlProvider = ({ children }: ControlProviderProps) => {
         setCartridgeList([]);
         setCartridgeList(values);
         setProdDateRange([new Date(parsed.prod_start), new Date(parsed.prod_end)])
+        for (const val of values) {
+            const code = Number(val.class_code)
+            if (!(Number(code) in colorMap)) {
+                colorMap[Number(code)] = val.color 
+            }
+        }
         } catch (error) {
         console.error("Error fetching/parsing cartridge list:", error);
         setCartridgeList([]); // Reset on error
