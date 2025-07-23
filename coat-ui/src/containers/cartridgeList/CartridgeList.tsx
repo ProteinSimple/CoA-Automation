@@ -1,101 +1,18 @@
 import { CartridgeListItem } from "../../components";
-import { pythonFetchRange } from "../../services";
-import { useEffect, useState, useMemo, useCallback } from "react";
 import "./cartridgeList.css";
-import { useCartridge, useControl, useFilter } from "../../contexts";
-
-interface CartridgeInfo {
-  id: number;
-  build_date: string;
-  build_time: string;
-  class_code: string;
-  qc_status: string;
-  qc_date: string;
-  qc_time: string
-}
-
-interface CartridgeListProps {
-  filterText: string
-}
-
-function CartridgeList({ filterText }: CartridgeListProps) {
-  const [cartridgeList, setCartridgeList] = useState<CartridgeInfo[]>([]);
-  const [loading, setLoading] = useState<boolean>(false);
-
-  const { addCartridge, clearSelected, selectedCartridgeList } = useCartridge()
-  const { checkDone } = useControl();
-  const {
-    prodDateRange, selectedTypes,
-    setValidTypes, showOnlyPassed, qcDateRange 
-  } = useFilter()
-  const [selectAll, setSelectAll] = useState<boolean>(true)
-
-  const fetchData = useCallback(async () => {
-    setLoading(true);
-    try {
-      const raw = await pythonFetchRange(prodDateRange[0], prodDateRange[1]);
-      const parsed: CartridgeInfo[] = JSON.parse(String(raw));
-      const uniqueTypes = [...new Set(parsed.map(item => Number(item.class_code)))];
-      setValidTypes(uniqueTypes);
-      setCartridgeList([]);
-      setCartridgeList(parsed);
-    } catch (error) {
-      console.error("Error fetching/parsing cartridge list:", error);
-      setCartridgeList([]); // Reset on error
-    } finally {
-      setLoading(false);
-    }
-  }, [prodDateRange[0], prodDateRange[1], setValidTypes]);
+import { useControl, useCartridge } from "../../contexts";
 
 
-  useEffect(() => {
-    if (checkDone) {
-      fetchData();
-    }
-  }, [checkDone, fetchData]);
 
-  const handleSelectAll = () => {
-    if(selectAll) {
-      setSelectAll(false)
-      filteredList.map(v => addCartridge(v.id))
-    } else {
-      setSelectAll(true)
-      clearSelected()
-    }
-  };
+function CartridgeList() {
+  const { checkDone, cartridgeLoading } = useControl();
+  const { cartridgeList, filteredList } = useCartridge();
 
-  const filteredList = useMemo(() => {
-    if (!cartridgeList.length) return [];
-    const lowerFilterText = filterText.toLowerCase();
-    
-    return cartridgeList.filter((item) => {
-      const id_str = String(item.id)
-      const matchesFilter = id_str.toLowerCase().includes(lowerFilterText);
-      
-      const matchesType = selectedTypes.length === 0 || selectedTypes.includes(Number(item.class_code));
-      const passedQc = item.qc_status === "P"
-
-      const qcDate = new Date(item.qc_date);
-      const [qcStart, qcEnd] = qcDateRange
-      const matchesQCDate = qcDate >= qcStart && qcDate <= qcEnd || item.qc_date == null;
-
-      return matchesFilter && matchesQCDate && matchesType && (!showOnlyPassed || passedQc);
-    });
-  }, [cartridgeList, filterText, selectedTypes, showOnlyPassed, qcDateRange]);
 
   
-  
-  useEffect(() => {
-    if (filteredList.length === 0) {
-      setSelectAll(true);
-      return;
-    }
-    const allFilteredSelected = filteredList.every(item => selectedCartridgeList.has(item.id));
-    setSelectAll(!allFilteredSelected);
-  }, [filteredList, selectedCartridgeList]);
 
 
-  if (!checkDone || loading) { return <div> Loading Cartridge Data...</div>;}
+  if (!checkDone || cartridgeLoading) { return <div> Loading Cartridge Data...</div>;}
 
   if (cartridgeList.length === 0) { return <div> No cartridge data available.</div>;}
 
@@ -103,12 +20,6 @@ function CartridgeList({ filterText }: CartridgeListProps) {
 
   return (
     <div>
-      <div style={{display: "flex"}}>
-        <button style={{ margin: "0.5em", padding: "0.5em"}}
-                onClick={handleSelectAll}>
-        { selectAll ? "select all" : "de-select all" }
-        </button>
-      </div>
       <div className="list_container">
         {filteredList.map(d =>
           <CartridgeListItem

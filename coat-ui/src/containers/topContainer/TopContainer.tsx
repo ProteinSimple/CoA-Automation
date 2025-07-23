@@ -1,25 +1,21 @@
 import "./TopContainer.css";
 import { pythonCoa } from "../../services";
-import  TopContainerDates  from "../topContainerDates/TopContainerDates"
+import  TopContainerFilters  from "../topContainerFilters/TopContainerFilters"
 import { useCartridge, useFilter, usePopUp } from "../../contexts";
 import { useState } from "react";
 import { DotLoader } from "react-spinners";
 import "react-datepicker/dist/react-datepicker.css";
-
-
-interface TopContainerProps {
-  setFilter: (given: string) => void;
-}
+import { MyDatePicker } from "../../components";
 
 
 
-function TopContainer({ setFilter }: TopContainerProps) {
+function TopContainer() {
   
   const { selectedCartridgeList } = useCartridge();
   const [ isGenerating, setIsGenerating ] = useState(false)
   const { setError } = usePopUp()
   const [ name, setName ] = useState<string>("")
-  const { prodDateRange } = useFilter()
+  const { prodDateRange, setQCDateRange, qcDateRange, setFilterText } = useFilter()
   
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -61,15 +57,24 @@ function TopContainer({ setFilter }: TopContainerProps) {
       setIsGenerating(false)
     }
   }
+  
+  const handleQCRangeChange = (dates: [Date | null, Date | null]) => {
+    setQCDateRange([dates[0] as Date, dates[1] as Date]);
+  };
 
   return (
     <div className="topContainer">
       <form
         className="row"
         onSubmit={handleSubmit}>  
+        <MyDatePicker 
+          headline="QC Date"
+          dateRange={qcDateRange}
+          onChange={handleQCRangeChange}/>
+          
         <input className="top-field" id="SN-search"
                placeholder="Search... 🔍"
-               onChange={(e) => setFilter(e.target.value)}/>
+               onChange={(e) => setFilterText(e.target.value)}/>
         <input className="top-field" id="greet-input"
                placeholder="Enter a name..."
                onChange={(e) => setName(e.target.value)} />
@@ -82,7 +87,7 @@ function TopContainer({ setFilter }: TopContainerProps) {
              )}
         </button>
        </form>
-       <TopContainerDates/>
+       <TopContainerFilters/>
     </div>
   );
 }

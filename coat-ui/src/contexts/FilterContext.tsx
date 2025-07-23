@@ -4,7 +4,6 @@ import chroma from 'chroma-js';
 
 
 interface FilterContextType {
-    
     showOnlyPassed: boolean;
     setShowOnlyPassed: (_: boolean) => void;
     showProdTime: boolean;
@@ -18,6 +17,12 @@ interface FilterContextType {
     validTypes: number[]
     setValidTypes: (_: number[]) => void
     colorMap: Record<number, string>
+    selectedUsers: string[]
+    setSelectedUsers: (_: string[]) => void
+    validUsers: string[]
+    setValidUsers: (_: string[]) => void;
+    filterText: string;
+    setFilterText: (_: string) => void
 }
 
 
@@ -25,7 +30,7 @@ const FilterContext = createContext<FilterContextType | undefined>(undefined)
 
 export const useFilter = () => {
     const context = useContext(FilterContext)
-    if (!context) throw new Error("useDate must be used within a DateProvider");
+    if (!context) throw new Error("useFilter must be used within a FilterProvider");
     return context
 }
 
@@ -37,20 +42,23 @@ interface FilterProviderProps {
 
 export const FilterProvider = ({ children }: FilterProviderProps) => {
   let prev_valid: number[] = []
-  const [prodEndDate, setProdEndDate] = useState<Date>(new Date());
-  const [prodStartDate, setProdStartDate] = useState<Date>(() => {
+  const [qcEndDate, setQCEndDate] = useState<Date>(new Date());
+  const [qcStartDate, setQCStartDate] = useState<Date>(() => {
     const d = new Date();
     d.setDate(d.getDate() - 1);
     return d;
   });
 
-  const [qcDateRange, setQCDateRange] = useState<[Date, Date]>([prodStartDate, prodEndDate])
+  const [prodDateRange, setProdDateRange] = useState<[Date, Date]>([qcStartDate, qcEndDate])
 
   const [selectedTypes, setTypes] = useState<number[]>([]);
   const [validTypes, setValidTypes] = useState<number[]>([]);
+  const [selectedUsers, setSelectedUsers] = useState<string[]>([])
+  const [validUsers, setValidUsers] = useState<string[]>([])
   const [colorMap, setColorMap] = useState<Record<number, string>>({});
   const [showOnlyPassed, setShowOnlyPassed] = useState<boolean>(true);
   const [showProdTime, setShowProdTime] = useState<boolean>(false);
+  const [filterText, setFilterText] = useState<string>("")
   
   
   useEffect(() => {
@@ -68,14 +76,10 @@ export const FilterProvider = ({ children }: FilterProviderProps) => {
     setColorMap(newColorMap);
   }, [validTypes]);
 
-  useEffect(() =>{
-    setQCDateRange([prodStartDate, prodEndDate])
-  }, [prodEndDate, prodStartDate])
-
-  const setProdDateRange = (range: [Date, Date]) => {
-    setProdStartDate(range[0]);
-    setProdEndDate(range[1]);
-  };
+  function setQCDateRange(given: [Date, Date]) {
+    setQCStartDate(given[0])
+    setQCEndDate(given[1])
+  }
 
   return (
     <FilterContext.Provider value={{ 
@@ -86,18 +90,26 @@ export const FilterProvider = ({ children }: FilterProviderProps) => {
       showProdTime,
       setShowProdTime,
       // Prod Date filter
-      prodDateRange: [prodStartDate, prodEndDate],
+      prodDateRange,
       setProdDateRange, 
       // QC Date filter
-      qcDateRange,
+      qcDateRange: [qcStartDate, qcEndDate],
       setQCDateRange,
       // filtering cartridges by their type
       selectedTypes, 
       setTypes, 
       validTypes, 
       setValidTypes,
+      // filtering by QC user
+      selectedUsers,
+      setSelectedUsers,
+      validUsers,
+      setValidUsers,
       // color map for assigning color. This should be changed!
-      colorMap
+      colorMap,
+      // Filter Text
+      filterText,
+      setFilterText
     }}>
       {children}
     </FilterContext.Provider>

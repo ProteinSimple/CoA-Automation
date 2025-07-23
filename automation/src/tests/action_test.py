@@ -63,9 +63,15 @@ class ActionTest(unittest.TestCase):
         self.assertEqual(out.getvalue().strip()[0], "1")
         data = out.getvalue()[1:].strip()
         parsed = json.loads(data)
-        self.assertIsInstance(parsed, list)
-        for val in parsed:
-            for f in ["id", "build_date", "build_time", "class_code", "qc_status"]:
+        self.assertIn("values", parsed)
+        self.assertIn("prod_start", parsed)
+        self.assertIn("prod_end", parsed)
+        self.assertRegex(parsed["prod_start"], r"\d{4}-\d{2}-\d{2}")
+        self.assertRegex(parsed["prod_end"], r"\d{4}-\d{2}-\d{2}")
+        values = parsed["values"]
+        self.assertIsInstance(values, list)
+        for val in values:
+            for f in ["id", "build_date", "class_code", "qc_status"]:
                 self.assertIn(f, val)
             self.assertIsInstance(int(val["id"]), int)
             self.assertIsInstance(val["class_code"], int)
@@ -167,7 +173,6 @@ class ActionTest(unittest.TestCase):
         args.name = "TESTER"
         action.action_coa(args, config)
         res = out.getvalue().strip()
-
         self.assertEqual(res[0], "1")
 
         files = res[1:].split("\n")

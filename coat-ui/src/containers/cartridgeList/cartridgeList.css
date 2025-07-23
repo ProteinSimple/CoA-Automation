@@ -3,7 +3,7 @@
   padding-left: 5px;
   display: grid;
   grid-template-columns: repeat(5, 1fr); /* 5 columns */
-  max-height: 65vh;
+  max-height: 75vh;
   overflow-y: auto;
 
   border: 1px solid rgba(255, 255, 255, 0.15); /* light translucent border */

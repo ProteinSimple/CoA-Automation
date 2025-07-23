@@ -25,7 +25,7 @@ function StatusIcon({ status }: { status : string }) {
 }
 
 function ListItem( { id, prod_date, prod_time, qc_date, qc_time, type, status }: ListItemProps) {
-  const { selectedCartridgeList, addCartridge, removeCartridge } = useCartridge()
+  const { selectedCartridgeList, addSelectedCartridge: addCartridge, removeSelectedCartridge: removeCartridge } = useCartridge()
   const isChecked = () => { return selectedCartridgeList.has(id) }
   const onChecked = () => { addCartridge(id) }
   const onUnchecked = () => { removeCartridge(id) }

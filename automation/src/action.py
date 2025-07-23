@@ -9,11 +9,10 @@ from pathlib import Path
 import pandas as pd
 import yaml
 from pypdf import PdfReader
-
 from checks import run_checks
 from coa import exec_c, fill_template, get_coa_filename, get_mapping_name
 from log import get_logger
-from saturn import auth, saturn_get_bundle
+from saturn import auth, saturn_bundle_data, saturn_bundle_prod_data
 from util import (PathCorrection, encrypt_pdf, format_date, init_dates,
                   init_fields, save_config)
 
@@ -84,7 +83,6 @@ def action_check(args, config):
         sys.stdout.flush()
         # traceback.print_exc(file=sys.stdout)
 
-
 def action_coa(args, config):
     try:
         logger.info("CoA creation has started, checking and gathering data!")
@@ -93,7 +91,7 @@ def action_coa(args, config):
 
         user, passkey = auth(args)
         logger.info("Fetching data for the given cartridges")
-        res = saturn_get_bundle(user, passkey, args.start, args.end)
+        res = saturn_bundle_prod_data(user, passkey, args.start, args.end)
         datas = list(filter(lambda v: v.id in set(args.ids), res))
         pdf_outputs = []
         mapping_rows = []
@@ -182,7 +180,6 @@ def action_coa(args, config):
                     "FileName": filename,
                 }
             )  # TODO: make this robust
-
         logger.info("Coa creation done. Now creating mapping files!")
         csv_files = []
         for model, mapping_rows in mapping_set.items():
@@ -324,23 +321,16 @@ def action_fetch(args, config):
     try:
         user, passkey = auth(args)
         logger.info("Fetching Ids from saturn in the range.")
-        data = saturn_get_bundle(user, passkey, args.start, args.end)
-        res = [d.to_dict() for d in data]
-        # for d in data:
-        #     res.append(
-        #         {
-        #             "id": d.id,
-        #             "b_date": d.build_date,
-        #             "b_time": d.build_time,
-        #             "exp_date": d.exp_date,
-        #             "type": d.class_code,
-        #             "passed_qc": d.qc_status
-        #         }
-        #     )
-
+        res = saturn_bundle_data(user, passkey, args.start, args.end)
+        res = [v.to_dict() for v in res]
+        retVal = {
+            "values": res,
+            "prod_start": saturn_bundle_data.prod_start,
+            "prod_end": saturn_bundle_data.prod_end
+        }
         logger.info("Fetched %d cartridge IDs", len(res))
         print(1)
-        print(json.dumps(res))
+        print(json.dumps(retVal))
     except Exception as e:
         print(0)
         logger.error("Error in FETCH (range) action: %s", str(e))

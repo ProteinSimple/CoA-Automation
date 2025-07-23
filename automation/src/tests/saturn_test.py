@@ -33,7 +33,7 @@ class TestSaturn(unittest.TestCase):
         start_dt = end_dt - timedelta(days=1)
         enddate = end_dt.strftime("%Y-%m-%d")
         startdate = start_dt.strftime("%Y-%m-%d")
-        res = saturn.saturn_get_bundle(user, passkey, startdate, enddate)
+        res = saturn.saturn_bundle_data(user, passkey, startdate, enddate)
 
         self.assertIsInstance(res, list)
         for val in res:
