@@ -66,7 +66,6 @@ export const ControlProvider = ({ children }: ControlProviderProps) => {
         try {
         const raw = await pythonFetchRange(qcDateRange[0], qcDateRange[1]);
         const parsed: FetchInfo = JSON.parse(String(raw));
-        console.log(parsed)
         const values = parsed["values"]
         const uniqueTypes = [...new Set(values.map(item => Number(item.class_code)))];
         const uniqueUsers = [...new Set(values.map(item => item.qc_user).filter(u => u != null))]

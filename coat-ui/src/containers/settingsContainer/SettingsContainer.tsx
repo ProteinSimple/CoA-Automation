@@ -110,9 +110,11 @@ function SettingsContainer() {
       closeTimeoutMS={300}
       ariaHideApp={false}
     >
-      <h4>Settings</h4>
+      <h4 style={{fontSize: "16px"}}>Settings</h4>
       <div className="settings-content-container">
-        <div className="settings-toggle-container">
+        <div className="settings-toggle-container"
+              style={{ display: "flex", flexDirection: "column", justifyContent: "flex-start",
+                       paddingTop: "2em", gap: "2em", alignItems: "flex-start"}}>
           <label>
             <input
               type="checkbox"

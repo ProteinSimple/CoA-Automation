@@ -9,7 +9,7 @@ function Logo() {
     return (
         <div className="logo-container">
             <img src={logo} alt="logo-placeholder" className="logo" />
-            <button className="settings-btn"
+            <button className="settings-btn" style={{"color": "white", marginRight: "0.5em"}}
                     onClick={showSettings}>
                 <Settings size={30}/>
             </button>

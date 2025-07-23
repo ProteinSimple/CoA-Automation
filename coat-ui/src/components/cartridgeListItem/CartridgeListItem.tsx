@@ -42,11 +42,11 @@ function ListItem( { id, prod_date, prod_time, qc_date, qc_time, type, status }:
           {id}
         </p>
         {showProdTime?
-          <p className="list_item_date">
+          <p style={{fontSize: "0.8em"}} className="list_item_date">
             {prod_date} {prod_time}
           </p>
           : qc_date && qc_time ? 
-          <p className="list_item_date">
+          <p style={{fontSize: "0.8em"}} className="list_item_date">
             {qc_date} {qc_time} 
           </p>
           :

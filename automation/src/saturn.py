@@ -272,8 +272,6 @@ def auth(args):
         logger.info("Saturn auth was succesful !")
         return user, passkey
     except Exception as e:
-        raise Exception("Couldn't load saturn API key correctly: " + str(e))
-
-# print(res:=_saturn_get_qc_data("api", "zaz4edebea8Tei3b", "2025-07-01", "2025-07-03"))
-# print(res["values"][res["values"]["_id"] == "6250228560"])
-# print(_extract_info("6250228560"))
+        raise Exception(
+            "Couldn't load saturn API key correctly: " + str(e)
+        )

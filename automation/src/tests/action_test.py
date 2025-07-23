@@ -76,8 +76,7 @@ class ActionTest(unittest.TestCase):
             self.assertIsInstance(int(val["id"]), int)
             self.assertIsInstance(val["class_code"], int)
             self.assertIn(val["class_code"], saturn.CartridgeData.code_map)
-    
-
+            
     def test_config_add_action(self):
         config = TestContext.get_config()
         args = Mock()

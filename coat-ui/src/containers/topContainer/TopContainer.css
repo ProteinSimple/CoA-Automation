@@ -1,3 +1,7 @@
+.topContainer {
+  padding-left: 1em;
+}
+
 .top-field,
 .topContainer button {
   border-radius: 8px;
@@ -10,24 +14,19 @@
   font-weight: 500;
   font-family: inherit;
   color: var(--color-text-primary);
-  background-color: var(--color-button-primary);
   
   transition: border-color 0.6s;
   box-shadow: 0 2px 2px rgba(0, 0, 0, 0.2);
 
   margin: 0.5rem 1rem 0.5rem 1rem;
-
 }
-
-
-
 
 .row {
   display: flex;
   flex-direction: row;
-  justify-content: center;
-  gap: 5em;
-  
+  justify-content: flex-start;
+  align-items: center;
+  gap: 3em; 
 }
 
 

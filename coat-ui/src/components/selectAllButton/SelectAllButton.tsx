@@ -18,12 +18,11 @@ function SelectAllButton() {
       clearSelected()
     }
   };
-  return <div style={{display: "flex"}}>
-    <button style={{ margin: "0.5em", padding: "0.5em"}}
-            onClick={handleSelectAll}>
-    { selectAll ? "select all" : "de-select all" }
-    </button>
-  </div>
+  return <div className='selectAll-container' style={{display: "flex"}}>
+          <button className='selectAll' onClick={handleSelectAll}>
+          { selectAll ? "select all" : "de-select all" }
+          </button>
+        </div>
 }
 
 export default SelectAllButton;
