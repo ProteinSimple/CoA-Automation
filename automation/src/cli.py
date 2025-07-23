@@ -28,8 +28,8 @@ def get_args():
         )
     )
     sub_list.append(fetch_sub := subparsers.add_parser(
-        "fetch",
-        help="Fetches")
+            "fetch", help="Fetches"
+        )
     )
     sub_list.append(
         _ := subparsers.add_parser(
@@ -46,46 +46,22 @@ def get_args():
 
     # specific argument passed to certain actions:
     coa_sub.add_argument(
-        "ids", type=int, nargs="+",
-        help="Id of the cartridge for file generation"
+        "ids", type=int, nargs="+", help="Id of the cartridge for file generation"
     )
     coa_sub.add_argument("--name", type=str, default="AA")
     coa_sub.add_argument("--start", type=str, default=None)
     coa_sub.add_argument("--end", type=str, default=None)
 
-    # Case 1: Default fetch with length and limit
-    fetch_subparsers = fetch_sub.add_subparsers(
-        dest="fetch_mode",
-        required=False
-    )
-    sub_list.append(
-        default_fetch := fetch_subparsers.add_parser(
-            "default", help="Default fetch mode using length and limit"
-        )
-    )
-    default_fetch.add_argument(
-        "length",
-        type=int,
-        help="Number of items to fetch"
-    )
-    default_fetch.add_argument("limit", type=int, help="Limit per request")
+    fetch_sub.add_argument("start", type=str, help="Start of the range")
+    fetch_sub.add_argument("end", type=str, help="End of the range")
 
-    # Case 2: fetch range with start and end
-    sub_list.append(
-        range_fetch := fetch_subparsers.add_parser(
-            "range", help="Fetch with a start and end range"
-        )
-    )
-    range_fetch.add_argument("start", type=str, help="Start of the range")
-    range_fetch.add_argument("end", type=str, help="End of the range")
-
-    init_sub.add_argument("model", type=str, help="Model number of cartridge")
+    init_sub.add_argument("model", type=str, help="Model name of cartridge")
     init_sub.add_argument("template", type=str)
     init_sub.add_argument("part_number", type=str)
+    init_sub.add_argument("color", type=str)
+    init_sub.add_argument("code", type=int)
 
-    config_subparser = config_sub.add_subparsers(
-        dest="config_mode", required=True
-    )
+    config_subparser = config_sub.add_subparsers(dest="config_mode", required=True)
     sub_list.append(add_config := config_subparser.add_parser("add"))
     add_config.add_argument("--pdf", type=str, nargs="+", help="TODO")
     add_config.add_argument("--csv", type=str, nargs="+", help="TODO")
@@ -99,11 +75,9 @@ def get_args():
     list_config.add_argument("--csv", type=str, nargs="+", help="TODO")
 
     for sub in sub_list:
-        sub.add_argument("--rm", type=str, default="test", help="Run mode")
+        sub.add_argument("--run_mode", type=str, default="prod", help="Run mode")
         sub.add_argument(
-            "--verbose",
-            action="store_true",
-            help="Print comments as process goes on"
+            "--verbose", action="store_true", help="Print comments as process goes on"
         )
         sub.add_argument(
             "--config",

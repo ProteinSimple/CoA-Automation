@@ -23,11 +23,11 @@
 
 .settings-modal-container {
   position: relative;
-  width: 60vw;
-  height: 60vh;
-  max-width: 625px;
-  max-height: 500px;
-  padding: 25px;
+  width: 80vw;
+  height: 75vh;
+  max-width: 700px;
+  max-height: 650px;
+  padding: 15px;
   background-color: #333; /* slightly darker gray */
   border-radius: 8px;
   text-align: center;
@@ -93,4 +93,8 @@
   text-align: left;
   padding: 0.25em;
   background-color: var(--color-bg-secondary);
+} 
+
+.settings-path-container {
+  max-width: 35%;
 }

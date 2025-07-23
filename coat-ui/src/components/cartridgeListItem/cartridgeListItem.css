@@ -9,16 +9,6 @@
   margin-right: 0.25rem;
   margin-top: 0.25rem;
   margin-bottom: 0.25rem;
-  
-}
-
-
-.list_item > p {
-  font-size: small;
-}
-
-.list_item_infobox{
-  font-size: x-small;
 }
 
 .list_item_infobox > p {
@@ -32,7 +22,6 @@
 }
 
 .list_item_infobox > p.list_item_date {
-  font-size: 0.5rem;
   color: var(--color-text-secondary);
   margin-top: -7px;
 }

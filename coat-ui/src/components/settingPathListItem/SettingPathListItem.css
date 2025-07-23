@@ -1,7 +1,33 @@
 .settingPathListItem {
   display: flex;
-  flex-direction: row;
+  align-items: center;
   justify-content: space-between;
-  border: 1px dotted;
-  border-width: 1px 0px;
+  border-top: 1px dotted #ccc;
+  border-bottom: 1px dotted #ccc;
+  padding: 0.5em;
+  gap: 1em;
+}
+
+
+.settingPathListItem .path-container {
+  overflow-x: auto;
+  white-space: nowrap;
+  flex-grow: 1;
+}
+.settingPathListItem button {
+  flex-shrink: 0;
+  cursor: pointer;
+}
+
+
+.settingPathListItem.deleting {
+  opacity: 0.5;
+  pointer-events: none;
+}
+
+
+
+.settingPathListItem button:disabled {
+  cursor: not-allowed;
+  opacity: 0.4;
 }

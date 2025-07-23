@@ -1,0 +1,9 @@
+.selectAll {
+  background-color: var(--color-button-secondary);
+  min-width: 6em;
+}
+
+.selectAll-container {
+  font-size: small;
+
+}
