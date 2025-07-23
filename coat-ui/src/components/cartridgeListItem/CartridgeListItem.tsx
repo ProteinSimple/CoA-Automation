@@ -11,7 +11,8 @@ type ListItemProps = {
   qc_date: string;
   qc_time: string;
   type: string;
-  status: string
+  status: string;
+  color: string;
 };
 
 function StatusIcon({ status }: { status : string }) {
@@ -24,12 +25,13 @@ function StatusIcon({ status }: { status : string }) {
     </div>
 }
 
-function ListItem( { id, prod_date, prod_time, qc_date, qc_time, type, status }: ListItemProps) {
+function ListItem( { id, prod_date, prod_time, qc_date, qc_time, type, status, color }: ListItemProps) {
   const { selectedCartridgeList, addSelectedCartridge: addCartridge, removeSelectedCartridge: removeCartridge } = useCartridge()
   const isChecked = () => { return selectedCartridgeList.has(id) }
   const onChecked = () => { addCartridge(id) }
   const onUnchecked = () => { removeCartridge(id) }
-  const { colorMap, showOnlyPassed, showProdTime } = useFilter()
+  const { showOnlyPassed, showProdTime } = useFilter()
+
   return (
     <div className="list_item">
       <Checkbox  id={id}
@@ -63,7 +65,7 @@ function ListItem( { id, prod_date, prod_time, qc_date, qc_time, type, status }:
           width: '0.75rem',
           height: '0.75rem',
           borderRadius: '50%',
-          backgroundColor: colorMap?.[parseInt(type)] ?? '#ccc',
+          backgroundColor: color ?? '#ccc',
           display: 'inline-block',
           marginRight: '0.5rem',
         }}

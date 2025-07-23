@@ -27,6 +27,7 @@ prod:
   - ./output/`
   prod_code_map: res/Western-Biologics Part Number to ProdCode.xlsx
   profile: profile.yaml
+  code_map: res/codes.json
 test:
   file_perm:
     accessibility: true
@@ -57,3 +58,4 @@ test:
   prod_code_map: res/Western-Biologics Part Number to ProdCode.xlsx
   profile: profile.yaml
   test_coa_exp_dir: ./tests/res
+  code_map: res/codes.json

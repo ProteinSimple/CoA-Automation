@@ -10,6 +10,7 @@ interface CartridgeInfo {
   qc_date: string;
   qc_time: string;
   qc_user: string;
+  color: string;
 }
 
 interface CartridgeContextType {

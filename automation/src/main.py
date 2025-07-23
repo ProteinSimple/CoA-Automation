@@ -2,11 +2,11 @@ import logging
 import os
 import sys
 from datetime import datetime
-
+from saturn import CartridgeData
 from action import dispatch_action
 from cli import get_args
 from log import get_logger
-from util import load_config
+from util import load_config, PathCorrection
 
 logger = get_logger(__name__)
 
@@ -34,6 +34,9 @@ def setup(args):
     logger.info("Logging initialized")
     logger.info("Setup done")
 
+def post_setup(args, config):
+    map_path = PathCorrection(config["code_map"]).as_path()
+    CartridgeData.load_code_map(map_path)
 
 def main():
     # Arg Init
@@ -41,6 +44,7 @@ def main():
     setup(args)
 
     config = load_config(args.config, args.run_mode)
+    post_setup(args, config)
     logger.info("Config Loaded")
     dispatch_action(args, config)
 

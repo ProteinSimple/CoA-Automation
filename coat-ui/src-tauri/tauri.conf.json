@@ -13,8 +13,8 @@
     "windows": [
       {
         "title": "Coat",
-        "width": 850,
-        "height": 650,
+        "width": 950,
+        "height": 750,
         "minWidth": 850,
         "minHeight": 650
       }

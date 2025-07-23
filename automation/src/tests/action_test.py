@@ -173,6 +173,7 @@ class ActionTest(unittest.TestCase):
         action.action_coa(args, config)
         res = out.getvalue().strip()
         self.assertEqual(res[0], "1")
+        
 
         files = res[1:].split("\n")
         pdf_files = [f for f in files if f.endswith(".pdf")]

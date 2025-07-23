@@ -12,7 +12,8 @@ from pypdf import PdfReader
 from checks import run_checks
 from coa import exec_c, fill_template, get_coa_filename, get_mapping_name
 from log import get_logger
-from saturn import auth, saturn_bundle_data, saturn_bundle_prod_data
+from saturn import (auth, saturn_bundle_data, saturn_bundle_prod_data,
+                   CartridgeData)
 from util import (PathCorrection, encrypt_pdf, format_date, init_dates,
                   init_fields, save_config)
 
@@ -216,7 +217,9 @@ def action_init(args, config):
     logger.info("INIT action started for model: %s", args.model)
     models = config.setdefault("models", [])
     model = args.model
+    code = args.code
     run_mode = args.run_mode
+    color = args.color
     template_path = PathCorrection(args.template).as_path()
     part_number = args.part_number
     profile = {"template": template_path.name}
@@ -234,6 +237,9 @@ def action_init(args, config):
         if model not in models:
             models.append(model)
 
+        
+        map_path = PathCorrection(config['code_map']).as_path()
+        CartridgeData.add_code2map(map_path, code, model)        
         shutil.copy(template_path, dir_path)
         logger.info("Template copied to model directory.")
 
@@ -248,6 +254,7 @@ def action_init(args, config):
         profile["fields"] = init_fields(fill_data)
         profile["dates"] = init_dates(fill_data)
         profile["PN"] = part_number
+        profile["color"] = color
 
         profile_path = dir_path / config["profile"]
         with open(profile_path, mode="w") as f:
@@ -323,6 +330,18 @@ def action_fetch(args, config):
         logger.info("Fetching Ids from saturn in the range.")
         res = saturn_bundle_data(user, passkey, args.start, args.end)
         res = [v.to_dict() for v in res]
+        color_map = {}
+        for v in res:
+            code = v["class_code"]
+            model = CartridgeData.code_map[code]
+            if code not in color_map:
+                profile_path = (
+                    PathCorrection(config["model_dir"]) / model / config["profile"]
+                ).as_path()
+                with open(profile_path) as f:
+                    profile = yaml.safe_load(f)
+                    color_map[code] = profile["color"]
+            v["color"] = color_map[code]
         retVal = {
             "values": res,
             "prod_start": saturn_bundle_data.prod_start,

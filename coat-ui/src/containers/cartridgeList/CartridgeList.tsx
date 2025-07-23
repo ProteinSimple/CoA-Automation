@@ -31,6 +31,7 @@ function CartridgeList() {
         qc_time={d.qc_time}
         type={d.class_code}
         status={d.qc_status}
+        color={d.color}
       />
     ));
   }
