@@ -1,13 +1,10 @@
 import warnings
 from datetime import datetime
 from pathlib import Path
-
-import fitz
 import pandas as pd
 from pypdf import PdfReader, PdfWriter
-
 from log import get_logger
-from util import PathCorrection, get_initial, predict_mapping
+from util import get_initial
 
 warnings.filterwarnings("ignore")
 
@@ -33,62 +30,6 @@ def exec_c(command: str) -> str:
 def get_coa_filename(id, profile, extn=".pdf"):
     template_name = Path(profile["template"]).stem
     return "_".join([str(id), template_name]) + extn
-
-
-@DeprecationWarning
-def generate_field_map_from_pdf(config, template, model):
-    """
-        Extracts form fields from a PDF template and generates a `fields.yaml`
-        file that maps each field name to a predicted value. Additionally,
-        creates a visual preview PDF where each field is filled with its own
-        name for reference.
-
-    Args:
-        - config (dict): Configuration dictionary containing `model_dir` and
-                         other settings.
-        - info (dict): Dictionary containing metadata such as the template
-                       filename.
-        - model (str): Name of the model directory where the PDF template and
-                       output files reside.
-
-    Return val:
-        - str: The filename of the generated `fields.yaml`.
-               TODO: Update this this is old comment
-
-    Exceptions:
-        - UtilError: If the PDF cannot be opened or the YAML file cannot be
-                     generated.
-
-    Notes:
-        - The output PDF (`filled.pdf`) will have all form fields filled with
-          their own names to help users identify field positions visually.
-        - The YAML file maps each field name to a predicted target field.
-          Placeholder predictions
-        are currently used (TODO).
-    """
-
-    dir_path = Path(config["model_dir"]) / Path(model)
-    template_path = PathCorrection(template).as_path()
-    save_path = (PathCorrection(dir_path) / "filled.pdf").as_path()
-
-    try:
-        doc = fitz.open(template_path)
-        retVal = {}
-        for page in doc:
-            for field in page.widgets():
-                field.field_value = field.field_name
-                retVal[field.field_name] = predict_mapping(
-                    field.field_name, []
-                )  # TODO !!!
-                field.update()
-        dates = []
-        for f in retVal.keys():
-            if "date" in f.lower():
-                dates.append(f)  # TODO: This is a bad way to detect dates!
-        doc.save(save_path)
-        return retVal, dates
-    except Exception as e:
-        raise CoaError("Failed to initilize template and fields.yaml!: " + str(e))
 
 
 def fill_template(

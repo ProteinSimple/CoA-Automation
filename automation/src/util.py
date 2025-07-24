@@ -150,7 +150,6 @@ def save_config(config_path, run_mode, new_config):
     """
     TODO
     """
-
     path = PathCorrection(config_path).as_path()
     full_config = None
 
