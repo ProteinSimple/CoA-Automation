@@ -34,9 +34,11 @@ def setup(args):
     logger.info("Logging initialized")
     logger.info("Setup done")
 
+
 def post_setup(args, config):
     map_path = PathCorrection(config["code_map"]).as_path()
     CartridgeData.load_code_map(map_path)
+
 
 def main():
     # Arg Init

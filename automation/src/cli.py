@@ -27,7 +27,8 @@ def get_args():
                   be place in res/model/*model name*",
         )
     )
-    sub_list.append(fetch_sub := subparsers.add_parser(
+    sub_list.append(
+        fetch_sub := subparsers.add_parser(
             "fetch", help="Fetches"
         )
     )

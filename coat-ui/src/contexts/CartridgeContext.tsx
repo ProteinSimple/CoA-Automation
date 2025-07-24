@@ -61,8 +61,9 @@ export const CartridgeProvider = ({ children }: CartridgeProviderProps) => {
       const matchesType = selectedTypes.length === 0 || selectedTypes.includes(Number(item.class_code));
       const matchesUser = selectedUsers.length === 0 || selectedUsers.includes(item.qc_user);
       const passedQc = !showOnlyPassed || item.qc_status === "P"
-
-      return matchesFilter && matchesType && matchesUser && passedQc;
+      const buildDate = new Date(item.build_date);
+      const inProdRange = buildDate >= prodDateRange[0] && buildDate <= prodDateRange[1];
+      return matchesFilter && matchesType && matchesUser && passedQc && inProdRange;
     });
   }, [cartridgeList, filterText, selectedTypes, showOnlyPassed, prodDateRange, selectedUsers]);
 
