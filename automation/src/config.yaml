@@ -1,4 +1,5 @@
 prod:
+  code_map: res/codes.json
   file_perm:
     accessibility: true
     annotate: false
@@ -14,6 +15,7 @@ prod:
   mapping_dir: res/mappings
   mapping_output_dir:
   - ./output/
+  - C:\Users\Arvin.Asgharian\Desktop\coatOutput2
   model_dir: res/models
   models:
   - SDS+
@@ -27,8 +29,8 @@ prod:
   - ./output/`
   prod_code_map: res/Western-Biologics Part Number to ProdCode.xlsx
   profile: profile.yaml
-  code_map: res/codes.json
 test:
+  code_map: res/codes.json
   file_perm:
     accessibility: true
     annotate: false
@@ -58,4 +60,3 @@ test:
   prod_code_map: res/Western-Biologics Part Number to ProdCode.xlsx
   profile: profile.yaml
   test_coa_exp_dir: ./tests/res
-  code_map: res/codes.json

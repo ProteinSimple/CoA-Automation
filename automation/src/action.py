@@ -198,10 +198,11 @@ def action_coa(args, config):
             run_checks(config=config, data=data, mapping=mapping)
             logger.info("outputting CSV mapping!")
             for dir in config["mapping_output_dir"]:
+
                 mapping_d_path = Path(dir)
                 logger.debug("Outputing mapping to %s", mapping_d_path)
                 mapping_d_path.mkdir(parents=True, exist_ok=True)
-                write_path = dir_p / mapping_f_name
+                write_path = mapping_d_path / mapping_f_name
                 mapping.to_csv(write_path, index=False)
                 csv_files.append(write_path.absolute())
 
