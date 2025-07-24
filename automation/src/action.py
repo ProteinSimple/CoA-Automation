@@ -13,7 +13,7 @@ from checks import run_checks
 from coa import exec_c, fill_template, get_coa_filename, get_mapping_name
 from log import get_logger
 from saturn import (auth, saturn_bundle_data, saturn_bundle_prod_data,
-                   CartridgeData)
+                    CartridgeData)
 from util import (PathCorrection, encrypt_pdf, format_date, init_dates,
                   init_fields, save_config)
 
@@ -49,6 +49,10 @@ profile_comment = """\
 # class_code : Code of classification
 # batch_num  : Batch number
 # passed_qc  : Cartridge QC results
+# qc_date    : Date of QC (YYYY-MM-DD)
+# qc_time    : Time of QC (HH:MM)
+# qc_status  : PASS or a FAIL
+# qc_user    : QC Analyst name
 # Possilbe actions: @!TEST, @!TIME
 """
 
@@ -84,6 +88,7 @@ def action_check(args, config):
         sys.stdout.flush()
         # traceback.print_exc(file=sys.stdout)
 
+
 def action_coa(args, config):
     try:
         logger.info("CoA creation has started, checking and gathering data!")
@@ -102,8 +107,10 @@ def action_coa(args, config):
         )
         logger.info("Data gathered sucessfully, now creating CoA")
         for data in datas:
-            logger.info("creating CoA for following cartridge: %s",
-                         str(data.to_dict()))
+            logger.info(
+                "creating CoA for following cartridge: %s",
+                str(data.to_dict())
+            )
             if data.model_name() not in config["models"]:
                 logger.error(
                     "Given model configuration is not setup. use 'init'\
@@ -216,59 +223,54 @@ def action_coa(args, config):
 def action_init(args, config):
     logger.info("INIT action started for model: %s", args.model)
     models = config.setdefault("models", [])
+    # Values used for filling the profile
     model = args.model
     code = args.code
     run_mode = args.run_mode
     color = args.color
-    template_path = PathCorrection(args.template).as_path()
     part_number = args.part_number
-    profile = {"template": template_path.name}
-    dir_path = (PathCorrection(config["model_dir"]) / model).as_path()
-    save_path = dir_path / "filled.pdf"
-
-    # Create mapping directory if it doesn't exist
+    # Paths used throughout the function
+    template_path = PathCorrection(args.template).as_path()
     dir_path = PathCorrection(Path(config["model_dir"]) / model).as_path()
+    save_path = dir_path / "filled.pdf"
+    map_path = PathCorrection(config['code_map']).as_path()
+    profile_path = dir_path / config["profile"]
+    config_path = PathCorrection(args.config).as_path()
+    # We will fill this as we go along
+    profile = {"template": template_path.name}
+    # Create mapping directory if it doesn't exist
     if os.path.exists(dir_path) and os.path.isfile(dir_path):
         logger.debug("Removing existing file at model dir path: %s", dir_path)
         os.remove(dir_path)
     dir_path.mkdir(parents=True, exist_ok=True)
+    if model not in models:
+        models.append(model)
 
     try:
-        if model not in models:
-            models.append(model)
-
-        
-        map_path = PathCorrection(config['code_map']).as_path()
-        CartridgeData.add_code2map(map_path, code, model)        
+        CartridgeData.add_code2map(map_path, code, model)
         shutil.copy(template_path, dir_path)
         logger.info("Template copied to model directory.")
-
         logger.debug("Generating field map from PDF")
         reader = PdfReader(template_path)
         fill_data = {}
         for rf in reader.get_form_text_fields():
-            fill_data[str(rf)] = str(rf)
-
+            fill_data[str(rf)] = str(rf) # Put the name of the field as the value of the field
         res = fill_template(reader, fill_data, config["fontsize"])
         res.write(save_path)
         profile["fields"] = init_fields(fill_data)
         profile["dates"] = init_dates(fill_data)
         profile["PN"] = part_number
         profile["color"] = color
-
-        profile_path = dir_path / config["profile"]
         with open(profile_path, mode="w") as f:
             f.write(profile_comment + "\n")
             yaml.safe_dump(profile, f)
-
-        config_path = PathCorrection(args.config).as_path()
+        # Update the config file with the new cartridge data
         full_config = yaml.safe_load(open(config_path, mode="r"))
         full_config[run_mode] = config
         with open(config_path, mode="w+") as f:
             yaml.safe_dump(full_config, f)
 
         logger.info("INIT completed successfully for model: %s", model)
-
         if args.verbose:
             print(f"Configuration for {model} finished successfully!")
             print("\n Created Config: \n")
@@ -303,13 +305,14 @@ def action_config_del(args, config):
 
 
 def action_config(args, config):
-    logger.info("CONFIG action started with mode: %s", args.config_mode)
+    mode = args.config_mode
+    logger.info("CONFIG action started with mode: %s", mode)
     try:
-        if args.config_mode == "add":
+        if mode == "add":
             action_config_add(args, config)
-        elif args.config_mode == "delete":
+        elif mode == "delete":
             action_config_del(args, config)
-        if args.config_mode != "list":
+        if mode != "list":
             save_config(args.config, args.run_mode, config)
             logger.info("CONFIG updated successfully")
         print(1)

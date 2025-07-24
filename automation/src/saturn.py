@@ -3,7 +3,6 @@ from urllib.parse import urlencode
 import json
 import pandas as pd
 import requests
-from copy import deepcopy
 from requests.auth import HTTPBasicAuth
 from keyToken import add_token, load_token
 from log import get_logger
@@ -64,7 +63,7 @@ class CartridgeData:
                 self.qc_user = d.get("qc_user")
             qc_data = d.get("qc_results")
             if pd.isna(qc_data) is not True:
-                data =  qc_data[-1]
+                data = qc_data[-1]
                 # QC time
                 qc_time_dt = data["analysis_timestamp"]
                 qc_timestampt = pd.to_datetime(qc_time_dt, unit="s")
@@ -83,7 +82,7 @@ class CartridgeData:
         with open(path) as f:
             res = json.load(f)
             CartridgeData.code_map = {int(k): v for k, v in res.items()}
-    
+
     @staticmethod
     def add_code2map(path: str, code: int, val: str):
         CartridgeData.code_map[code] = val
@@ -136,18 +135,20 @@ def _saturn_get_cartridge_data(start, end, username, passkey):
         print(response.text)
         return None
 
+
 def _preprocess_cartridge_data(df: pd.DataFrame):
     df["b_date_ts"] = df["build_completion_date"].apply(lambda x: x["$date"])
     df["b_date"] = pd.to_datetime(df["b_date_ts"], unit="ms")
     df["exp_date"] = (
-        (df["b_date"] + 
+        (df["b_date"] +
             pd.DateOffset(months=12))
                 .dt.to_period("M")
                 .dt.to_timestamp("M")
     )
 
+
 def _saturn_get_prod_data(username, passkey,
-                      start, end) -> pd.DataFrame:
+                          start, end) -> pd.DataFrame:
     response = _saturn_get_cartridge_data(start, end, username, passkey)
     _preprocess_cartridge_data(df := pd.DataFrame(response.json()))
     return df
@@ -166,6 +167,7 @@ def saturn_check(username, passkey) -> bool:
     else:
         return False
 
+
 def _saturn_get_qc_results(start, end, user, passkey):
     end_dt = datetime.strptime(end, "%Y-%m-%d")
     end_dt = end_dt + timedelta(days=1)
@@ -173,13 +175,13 @@ def _saturn_get_qc_results(start, end, user, passkey):
     url = build_saturn_url(QC_RUN_URL, startdate=start, enddate=end)
     response = requests.get(url, auth=HTTPBasicAuth(user, passkey))
 
-    
     if response.status_code == 200:
         return response
     else:
         print(f"Request failed with status code {response.status_code}")
         print(response.text)
         return None
+
 
 def _extract_info(id: int | str) -> dict:
     if isinstance(id, int):
@@ -199,20 +201,20 @@ def _extract_info(id: int | str) -> dict:
 
 
 def _saturn_get_qc_data(username, passkey,
-                      start, end):
-    qc_data = _saturn_get_qc_results(start, end ,username, passkey).json()
+                        start, end):
+    qc_data = _saturn_get_qc_results(start, end, username, passkey).json()
     info_set = {}
     for data in qc_data:
         id = int(data['cartridge_serial'])
-        info_set[id] = data # always keep the latest QC test results
-    
+        info_set[id] = data  # always keep the latest QC test results
+
     values = []
     earliest_date = None
     latest_date = None
 
     for id, data in info_set.items():
         values.append({
-            "_id" : str(id),
+            "_id": str(id),
             "qc_user": data["analyst"].split("@")[0]
         })
 
@@ -222,14 +224,15 @@ def _saturn_get_qc_data(username, passkey,
             earliest_date = build_date
         if latest_date is None or build_date > latest_date:
             latest_date = build_date
-     
+
     retVal = {
         "start": earliest_date,
         "end": latest_date,
         "values": pd.DataFrame(values)
     }
-    
+
     return retVal
+
 
 def saturn_bundle_data(username, passkey, start, end):
     res = _saturn_get_qc_data(username, passkey, start, end)
@@ -244,12 +247,14 @@ def saturn_bundle_data(username, passkey, start, end):
     saturn_bundle_data.prod_end = prod_end
     return [CartridgeData(d) for _, d in joined.iloc[::-1].iterrows()]
 
+
 def saturn_bundle_prod_data(username, passkey,
-                                 start, end):
+                            start, end):
     prod_df = _saturn_get_prod_data(username, passkey, start, end)
     prod_df["_id"] = prod_df["_id"].astype(str)
 
     return [CartridgeData(d) for _, d in prod_df.iloc[::-1].iterrows()]
+
 
 def auth(args):
     logger.info("trying to authenticate to saturn API")
