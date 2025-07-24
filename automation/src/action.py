@@ -254,7 +254,7 @@ def action_init(args, config):
         reader = PdfReader(template_path)
         fill_data = {}
         for rf in reader.get_form_text_fields():
-            fill_data[str(rf)] = str(rf) # Put the name of the field as the value of the field
+            fill_data[str(rf)] = str(rf)  # Put the name of the field as the value of the field
         res = fill_template(reader, fill_data, config["fontsize"])
         res.write(save_path)
         profile["fields"] = init_fields(fill_data)
