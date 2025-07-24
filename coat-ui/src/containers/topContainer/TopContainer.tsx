@@ -27,7 +27,7 @@ function TopContainer() {
     setIsGenerating(true);
 
     try {
-      const outputed_files = await pythonCoa([...selectedCartridgeList], name, prodDateRange[0], prodDateRange[1]);
+      const outputed_files = await pythonCoa([...selectedCartridgeList], name.trim(), prodDateRange[0], prodDateRange[1]);
       let fileList: string[] = [];
 
       if (typeof outputed_files === "string") {
@@ -77,8 +77,14 @@ function TopContainer() {
                onChange={(e) => setFilterText(e.target.value)}/>
         <input className="top-field" id="greet-input"
                placeholder="Enter a name..."
-               onChange={(e) => setName(e.target.value)} />
-          
+               value={name}
+               onChange={(e) => {
+                const val = e.target.value;
+                  if (/^[a-zA-Z\s]*$/.test(val)) {
+                    setName(val);
+                  }
+                }} />
+                      
         <button type="submit"
                 disabled={isGenerating || selectedCartridgeList.size == 0}
                 style={{display: "flex", alignItems: "center", backgroundColor: "var(--color-button-primary)"}}>

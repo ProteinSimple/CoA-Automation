@@ -69,7 +69,7 @@ class PathCorrection:
 def get_initial(name: str):
     "TODO"
     # name: str = args.name.lower()
-    return "".join([s[0].lower() for s in name.split(" ")])
+    return "".join([s[0].lower() for s in name.strip().split(" ")])
 
 
 def predict_mapping(x: str, ys: list[str]):

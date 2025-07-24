@@ -9,7 +9,8 @@ class UtilTest(unittest.TestCase):
         cases = [
             ("John Doe", "jd"),
             ("John Michael Smith", "jms"),
-            ("JOHN DOE", "jd")
+            ("JOHN DOE", "jd"),
+            ("  Arvin Asgharian", "aa")
         ]
         for name, exp in cases:
             self.assertEqual(util.get_initial(name), exp)
