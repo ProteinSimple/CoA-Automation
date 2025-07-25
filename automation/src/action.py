@@ -163,10 +163,10 @@ def action_coa(args, config):
 
             # Output Coa Files
             for dir in config["pdf_output_dir"]:
-                dir_p = Path(dir)
-                logger.info("Outputing to: %s", dir_p)
-                os.makedirs(dir_p, exist_ok=True)
-                dest_path = (dir_p / filename).with_suffix(".pdf").absolute()
+                pdf_dir_path = Path(dir)
+                logger.info("Outputing to: %s", pdf_dir_path)
+                os.makedirs(pdf_dir_path, exist_ok=True)
+                dest_path = (pdf_dir_path / filename).with_suffix(".pdf").absolute()
                 pdf_outputs.append(str(dest_path))
                 with open(dest_path, "wb") as f:
                     encrypted.write(f)
