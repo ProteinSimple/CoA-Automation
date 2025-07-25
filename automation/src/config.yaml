@@ -15,7 +15,6 @@ prod:
   mapping_dir: res/mappings
   mapping_output_dir:
   - ./output/
-  - C:\Users\Arvin.Asgharian\Desktop\coatOutput2
   model_dir: res/models
   models:
   - SDS+
