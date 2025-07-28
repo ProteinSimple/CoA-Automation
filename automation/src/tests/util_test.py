@@ -18,7 +18,7 @@ class UtilTest(unittest.TestCase):
     def test_format_date(self):
         cases = [
             ("03/15/2023", "15MAR2023"),
-            ("1/5/2023", "5JAN2023"),
+            ("1/5/2023", "05JAN2023"),
             ("12/31/2023", "31DEC2023"),
         ]
         for given, expected in cases:

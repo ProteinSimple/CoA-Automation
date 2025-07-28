@@ -81,7 +81,8 @@ def predict_mapping(x: str, ys: list[str]):
 def format_date(given: str):
     "TODO"
     parts = given.split("/")
-    return parts[1] + MONTH_MAP[int(parts[0])] + parts[2]
+    day = parts[1].zfill(2)
+    return day + MONTH_MAP[int(parts[0])] + parts[2]
 
 
 def encrypt_pdf(writer: PdfWriter, permissions: dict) -> PdfWriter:
