@@ -31,8 +31,6 @@ class CartridgeData:
         if sat_data is not None:
             d = sat_data
             self.id = int(d["_id"])
-            if (pd.isna(d.get("b_date"))):
-                print(self.id)
             self.build_date = "%s/%s/%s" % (
                 d["b_date"].month,
                 d["b_date"].day,
@@ -251,8 +249,13 @@ def saturn_bundle_data(username, passkey, start, end):
 def saturn_bundle_prod_data(username, passkey,
                             start, end):
     prod_df = _saturn_get_prod_data(username, passkey, start, end)
+    def is_valid_int(val):
+        try:
+            return float(val).is_integer()
+        except:
+            return False
+    prod_df = prod_df[prod_df["_id"].apply(is_valid_int)]
     prod_df["_id"] = prod_df["_id"].astype(str)
-
     return [CartridgeData(d) for _, d in prod_df.iloc[::-1].iterrows()]
 
 

@@ -86,8 +86,7 @@ def action_check(args, config):
         logger.error("Error in CHECK action: %s", str(e))
         logger.error(traceback.format_exc())
         sys.stdout.flush()
-        # traceback.print_exc(file=sys.stdout)
-
+        traceback.print_exc(file=sys.stdout)
 
 def action_coa(args, config):
     try:

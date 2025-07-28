@@ -153,8 +153,8 @@ class ActionTest(unittest.TestCase):
         config = TestContext.get_config()
         tests_path = PathCorrection(config["test_coa_exp_dir"]).as_path()
         exp_map = {}
-        START = "2025-03-15"
-        END = "2025-03-31"
+        START = "2025-03-01"
+        END = "2025-04-30"
         user = os.getenv("API_USER")
         passkey = os.getenv("API_PASS")
         for file in os.listdir(tests_path):
@@ -173,6 +173,7 @@ class ActionTest(unittest.TestCase):
         action.action_coa(args, config)
         res = out.getvalue().strip()
         self.assertEqual(res[0], "1")
+        
         # See if the files are correct
         files = res[1:].split("\n")
         pdf_files = [f for f in files if f.endswith(".pdf")]
@@ -191,7 +192,7 @@ class ActionTest(unittest.TestCase):
 
             pdf_f = pdf_r.get_form_text_fields()
             exp_f = exp_r.get_form_text_fields()
-
+            
             for field, val in exp_f.items():
                 field = str(field)
                 val = str(val)
@@ -201,6 +202,8 @@ class ActionTest(unittest.TestCase):
                 try:
                     produced = pdf_f[field]
                 except Exception:
+                    test_print(pdf_f)
+                    test_print(exp_f)
                     self.fail()
                 self.assertEqual(produced, val)
 
