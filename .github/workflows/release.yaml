@@ -31,6 +31,13 @@ jobs:
         shell: pwsh
         run: |
             Compress-Archive -Path automation/dist/main/* -DestinationPath cli_tool.zip
+      - name: Set npm version from Git tag
+        shell: pwsh
+        run: |
+          $tag = "${{ github.ref }}".Split("/")[-1]
+          $version = $tag.TrimStart("v")
+          cd coat-ui
+          npm version $version --no-git-tag-version
 
       - name: Build Tauri App
         shell: pwsh
