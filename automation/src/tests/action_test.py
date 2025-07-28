@@ -173,7 +173,7 @@ class ActionTest(unittest.TestCase):
         action.action_coa(args, config)
         res = out.getvalue().strip()
         self.assertEqual(res[0], "1")
-        
+
         # See if the files are correct
         files = res[1:].split("\n")
         pdf_files = [f for f in files if f.endswith(".pdf")]
@@ -192,7 +192,7 @@ class ActionTest(unittest.TestCase):
 
             pdf_f = pdf_r.get_form_text_fields()
             exp_f = exp_r.get_form_text_fields()
-            
+
             for field, val in exp_f.items():
                 field = str(field)
                 val = str(val)

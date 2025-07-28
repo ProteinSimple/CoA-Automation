@@ -88,6 +88,7 @@ def action_check(args, config):
         sys.stdout.flush()
         traceback.print_exc(file=sys.stdout)
 
+
 def action_coa(args, config):
     try:
         logger.info("CoA creation has started, checking and gathering data!")

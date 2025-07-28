@@ -22,5 +22,4 @@ class UtilTest(unittest.TestCase):
             ("12/31/2023", "31DEC2023"),
         ]
         for given, expected in cases:
-            
             self.assertEqual(util.format_date(given), expected)

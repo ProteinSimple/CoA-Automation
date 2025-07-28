@@ -249,10 +249,11 @@ def saturn_bundle_data(username, passkey, start, end):
 def saturn_bundle_prod_data(username, passkey,
                             start, end):
     prod_df = _saturn_get_prod_data(username, passkey, start, end)
+
     def is_valid_int(val):
         try:
             return float(val).is_integer()
-        except:
+        except Exception:
             return False
     prod_df = prod_df[prod_df["_id"].apply(is_valid_int)]
     prod_df["_id"] = prod_df["_id"].astype(str)
