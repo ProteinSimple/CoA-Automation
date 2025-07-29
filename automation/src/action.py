@@ -86,7 +86,7 @@ def action_check(args, config):
         logger.error("Error in CHECK action: %s", str(e))
         logger.error(traceback.format_exc())
         sys.stdout.flush()
-        # traceback.print_exc(file=sys.stdout)
+        traceback.print_exc(file=sys.stdout)
 
 
 def action_coa(args, config):
@@ -337,6 +337,8 @@ def action_fetch(args, config):
         color_map = {}
         for v in res:
             code = v["class_code"]
+            if (code not in CartridgeData.code_map):
+                continue  # Old cartridge !
             model = CartridgeData.code_map[code]
             if code not in color_map:
                 profile_path = (

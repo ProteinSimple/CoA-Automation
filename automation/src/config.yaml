@@ -25,7 +25,7 @@ prod:
   - Flex
   - cIEF 400
   pdf_output_dir:
-  - ./output/`
+  - ./output/
   prod_code_map: res/Western-Biologics Part Number to ProdCode.xlsx
   profile: profile.yaml
 test:

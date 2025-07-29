@@ -9,6 +9,7 @@ function ErrorPopUpContainer() {
     "You are not connected to the internet.",
     "Some of the required files may be missing or corrupted.",
     "The app does not have permission to access the required files or directories.",
+    "You have given the program a path that doesn't exists in the settings.",
     "Your antivirus or security software may be blocking the app.",
     "Try restarting the app and ensuring all updates are installed."
   ];
