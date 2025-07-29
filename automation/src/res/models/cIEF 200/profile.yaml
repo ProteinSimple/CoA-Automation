@@ -9,4 +9,4 @@ fields:
   Text1: '@!TIME'
 template: 046-329_CofA_Maurice_cIEF_Cartridge_090-101_RevF.pdf
 PN: 090-101
-color: orange
+color: "#B22222"

@@ -59,33 +59,40 @@ export const ControlProvider = ({ children }: ControlProviderProps) => {
     const { setCartridgeList } = useCartridge()
     const {
         setValidUsers, setValidTypes, qcDateRange,
-        setProdDateRange, colorMap
+        setProdDateRange, colorMap, setColorMap
     } = useFilter()
     
     const fetchData = useCallback(async () => {
         setCartridgeLoading(true);
+        console.log(qcDateRange)
+        if (qcDateRange[0] === null || qcDateRange[1] === null) return;
+        console.log("FetchData Called")
         try {
-        const raw = await pythonFetchRange(qcDateRange[0], qcDateRange[1]);
-        const parsed: FetchInfo = JSON.parse(String(raw));
-        const values = parsed["values"]
-        const uniqueTypes = [...new Set(values.map(item => Number(item.class_code)))];
-        const uniqueUsers = [...new Set(values.map(item => item.qc_user).filter(u => u != null))]
-        setValidTypes(uniqueTypes);
-        setValidUsers(uniqueUsers)
-        setCartridgeList([]);
-        setCartridgeList(values);
-        setProdDateRange([new Date(parsed.prod_start), new Date(parsed.prod_end)])
-        for (const val of values) {
-            const code = Number(val.class_code)
-            if (!(Number(code) in colorMap)) {
-                colorMap[Number(code)] = val.color 
+            const raw = await pythonFetchRange(qcDateRange[0], qcDateRange[1]);
+            const parsed: FetchInfo = JSON.parse(String(raw));
+            const values = parsed["values"]
+            const uniqueTypes = [...new Set(values.map(item => Number(item.class_code)))];
+            const uniqueUsers = [...new Set(values.map(item => item.qc_user).filter(u => u != null))]
+            setValidTypes(uniqueTypes);
+            setValidUsers(uniqueUsers)
+            setCartridgeList([]);
+            setCartridgeList(values);
+            setProdDateRange([new Date(parsed.prod_start), new Date(parsed.prod_end)])
+            const updatedMap = { ...colorMap };
+
+            for (const val of values) {
+                const code = Number(val.class_code);
+                if (!(code in updatedMap)) {
+                    updatedMap[code] = val.color;
+                }
             }
-        }
+
+            setColorMap(updatedMap);
         } catch (error) {
-        console.error("Error fetching/parsing cartridge list:", error);
-        setCartridgeList([]); // Reset on error
+            console.error("Error fetching/parsing cartridge list:", error);
+            setCartridgeList([]); // Reset on error
         } finally {
-        setCartridgeLoading(false);
+            setCartridgeLoading(false);
         }
     }, [qcDateRange[0], qcDateRange[1], setValidTypes]);
 
