@@ -41,7 +41,7 @@ function SettingsPathList({ addPathFunc, removePathFunc, paths, title } : Settin
           </button>
       </div>
       <div className="settings-modal-message">
-        {paths.map((val) => <SettingPathListItem path={val} deleteAction={removePathFunc}/>)}
+        {paths.map((val) => <SettingPathListItem key={val} path={val} deleteAction={removePathFunc}/>)}
       </div>
     </div>
   )
