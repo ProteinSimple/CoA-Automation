@@ -1,7 +1,7 @@
 // import { useState } from "react";
 import { Logo } from "./components";
 import { BottomText, CartridgeList, TopContainer, ErrorPopUpContainer, SettingsContainer } from "./containers";
-import { CartridgeProvider, ControlProvider, FilterProvider, PopUpProvider } from "./contexts";
+import { CartridgeProvider, ControlProvider, FilterProvider, PopUpProvider, SettingsProvider } from "./contexts";
 import Modal  from "react-modal"
 import "./App.css";
 
@@ -20,7 +20,9 @@ function App() {
       <main className="container">
         <ErrorPopUpContainer/>
         <Logo/>
+          <SettingsProvider>
           <SettingsContainer />
+          </SettingsProvider>
           <TopContainer/>
           <CartridgeList/>
         <BottomText/>
