@@ -65,7 +65,7 @@ export const CartridgeProvider = ({ children }: CartridgeProviderProps) => {
       const inProdRange = buildDate >= prodDateRange[0] && buildDate <= prodDateRange[1];
       return matchesFilter && matchesType && matchesUser && passedQc && inProdRange;
     });
-  }, [cartridgeList, filterText, selectedTypes, showOnlyPassed, prodDateRange, selectedUsers]);
+  }, [cartridgeList, filterText, selectedTypes, showOnlyPassed, prodDateRange[0], prodDateRange[1], selectedUsers]);
 
   
     

@@ -2,6 +2,7 @@ import {useState, createContext, useContext, ReactNode, useEffect, useRef, useCa
 import { pythonAuth, pythonCheck, pythonFetchRange } from '../services';
 import { useFilter } from './FilterContext';
 import { useCartridge } from './CartridgeContext';
+import dayjs from 'dayjs';
 
 interface ControlContextType {
     checkDone: boolean
@@ -77,7 +78,8 @@ export const ControlProvider = ({ children }: ControlProviderProps) => {
             setValidUsers(uniqueUsers)
             setCartridgeList([]);
             setCartridgeList(values);
-            setProdDateRange([new Date(parsed.prod_start), new Date(parsed.prod_end)])
+            console.log(parsed)
+            setProdDateRange([dayjs(parsed.prod_start).toDate(), dayjs(parsed.prod_end).toDate()])
             const updatedMap = { ...colorMap };
 
             for (const val of values) {
