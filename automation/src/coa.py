@@ -5,7 +5,7 @@ import pandas as pd
 from pypdf import PdfReader, PdfWriter
 from log import get_logger
 from util import get_initial
-import fitz 
+import fitz
 from io import BytesIO
 
 warnings.filterwarnings("ignore")
@@ -48,13 +48,13 @@ def fill_template(
     writer.append(reader)
     writer.write(original_stream)
     original_stream.seek(0)
-    
+
     doc = fitz.open(stream=original_stream.read(), filetype="pdf")
     for page in doc:
         for widget in page.widgets():
             if widget.field_name in fill_data:
                 widget.field_value = str(fill_data[widget.field_name])
-                widget.text_fontsize =  fontsize
+                widget.text_fontsize = fontsize
                 widget.text_font = font
                 widget.update()
     updated_pdf_bytes = doc.write()
