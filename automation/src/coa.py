@@ -5,6 +5,8 @@ import pandas as pd
 from pypdf import PdfReader, PdfWriter
 from log import get_logger
 from util import get_initial
+import fitz 
+from io import BytesIO
 
 warnings.filterwarnings("ignore")
 
@@ -33,25 +35,36 @@ def get_coa_filename(id, profile, extn=".pdf"):
 
 
 def fill_template(
-    reader: PdfReader, fill_data: dict, fontsize: float = 12.0
+    reader: PdfReader, fill_data: dict, fontsize: float = 12.0, font: str = "helv"
 ) -> PdfWriter:
     """
     TODO
     """
 
     logger.info("Filling the CoA fields")
-    reader_fields = reader.get_form_text_fields()
-    writer = PdfWriter()
-    for rf in reader_fields:
-        val = fill_data[rf]
-        logger.debug("Field is being filled: %s --> %s", rf, val)
-        reader_fields[rf] = (val, "Helv", fontsize)
+    original_stream = BytesIO()
     reader.pages[0]
+    writer = PdfWriter()
     writer.append(reader)
-    writer.update_page_form_field_values(
-        writer.pages[0], reader_fields, auto_regenerate=False
-    )
-    return writer
+    writer.write(original_stream)
+    original_stream.seek(0)
+    
+    doc = fitz.open(stream=original_stream.read(), filetype="pdf")
+    for page in doc:
+        for widget in page.widgets():
+            if widget.field_name in fill_data:
+                widget.field_value = str(fill_data[widget.field_name])
+                widget.text_fontsize =  fontsize
+                widget.text_font = font
+                widget.update()
+    updated_pdf_bytes = doc.write()
+    doc.close()
+    updated_stream = BytesIO(updated_pdf_bytes)
+    updated_reader = PdfReader(updated_stream)
+    final_writer = PdfWriter()
+    updated_reader.pages[0]
+    final_writer.append(updated_reader)
+    return final_writer
 
 
 def get_mapping_name(args, model, name_prefix="coa_mapping", extn: str = ".csv") -> str:
