@@ -256,7 +256,7 @@ def action_init(args, config):
         fill_data = {}
         for rf in reader.get_form_text_fields():
             fill_data[str(rf)] = str(rf)  # Put the name of the field as the value of the field
-        res = fill_template(reader, fill_data, config["fontsize"])
+        res = fill_template(reader, fill_data, config["fontsize"], config["font"])
         res.write(save_path)
         profile["fields"] = init_fields(fill_data)
         profile["dates"] = init_dates(fill_data)
