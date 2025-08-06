@@ -56,6 +56,8 @@ def fill_template(
                 widget.field_value = str(fill_data[widget.field_name])
                 widget.text_fontsize = fontsize
                 widget.text_font = font
+                if ("text" not in str(widget.field_name).lower()):
+                    widget.text_fontsize = fontsize + 2 # TODO : this should be changed ASAP
                 widget.update()
     updated_pdf_bytes = doc.write()
     doc.close()

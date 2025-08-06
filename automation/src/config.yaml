@@ -10,7 +10,7 @@ prod:
     modify: false
     print: true
   font: Helv
-  fontsize: 10
+  fontsize: 8
   mapping_columns: res/mapping_columns.json
   mapping_dir: res/mappings
   mapping_output_dir:
