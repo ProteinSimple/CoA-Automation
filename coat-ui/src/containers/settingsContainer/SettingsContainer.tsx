@@ -39,8 +39,8 @@ function SettingsContainer() {
       <h4 style={{fontSize: "16px"}}>Settings</h4>
       <div className="settings-content-container">
         <SettingsToggles/>
-        <SettingsPathList addPathFunc={addPdfPath} removePathFunc={removePdfPath} paths={pdfPaths} />
-        <SettingsPathList addPathFunc={addMappingPath} removePathFunc={removeMappingPath} paths={mappingPaths} />
+        <SettingsPathList addPathFunc={addPdfPath} removePathFunc={removePdfPath} paths={pdfPaths} title='PDF paths' />
+        <SettingsPathList addPathFunc={addMappingPath} removePathFunc={removeMappingPath} paths={mappingPaths} title='Mapping paths' />
       </div>
       <CloseButton onClick={hideSettings}></CloseButton>
     </Modal>
