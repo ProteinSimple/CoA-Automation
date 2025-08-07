@@ -31,7 +31,7 @@ function SettingsPathList({ addPathFunc, removePathFunc, paths, title } : Settin
 
   return (
     <div className="settings-path-container">
-      {title ? "COA Output paths" : "Title"}
+      {title ? title : "Title"}
       <div>
           <button onClick={handleAddButton}>
             Add path manually
