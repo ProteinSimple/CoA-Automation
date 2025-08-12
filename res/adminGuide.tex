@@ -1,0 +1,155 @@
+\documentclass[12pt,a4paper]{article}
+
+% -----------------------------
+% Packages
+% -----------------------------
+\usepackage[utf8]{inputenc}    % UTF-8 encoding
+\usepackage[T1]{fontenc}       % Better font encoding
+\usepackage{lmodern}           % Better font rendering
+\usepackage[scaled]{helvet}
+\renewcommand{\familydefault}{\sfdefault}
+\usepackage{geometry}          % Page margins
+\usepackage{setspace}          % Line spacing
+\usepackage{titlesec}          % Control section formatting
+\usepackage{hyperref}          % Clickable links & TOC
+\usepackage{graphicx}          % Images
+\usepackage{fancyhdr}          % Headers & footers
+\usepackage{listings}
+\usepackage{xcolor}
+\lstset{
+  basicstyle=\ttfamily\small,  % Monospace for code
+  backgroundcolor=\color{gray!10},
+  frame=single,
+  breaklines=true,
+  showstringspaces=false,
+  keywordstyle=\color{blue},
+  commentstyle=\color{green!50!black},
+  stringstyle=\color{red!70!black}
+}
+% Monospace font setup
+\renewcommand{\ttdefault}{pcr}
+% -----------------------------
+% Page setup
+% -----------------------------
+\geometry{margin=1in}
+\singlespacing
+\setlength{\parskip}{0.5em}
+
+% -----------------------------
+% Section title formatting
+% -----------------------------
+\titleformat{\section}
+  {\normalfont\Large\bfseries}{\thesection}{1em}{}
+\titleformat{\subsection}
+  {\normalfont\large\bfseries}{\thesubsection}{1em}{}
+
+% -----------------------------
+% Header & footer
+% -----------------------------
+\pagestyle{fancy}
+\fancyhf{}
+\lhead{ COAT (Certificate of analysis toolkit) Admin Guide }
+\rhead{\thepage}
+
+% -----------------------------
+% Title info
+% -----------------------------
+\title{
+  \Huge \textbf{
+    COAT (Certificate of analysis toolkit) Admin Guide} \\
+    \vspace{1em}
+  \large ProteinSimple Toronto Operation department \\
+  \large Author: Arvin Asgharian Rezaee
+  }
+ 
+\author{}
+\date{\today}
+
+% -----------------------------
+% Document
+% -----------------------------
+\begin{document}
+
+% Title page
+\maketitle
+\thispagestyle{empty}
+\clearpage
+
+% Table of contents
+\tableofcontents
+\clearpage
+
+% -----------------------------
+% Introduction
+% -----------------------------
+\section{Introduction}
+COAT was first developed during summer of 2025 for automating and streamlining the process of COA creation
+of Maurice cartridges for the Toronto office. the purpose of this guide it to briefly touch on the 
+software architecture of the project, alongside guides to maintain and update it.
+
+\section{Getting Started}
+We will first lightly touch opon compiling and deploying a project and releasing a new version.
+\subsection{System Requirements}
+At the time of creation of this document, the only supported OS for COAT is Windows 11 and Windows 10.
+The released executable file only supports the mentioned Systems. Though the source code can be altered to
+support other systems but no guarantee is currently. It is assumed that the following software is installed
+and working correctly on your machine.
+\begin{itemize}
+  \item Git
+  \item Winget
+\end{itemize}
+
+\subsection{Setup}
+The source code for the project can be cloned with the following links: \newline
+\textit{https://github.com/ProteinSimple/CoA-Automation} \newline
+To clone the project use the following command in your terminal
+\begin{lstlisting}[language=bash]
+cd ~
+mkdir temp
+cd temp
+git clone https://github.com/ProteinSimple/CoA-Automation.git .
+\end{lstlisting}
+The steps to install the program can be found in the GitHub webpage. Follow the steps to install the requirements
+and run the project. 
+
+
+
+\section{Action Guide}
+The automation script that is the backend logic of COAT, is written
+in python and has a CLI where you can provide the application with actions
+you would like it to perform. This is in fact the exact method that the UI 
+communicates with this script. The following is a list of possible actions
+alongside a brief and non-technical explaination. The python file containing
+the entry point to the program is listed below:
+\begin{lstlisting}[language=bash]
+<project path>/automation/src/main.py
+\end{lstlisting}
+To get comprehensive list of actions run the following
+\begin{lstlisting}[language=bash]
+> cd <project path>/automation/src
+> python main.py --help
+\end{lstlisting}
+To get a description of an action alongside how to use it run it with "action-name --help"
+so as an example:
+\begin{lstlisting}[language=bash]
+> python main.py check --help
+\end{lstlisting}
+Before diving into specifics of each action,  there are several common argument
+that is shared between all of the actions. Lets first have an overview of those:
+\begin{itemize}
+  \item -h, --help: Show help comments
+  \item --run-mode: Set run mode of program (test or prod, default = prod)
+  \item --verbose: By default the script outputs its results to the given output file.
+                   with this option it will print it to stdout instead (default = False)
+  \item ---config: Path to the configuration file containing run information (default = ./config.yaml)
+  \item --output: Output file used to showcase the result of the program
+  \item --user: username for saturn authentication
+  \item --passkey: passkey for saturn authentication 
+\end{itemize}
+
+\subsection{Check Action}
+Used to check if connection to saturn is valid. Method of running is :
+\begin{lstlisting}[]
+  python main.py check
+\end{lstlisting}
+\end{document}

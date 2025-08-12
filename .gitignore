@@ -201,3 +201,10 @@ _internal
 main.exe
 out.csv
 .out
+/res/*.toc
+/res/*.out
+/res/*.fls
+/res/*.fdb_latexmk
+/res/*.aux
+/res/*.minted
+/res/*.gz
