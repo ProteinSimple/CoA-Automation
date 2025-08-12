@@ -1,27 +1,31 @@
-file_perm:
-  accessibility: true
-  annotate: false
-  assemble: false
-  copy: true
-  extract: false
-  form_fill: false
-  modify: false
-  print: true
-font: Helv
-fontsize: 8
-mapping_columns: res/mapping_columns.json
-mapping_dir: res/mappings
-mapping_output_dir:
-- ./output/
-model_dir: res/models
-models:
-- SDS+
-- SDSTurbo
-- cIEF 200
-- CE-SDS
-- CE-SDS 50
-- Flex
-pdf_output_dir:
-- ./output/
-prod_code_map: res/Western-Biologics Part Number to ProdCode.xlsx
-profile: profile.yaml
+0
+Traceback (most recent call last):
+  File "C:\Users\Arvin.Asgharian\Desktop\coding\CoA-Automation\automation\src\action.py", line 268, in action_init
+    yaml.safe_dump(profile, f)
+    ~~~~~~~~~~~~~~^^^^^^^^^^^^
+  File "C:\Users\Arvin.Asgharian\Desktop\coding\CoA-Automation\automation\python_env\Lib\site-packages\yaml\__init__.py", line 269, in safe_dump
+    return dump_all([data], stream, Dumper=SafeDumper, **kwds)
+  File "C:\Users\Arvin.Asgharian\Desktop\coding\CoA-Automation\automation\python_env\Lib\site-packages\yaml\__init__.py", line 241, in dump_all
+    dumper.represent(data)
+    ~~~~~~~~~~~~~~~~^^^^^^
+  File "C:\Users\Arvin.Asgharian\Desktop\coding\CoA-Automation\automation\python_env\Lib\site-packages\yaml\representer.py", line 27, in represent
+    node = self.represent_data(data)
+  File "C:\Users\Arvin.Asgharian\Desktop\coding\CoA-Automation\automation\python_env\Lib\site-packages\yaml\representer.py", line 48, in represent_data
+    node = self.yaml_representers[data_types[0]](self, data)
+  File "C:\Users\Arvin.Asgharian\Desktop\coding\CoA-Automation\automation\python_env\Lib\site-packages\yaml\representer.py", line 207, in represent_dict
+    return self.represent_mapping('tag:yaml.org,2002:map', data)
+           ~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Arvin.Asgharian\Desktop\coding\CoA-Automation\automation\python_env\Lib\site-packages\yaml\representer.py", line 118, in represent_mapping
+    node_value = self.represent_data(item_value)
+  File "C:\Users\Arvin.Asgharian\Desktop\coding\CoA-Automation\automation\python_env\Lib\site-packages\yaml\representer.py", line 48, in represent_data
+    node = self.yaml_representers[data_types[0]](self, data)
+  File "C:\Users\Arvin.Asgharian\Desktop\coding\CoA-Automation\automation\python_env\Lib\site-packages\yaml\representer.py", line 199, in represent_list
+    return self.represent_sequence('tag:yaml.org,2002:seq', data)
+           ~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Arvin.Asgharian\Desktop\coding\CoA-Automation\automation\python_env\Lib\site-packages\yaml\representer.py", line 92, in represent_sequence
+    node_item = self.represent_data(item)
+  File "C:\Users\Arvin.Asgharian\Desktop\coding\CoA-Automation\automation\python_env\Lib\site-packages\yaml\representer.py", line 58, in represent_data
+    node = self.yaml_representers[None](self, data)
+  File "C:\Users\Arvin.Asgharian\Desktop\coding\CoA-Automation\automation\python_env\Lib\site-packages\yaml\representer.py", line 231, in represent_undefined
+    raise RepresenterError("cannot represent an object", data)
+yaml.representer.RepresenterError: ('cannot represent an object', 'Date of Manufacture')

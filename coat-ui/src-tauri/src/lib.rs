@@ -4,11 +4,12 @@ use std::fs;
 use std::path::PathBuf;
 use std::process::Command;
 use tauri::async_runtime::spawn_blocking;
+use uuid::Uuid;
 
 fn get_temp_output_path() -> PathBuf {
     let mut temp_dir = env::temp_dir();
-    let timestamp = chrono::Utc::now().timestamp();
-    temp_dir.push(format!("coat_{}.out", timestamp));
+    let unique_id = Uuid::new_v4(); // generate a truly unique identifier
+    temp_dir.push(format!("coat_{}.out", unique_id));
     temp_dir
 }
 

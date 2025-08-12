@@ -1,25 +1,21 @@
 import "./TopContainer.css";
 import { pythonCoa } from "../../services";
-import  TopContainerDates  from "../topContainerDates/TopContainerDates"
+import  TopContainerFilters  from "../topContainerFilters/TopContainerFilters"
 import { useCartridge, useFilter, usePopUp } from "../../contexts";
 import { useState } from "react";
 import { DotLoader } from "react-spinners";
 import "react-datepicker/dist/react-datepicker.css";
-
-
-interface TopContainerProps {
-  setFilter: (given: string) => void;
-}
+import { MyDatePicker } from "../../components";
 
 
 
-function TopContainer({ setFilter }: TopContainerProps) {
+function TopContainer() {
   
-  const { selectedCartridgeList } = useCartridge();
+  const { selectedCartridgeList, filteredList } = useCartridge();
   const [ isGenerating, setIsGenerating ] = useState(false)
   const { setError } = usePopUp()
   const [ name, setName ] = useState<string>("")
-  const { startDate, endDate } = useFilter()
+  const { prodDateRange, setQCDateRange, qcDateRange, setFilterText } = useFilter()
   
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -31,7 +27,20 @@ function TopContainer({ setFilter }: TopContainerProps) {
     setIsGenerating(true);
 
     try {
-      const outputed_files = await pythonCoa([...selectedCartridgeList], name, startDate, endDate);
+      // selectdCartridgeList
+      // filteredCartridgeList CartridgeInfo
+      const filteredIds = new Set(filteredList.map(c => c.id));
+      //
+      const targetSet = new Set(
+        [...selectedCartridgeList].filter(id => filteredIds.has(id))
+      );
+
+      if (targetSet.size === 0) {
+        alert("No cartridges are selected for generation!")
+        return
+      }
+        
+      const outputed_files = await pythonCoa([...targetSet], name.trim(), prodDateRange[0], prodDateRange[1]);
       let fileList: string[] = [];
 
       if (typeof outputed_files === "string") {
@@ -61,28 +70,45 @@ function TopContainer({ setFilter }: TopContainerProps) {
       setIsGenerating(false)
     }
   }
+  
+  const handleQCRangeChange = (dates: [Date | null, Date | null]) => {
+    setQCDateRange([dates[0] as Date, dates[1] as Date]);
+  };
 
   return (
     <div className="topContainer">
       <form
         className="row"
         onSubmit={handleSubmit}>  
+        <MyDatePicker 
+          headline="QC Date"
+          dateRange={qcDateRange}
+          onChange={handleQCRangeChange}/>
+          
         <input className="top-field" id="SN-search"
                placeholder="Search... 🔍"
-               onChange={(e) => setFilter(e.target.value)}/>
+               onChange={(e) => setFilterText(e.target.value)}/>
         <input className="top-field" id="greet-input"
                placeholder="Enter a name..."
-               onChange={(e) => setName(e.target.value)} />
-          
-        <button type="submit" disabled={isGenerating || selectedCartridgeList.size == 0}>
+               value={name}
+               onChange={(e) => {
+                const val = e.target.value;
+                  if (/^[a-zA-Z\s]*$/.test(val)) {
+                    setName(val);
+                  }
+                }} />
+                      
+        <button type="submit"
+                disabled={isGenerating}
+                style={{display: "flex", alignItems: "center", backgroundColor: "var(--color-button-primary)"}}>
             {isGenerating? (
               <DotLoader color="white" loading={isGenerating} size={20} />
-             ) : (
+            ) : (
               "Generate"
-             )}
+            )}
         </button>
        </form>
-       <TopContainerDates/>
+       <TopContainerFilters/>
     </div>
   );
 }

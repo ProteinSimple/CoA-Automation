@@ -12,10 +12,14 @@ PN: 101-0059
 dates:
 - Date of Manufacture
 - Expiration Date
+- Text1
 fields:
   Batch No: 'batch_num'
-  Date of Manufacture: 'build_time'
+  Date of Manufacture: 'build_date'
   Expiration Date: 'exp_date'
   Serial Number: 'id'
   Text1: '@!TIME'
 template: Q51-0206_CofA_101-0059_cIEF Fractionation_Cartridge_RevB.pdf
+color: "#008080"
+font:
+  Text1: 8

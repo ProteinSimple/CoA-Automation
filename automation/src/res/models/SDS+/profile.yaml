@@ -19,3 +19,6 @@ fields:
   Serial Number: 'id'
   Text1: '@!TIME'
 template: Q51-0003_CofA_090-157_Maurice-CE-SDS_PLUS_Cartridge_RevD.pdf
+color: "#0000CD"
+font:
+  Text1: 8

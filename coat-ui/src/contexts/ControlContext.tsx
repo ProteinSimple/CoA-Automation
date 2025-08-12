@@ -1,5 +1,8 @@
-import {useState, createContext, useContext, ReactNode, useEffect, useRef} from 'react';
-import { pythonAuth, pythonCheck } from '../services';
+import {useState, createContext, useContext, ReactNode, useEffect, useRef, useCallback} from 'react';
+import { pythonAuth, pythonCheck, pythonFetchRange } from '../services';
+import { useFilter } from './FilterContext';
+import { useCartridge } from './CartridgeContext';
+import dayjs from 'dayjs';
 
 interface ControlContextType {
     checkDone: boolean
@@ -7,14 +10,38 @@ interface ControlContextType {
     isAuthenticating: boolean
     authError: string | null
     forceReauth: () => void
+    cartridgeLoading: boolean;
+    setCartridgeLoading: (_: boolean) => void
 }
+
+
+interface CartridgeInfo {
+  id: number;
+  build_date: string;
+  build_time: string;
+  class_code: string;
+  qc_status: string;
+  qc_date: string;
+  qc_time: string;
+  qc_user: string;
+  color: string;
+}
+
+
+
+interface FetchInfo {
+  values: CartridgeInfo[];
+  prod_start: string;
+  prod_end: string;
+}
+
 
 const ControlContext = createContext<ControlContextType | undefined>(undefined)
   
 export const useControl = (): ControlContextType => {
     const context = useContext(ControlContext)
     if (!context) {
-        throw new Error("useCartridge must be used within a CartridgeProvider")
+        throw new Error("useControl must be used within a ControlProvider")
     }
     return context
 }
@@ -25,10 +52,58 @@ interface ControlProviderProps {
 
 
 export const ControlProvider = ({ children }: ControlProviderProps) => {
-   const [checkDone, setCheckDone] = useState<boolean>(false)
+    const [checkDone, setCheckDone] = useState<boolean>(false)
     const [isAuthenticating, setIsAuthenticating] = useState<boolean>(false)
     const [authError, setAuthError] = useState<string | null>(null)
     const loginInProgress = useRef(false)
+    const [cartridgeLoading, setCartridgeLoading] = useState<boolean>(false);
+    const { setCartridgeList } = useCartridge()
+    const {
+        setValidUsers, setValidTypes, qcDateRange,
+        setProdDateRange, colorMap, setColorMap
+    } = useFilter()
+    
+    const fetchData = useCallback(async () => {
+        setCartridgeLoading(true);
+        console.log(qcDateRange)
+        if (qcDateRange[0] === null || qcDateRange[1] === null) return;
+        console.log("FetchData Called")
+        try {
+            const raw = await pythonFetchRange(qcDateRange[0], qcDateRange[1]);
+            const parsed: FetchInfo = JSON.parse(String(raw));
+            const values = parsed["values"]
+            const uniqueTypes = [...new Set(values.map(item => Number(item.class_code)))];
+            const uniqueUsers = [...new Set(values.map(item => item.qc_user).filter(u => u != null))]
+            setValidTypes(uniqueTypes);
+            setValidUsers(uniqueUsers)
+            setCartridgeList([]);
+            setCartridgeList(values);
+            console.log(parsed)
+            setProdDateRange([dayjs(parsed.prod_start).toDate(), dayjs(parsed.prod_end).toDate()])
+            const updatedMap = { ...colorMap };
+
+            for (const val of values) {
+                const code = Number(val.class_code);
+                if (!(code in updatedMap)) {
+                    updatedMap[code] = val.color;
+                }
+            }
+
+            setColorMap(updatedMap);
+        } catch (error) {
+            console.error("Error fetching/parsing cartridge list:", error);
+            setCartridgeList([]); // Reset on error
+        } finally {
+            setCartridgeLoading(false);
+        }
+    }, [qcDateRange[0], qcDateRange[1], setValidTypes]);
+
+    useEffect(() => {
+        if (checkDone) {
+        fetchData();
+        }
+    }, [checkDone, fetchData]);
+
 
     const authenticate = async (): Promise<boolean> => {
         if (loginInProgress.current) return false
@@ -37,13 +112,7 @@ export const ControlProvider = ({ children }: ControlProviderProps) => {
         setAuthError(null)
 
         try {
-            console.log("About to call pythonCheck()...")
             let result = await pythonCheck()
-            console.log("pythonCheck() returned:", result)
-            console.log("Type of result:", typeof result)
-            console.log("Result === true:", result === true)
-            console.log("Result == true:", result == true)
-            console.log("Boolean(result):", Boolean(result))
             
             while (!result) {
                 const user = prompt("Enter username:", "")
@@ -91,7 +160,9 @@ export const ControlProvider = ({ children }: ControlProviderProps) => {
             setCheckDone, 
             isAuthenticating, 
             authError, 
-            forceReauth 
+            forceReauth,
+            cartridgeLoading,
+            setCartridgeLoading
         }}>
             {children}
         </ControlContext.Provider>

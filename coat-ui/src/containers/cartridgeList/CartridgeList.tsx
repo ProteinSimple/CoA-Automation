@@ -1,74 +1,46 @@
 import { CartridgeListItem } from "../../components";
-import { pythonFetchRange } from "../../services";
-import { useEffect, useState, useMemo, useCallback } from "react";
 import "./cartridgeList.css";
-import { useControl, useFilter } from "../../contexts";
-
-interface CartridgeInfo {
-  id: string;
-  b_date: string;
-  type: string;
-}
-
-interface CartridgeListProps {
-  filterText: string
-}
-
-function CartridgeList({ filterText }: CartridgeListProps) {
-  const [cartridgeList, setCartridgeList] = useState<CartridgeInfo[]>([]);
-  const [loading, setLoading] = useState<boolean>(false);
+import { useControl, useCartridge } from "../../contexts";
 
 
-  const { checkDone } = useControl();
-  const {startDate, endDate, selectedTypes, setValidTypes } = useFilter()
 
-  const fetchData = useCallback(async () => {
-    setLoading(true);
-    try {
-      const raw = await pythonFetchRange(startDate, endDate);
-      const parsed: CartridgeInfo[] = JSON.parse(String(raw));
-      const uniqueTypes = [...new Set(parsed.map(item => Number(item.type)))];
-      setValidTypes(uniqueTypes);
-      setCartridgeList(parsed);
-    } catch (error) {
-      console.error("Error fetching/parsing cartridge list:", error);
-      setCartridgeList([]); // Reset on error
-    } finally {
-      setLoading(false);
-    }
-  }, [startDate, endDate, setValidTypes]);
+function CartridgeList() {
+  const { checkDone, cartridgeLoading } = useControl();
+  const { cartridgeList, filteredList } = useCartridge();
 
+  let content = null;
 
-  useEffect(() => {
-    if (checkDone) {
-      fetchData();
-    }
-  }, [checkDone, fetchData]);
-
-
-  const filteredList = useMemo(() => {
-    if (!cartridgeList.length) return [];
-    
-    const lowerFilterText = filterText.toLowerCase();
-    
-    return cartridgeList.filter((item) => {
-      const matchesFilter = item.id.toLowerCase().includes(lowerFilterText);
-      const matchesType = selectedTypes.length === 0 || selectedTypes.includes(Number(item.type));
-      return matchesFilter && matchesType;
-    });
-  }, [cartridgeList, filterText, selectedTypes]);
-
-  if (!checkDone || loading) { return <div>Loading Cartridge Data...</div>;}
-
-  if (cartridgeList.length === 0) { return <div>No cartridge data available.</div>;}
-
-  if (filteredList.length === 0) { return <div>No cartridges match your current filters.</div>; }
+  if (!checkDone || cartridgeLoading) {
+     content = (
+      <div className="placeholder">
+        Loading Cartridge Data<span className="dots"></span>
+      </div>
+    );
+  } else if (cartridgeList.length === 0) {
+    content = <div className="placeholder">No cartridge data available.</div>;
+  } else if (filteredList.length === 0) {
+    content = <div className="placeholder">No cartridges match your current filters.</div>;
+  } else {
+    content = filteredList.map((d) => (
+      <CartridgeListItem
+        key={d.id}
+        id={d.id}
+        prod_time={d.build_time}
+        prod_date={d.build_date}
+        qc_date={d.qc_date}
+        qc_time={d.qc_time}
+        type={d.class_code}
+        status={d.qc_status}
+        color={d.color}
+      />
+    ));
+  }
 
   return (
-    <div className="list_container">
-      {filteredList.map((d) => (
-        <CartridgeListItem key={d.id} id={d.id} time={d.b_date} type={d.type} />
-      ))}
+    <div>
+      <div className="list_container">
+        {content}
+      </div>
     </div>
   );
 }

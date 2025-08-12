@@ -1,0 +1,119 @@
+name: Main Branch CI
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+env:
+  API_USER: ${{ secrets.SATURN_API_USER }}
+  API_PASS: ${{ secrets.SATURN_API_PASS }}
+
+jobs:
+  build-python-windows:
+    runs-on: windows-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        working-directory: ./automation
+        run: |
+          make install
+      
+      - name: Get sample build
+        working-directory: ./automation
+        run: |
+          make build
+
+  test-python:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies and build
+        working-directory: ./automation
+        run: |
+          make install
+      
+      - name: run tests
+        working-directory: ./automation
+        run: |
+          make test
+  
+  lint-python:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install linting tool
+        working-directory: ./automation
+        run: |
+          pip install --upgrade pip
+          pip install flake8
+          
+      
+      - name: run lint
+        working-directory: ./automation
+        run: |
+          make lint
+
+  build-ui:
+    needs: [test-python, build-python-windows]
+    runs-on: windows-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+      
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        working-directory: ./automation
+        run: |
+          make install
+      
+      - name: Build using PyInstaller
+        shell: pwsh
+        run: ./buildPy.ps1
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+
+      - name: Install UI dependencies
+        run: |
+          cd coat-ui
+          npm install
+
+      - name: Build Tauri App
+        run: |
+          cd coat-ui
+          npm run tauri build

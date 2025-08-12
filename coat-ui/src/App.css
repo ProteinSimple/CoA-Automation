@@ -5,14 +5,14 @@
 
   /* Button colors */
   --color-button-primary: black;
-  --color-button-secondary: white;
+  --color-button-secondary: rgb(99, 99, 99);
   --color-button-hover: #396cd8;
 
   /* Text colors */
   --color-text-primary: #f6f6f6;
-  --color-text-secondary: #b4b4b4;
+  --color-text-secondary: #8b8b8b;
   font-family: Inter, Avenir, Helvetica, Arial, sans-serif;
-  font-size: 16px;
+  font-size: 14px;
   line-height: 24px;
   font-weight: 400;
 
@@ -31,5 +31,5 @@
   flex-direction: column;
   justify-content: center;
   text-align: center;
-  height: 97vh;
+  height: 95vh;
 }

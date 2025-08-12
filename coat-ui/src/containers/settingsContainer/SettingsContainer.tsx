@@ -1,151 +1,49 @@
 import './SettingsContainer.css';
 import Modal from "react-modal";
-import { SettingPathListItem } from '../../components';
-import { useEffect, useState } from 'react';
-import { open  } from '@tauri-apps/plugin-dialog';
-import { pythonConfigAddPdf, pythonConfigList, pythonConfigDeletePdf, pythonConfigAddMapping, pythonConfigDeleteMapping } from '../../services';
-import { useControl, usePopUp } from '../../contexts';
-import { Folder } from 'lucide-react';
-
-
-
+import { usePopUp, useSettings } from '../../contexts';
+import SettingsPathList from "../settingsPathList/SettingsPathList";
+import { SettingsToggles, CloseButton } from '../../components';
 
 
 function SettingsContainer() {
 
-  const [pdfPaths, setPdfPaths] = useState<string[]>([])
-  const [mappingPaths, setMappingPaths] = useState<string[]>([])
-  const { setting: isOpen, hideSettings: onClose} = usePopUp()
-  const { checkDone } = useControl();
+  const overlayStyleClass = {
+    base: "settings-modal-overlay",
+    afterOpen: "ReactModal__Overlay--after-open",
+    beforeClose: "ReactModal__Overlay--before-close",      
+  }  
 
-  const addPdfPath = async (given: string) => {
-    try {
-        const res = await pythonConfigAddPdf([given])
-        const config = JSON.parse(res as string) as { [key: string]: any }
-        setPdfPaths(config["pdf_output_dir"])
-    } catch (err) {
-        console.error("Failed to fetch or parse config:", err);
-    }
+  const mainStyleClass = {
+    base: "settings-modal-container",
+    afterOpen: "ReactModal__Content--after-open",
+    beforeClose: "ReactModal__Content--before-close",
   }
+
+  const { setting, hideSettings} = usePopUp()
+  const { 
+    pdfPaths, addPdfPath, removePdfPath, 
+    mappingPaths, addMappingPath, removeMappingPath
+  } = useSettings();
 
   
-
-  const removePdfPath = async (given: string) => {
-    try {
-        const res = await pythonConfigDeletePdf([given])
-        const config = JSON.parse(res as string) as { [key: string]: any }
-        setPdfPaths(config["pdf_output_dir"])
-    } catch (err) {
-        console.error("Failed to fetch or parse config:", err);
-    }
-  }
-
-  const addMappingPath = async (given: string) => {
-    try {
-        const res = await pythonConfigAddMapping([given])
-        const config = JSON.parse(res as string) as { [key: string]: any }
-        setMappingPaths(config["mapping_output_dir"])
-    } catch (err) {
-        console.error("Failed to fetch or parse config:", err);
-    }
-  }
-
-  const removeMappingPath = async (given: string) => {
-    try {
-        const res = await pythonConfigDeleteMapping([given])
-        const config = JSON.parse(res as string) as { [key: string]: any }
-        setMappingPaths(config["mapping_output_dir"])
-    } catch (err) {
-        console.error("Failed to fetch or parse config:", err);
-    }
-  }
-
-  const handleAddButton = async (addFunc: (_: string) => void) => {
-    const prompted = prompt("Paste your output path here")
-    
-    if (prompted != null) { 
-      addFunc(prompted)
-    }
-  }
-
-  const handleFolderButton = async (addFunc: (_: string) => void) => {
-    const file = await open({
-      multiple: false,
-      directory: true,
-    });
-    if (file != null) { addFunc(file) }
-  }
-
-  useEffect(() => {
-    const effect = async () => {
-      if (!checkDone) return
-      try {
-        const res = await pythonConfigList();
-        const config = JSON.parse(res as string) as { [key: string]: any };
-        console.log(config)
-        setPdfPaths(config["pdf_output_dir"]);
-        setMappingPaths(config["mapping_output_dir"]);
-      } catch (err) {
-        console.error("Failed to fetch or parse config:", err);
-      }
-    }
-    effect()
-  }, [isOpen, checkDone])
-
   return (
     <Modal
-      isOpen={isOpen}
-      onRequestClose={onClose}
+      isOpen={setting}
+      onRequestClose={hideSettings}
       contentLabel="Settings Modal"
-      overlayClassName={{
-        base: "settings-modal-overlay",
-        afterOpen: "ReactModal__Overlay--after-open",
-        beforeClose: "ReactModal__Overlay--before-close",
-      }}
-      className={{
-        base: "settings-modal-container",
-        afterOpen: "ReactModal__Content--after-open",
-        beforeClose: "ReactModal__Content--before-close",
-      }}
+      overlayClassName={overlayStyleClass}
+      className={mainStyleClass}
       closeTimeoutMS={300}
       ariaHideApp={false}
     >
-      
-      
-      <h2>Settings</h2>
+      <h4 style={{fontSize: "16px"}}>Settings</h4>
       <div className="settings-content-container">
-        <div>
-          COA Output paths
-          <div>
-              <button onClick={() => handleAddButton(addPdfPath)}>
-                Add path manually
-              </button>
-              <button onClick={() => handleFolderButton(addPdfPath)}>
-                <Folder size="1em"/>
-              </button>
-          </div>
-          <div className="settings-modal-message">
-            {pdfPaths.map((val) => <SettingPathListItem path={val} deleteAction={removePdfPath}/>)}
-          </div>
-        </div>
-        <div>
-          Mapping Output paths
-          <div>
-              <button onClick={() => handleAddButton(addMappingPath)}>
-                Add path manually
-              </button>
-              <button onClick={() => handleFolderButton(addMappingPath)}>
-                <Folder size="1em"/>
-              </button>
-          </div>
-          <div className="settings-modal-message">
-            {mappingPaths.map((val) => <SettingPathListItem path={val} deleteAction={removeMappingPath}/>)}
-          </div>
-        </div>
+        <SettingsToggles/>
+        <SettingsPathList addPathFunc={addPdfPath} removePathFunc={removePdfPath} paths={pdfPaths} title='PDF paths' />
+        <SettingsPathList addPathFunc={addMappingPath} removePathFunc={removeMappingPath} paths={mappingPaths} title='Mapping paths' />
       </div>
-      <button className='setting_x' onClick={onClose}>X</button>
+      <CloseButton onClick={hideSettings}></CloseButton>
     </Modal>
-
   );
 };
 
