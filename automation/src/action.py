@@ -16,6 +16,7 @@ from saturn import (auth, saturn_bundle_data, saturn_bundle_prod_data,
 from util import (PathCorrection, encrypt_pdf, format_date, init_dates,
                   init_fields, init_fonts, save_config)
 
+
 class CoatActions(Enum):
     COA = (1,)
     INIT = (2,)
@@ -157,7 +158,9 @@ def action_coa(args, config):
                 if rf in dates:
                     val = format_date(val)
                 fill_data[rf] = val
-                font_data[rf] = fonts[rf] if (rf in fonts and fonts[rf] is not None and fonts[rf] != "") else default_font
+                font_data[rf] = \
+                    fonts[rf] if (rf in fonts and fonts[rf] is not None and fonts[rf] != "") \
+                    else default_font
             logger.debug(font_data)
             res = fill_template(reader, fill_data, font_data)
             encrypted = encrypt_pdf(res, config["file_perm"])
@@ -268,7 +271,7 @@ def action_init(args, config):
         profile["font"] = init_fonts(fill_data, config["fontsize"])
         profile["PN"] = part_number
         profile["color"] = color
-        
+
         with open(profile_path, mode="w") as f:
             f.write(profile_comment + "\n")
             yaml.safe_dump(profile, f)
