@@ -5,7 +5,6 @@ import sys
 import traceback
 from enum import Enum
 from pathlib import Path
-
 import pandas as pd
 import yaml
 from pypdf import PdfReader
@@ -15,8 +14,7 @@ from log import get_logger
 from saturn import (auth, saturn_bundle_data, saturn_bundle_prod_data,
                     CartridgeData)
 from util import (PathCorrection, encrypt_pdf, format_date, init_dates,
-                  init_fields, save_config)
-
+                  init_fields, init_fonts, save_config)
 
 class CoatActions(Enum):
     COA = (1,)
@@ -134,6 +132,7 @@ def action_coa(args, config):
             filename = get_coa_filename(id, profile)
             dates = set(profile["dates"])
             fields = profile["fields"]
+            fonts = profile.get("font", dict())
 
             # CoA Creation
             logger.info("filling CoA template. template path: %s", profile["template"])
@@ -145,6 +144,8 @@ def action_coa(args, config):
 
             # Data used to fill the values of the template file.
             fill_data = {}
+            font_data = {}
+            default_font = config["fontsize"]
             for rf in reader.get_form_text_fields():
                 key = fields[rf]
                 val: str
@@ -156,8 +157,9 @@ def action_coa(args, config):
                 if rf in dates:
                     val = format_date(val)
                 fill_data[rf] = val
-
-            res = fill_template(reader, fill_data, config["fontsize"])
+                font_data[rf] = fonts[rf] if (rf in fonts and fonts[rf] is not None and fonts[rf] != "") else default_font
+            logger.debug(font_data)
+            res = fill_template(reader, fill_data, font_data)
             encrypted = encrypt_pdf(res, config["file_perm"])
             logger.info("Template filled and Encrypted. now outputing files")
 
@@ -230,6 +232,7 @@ def action_init(args, config):
     run_mode = args.run_mode
     color = args.color
     part_number = args.part_number
+    default_fontsize = config['fontsize']
     # Paths used throughout the function
     template_path = PathCorrection(args.template).as_path()
     dir_path = PathCorrection(Path(config["model_dir"]) / model).as_path()
@@ -254,14 +257,18 @@ def action_init(args, config):
         logger.debug("Generating field map from PDF")
         reader = PdfReader(template_path)
         fill_data = {}
+        font_data = {}
         for rf in reader.get_form_text_fields():
             fill_data[str(rf)] = str(rf)  # Put the name of the field as the value of the field
-        res = fill_template(reader, fill_data, config["fontsize"], config["font"])
+            font_data[str(rf)] = default_fontsize
+        res = fill_template(reader, fill_data, font_data)
         res.write(save_path)
         profile["fields"] = init_fields(fill_data)
         profile["dates"] = init_dates(fill_data)
+        profile["font"] = init_fonts(fill_data, config["fontsize"])
         profile["PN"] = part_number
         profile["color"] = color
+        
         with open(profile_path, mode="w") as f:
             f.write(profile_comment + "\n")
             yaml.safe_dump(profile, f)

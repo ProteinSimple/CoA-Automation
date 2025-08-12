@@ -85,7 +85,7 @@ class CartridgeData:
     def add_code2map(path: str, code: int, val: str):
         CartridgeData.code_map[code] = val
         with open(path, mode="w+") as f:
-            json.dump(CartridgeData.code_map[code], f)
+            json.dump(CartridgeData.code_map, f)
 
     def to_dict(self):
         return {

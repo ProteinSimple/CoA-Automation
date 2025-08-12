@@ -10,3 +10,5 @@ fields:
 template: 046-329_CofA_Maurice_cIEF_Cartridge_090-101_RevF.pdf
 PN: 090-101
 color: "#B22222"
+font:
+  Text1: 8

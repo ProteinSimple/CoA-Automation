@@ -2,7 +2,7 @@ import os
 import sys
 from pathlib import Path
 from typing import Self
-
+from collections import defaultdict
 import yaml
 from pypdf import PdfWriter
 from pypdf.constants import UserAccessPermissions
@@ -194,3 +194,11 @@ def init_dates(fill_data: dict[str, str]):
         if "date" in f.lower():
             retVal.append(f)
     return retVal
+
+
+def init_fonts(fill_data: dict[str, str], default_fontsize: int, delta: int = 2):
+    retVal = defaultdict(int)
+    for f in fill_data.keys():
+        if "text" in f.lower(): # bad way to check for this but still better than nothing
+            retVal[f] = default_fontsize - delta
+    return dict(retVal)

@@ -21,3 +21,5 @@ fields:
   Text Field 9: '@!TIME'
 template: Q51-0194_CofA_101-0058_Cartridge, Maurice Turbo CE-SDS_REVB.pdf
 color: "#FF4500"
+font:
+  Text Field 9: 8

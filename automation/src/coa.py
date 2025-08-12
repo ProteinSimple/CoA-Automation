@@ -35,7 +35,7 @@ def get_coa_filename(id, profile, extn=".pdf"):
 
 
 def fill_template(
-    reader: PdfReader, fill_data: dict, fontsize: float = 12.0, font: str = "helv"
+    reader: PdfReader, fill_data: dict[str, str], font_data: dict[str, int], font: str = "helv"
 ) -> PdfWriter:
     """
     TODO
@@ -54,10 +54,8 @@ def fill_template(
         for widget in page.widgets():
             if widget.field_name in fill_data:
                 widget.field_value = str(fill_data[widget.field_name])
-                widget.text_fontsize = fontsize
+                widget.text_fontsize = font_data[widget.field_name]
                 widget.text_font = font
-                if ("text" not in str(widget.field_name).lower()):
-                    widget.text_fontsize = fontsize + 2 # TODO : this should be changed ASAP
                 widget.update()
     updated_pdf_bytes = doc.write()
     doc.close()
