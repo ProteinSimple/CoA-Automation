@@ -6,7 +6,7 @@ import { useFilter } from '../../contexts';
 function TopContainerFilters() {
   
   const {
-    prodDateRange, setProdDateRange,
+    analysisDateRange: prodDateRange, setAnalysisDateRange: setProdDateRange,
   } = useFilter();
   
 
@@ -16,7 +16,7 @@ function TopContainerFilters() {
 
   return (
     <div className="topContainer-dates">
-      <MyDatePicker headline="Production range"
+      <MyDatePicker headline="QC Analysis Date"
                     dateRange={prodDateRange}
                     onChange={handleProdRangeChange} >
       </MyDatePicker>

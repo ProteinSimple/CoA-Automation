@@ -25,7 +25,7 @@ jobs:
 
       - name: Build using PyInstaller
         shell: pwsh
-        run: ./buildPy.ps1
+        run: ./bin/buildPy.ps1
       
       - name: Zip CLI Tool
         shell: pwsh

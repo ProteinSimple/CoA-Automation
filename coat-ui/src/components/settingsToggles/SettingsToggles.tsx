@@ -2,7 +2,7 @@ import { useFilter } from "../../contexts";
 
 
 function SettingsToggles() {
-  const { showOnlyPassed, setShowOnlyPassed, showProdTime, setShowProdTime } = useFilter();
+  const { showOnlyPassed, setShowOnlyPassed, showRunTime, setShowRunTime } = useFilter();
   return (
     <div className="settings-toggle-container"
           style={{ display: "flex", flexDirection: "column", justifyContent: "flex-start",
@@ -18,10 +18,10 @@ function SettingsToggles() {
       <label>
         <input
           type="checkbox"
-          checked={showProdTime}
-          onChange={(e) => setShowProdTime(e.target.checked)}
+          checked={showRunTime}
+          onChange={(e) => setShowRunTime(e.target.checked)}
         />
-        Show Production time instead of QC time
+        Show Run time instead of Analysis time
       </label>
     </div>
   )

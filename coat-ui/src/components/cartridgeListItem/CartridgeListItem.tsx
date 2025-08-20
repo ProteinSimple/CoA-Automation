@@ -6,8 +6,8 @@ import { Check, X  } from "lucide-react";
 
 type ListItemProps = {
   id: number;
-  prod_date: string;
-  prod_time: string;
+  analysis_date: string;
+  analysis_time: string;
   qc_date: string;
   qc_time: string;
   type: string;
@@ -25,12 +25,12 @@ function StatusIcon({ status }: { status : string }) {
     </div>
 }
 
-function ListItem( { id, prod_date, prod_time, qc_date, qc_time, type, status, color }: ListItemProps) {
+function ListItem( { id, analysis_date, analysis_time, qc_date, qc_time, type, status, color }: ListItemProps) {
   const { selectedCartridgeList, addSelectedCartridge: addCartridge, removeSelectedCartridge: removeCartridge } = useCartridge()
   const isChecked = () => { return selectedCartridgeList.has(id) }
   const onChecked = () => { addCartridge(id) }
   const onUnchecked = () => { removeCartridge(id) }
-  const { showOnlyPassed, showProdTime } = useFilter()
+  const { showOnlyPassed, showRunTime } = useFilter()
 
   return (
     <div className="list_item">
@@ -43,11 +43,11 @@ function ListItem( { id, prod_date, prod_time, qc_date, qc_time, type, status, c
         <p>
           {id}
         </p>
-        {showProdTime?
+        {!showRunTime?
           <p style={{fontSize: "0.8em"}} className="list_item_date">
-            {prod_date} {prod_time}
+            {analysis_date} {analysis_time}
           </p>
-          : qc_date && qc_time ? 
+          : qc_date && qc_time? 
           <p style={{fontSize: "0.8em"}} className="list_item_date">
             {qc_date} {qc_time} 
           </p>
@@ -57,7 +57,7 @@ function ListItem( { id, prod_date, prod_time, qc_date, qc_time, type, status, c
           </p>
         } 
         
-          {!showOnlyPassed ? <StatusIcon status={status}/> : <p></p>}
+          {!showOnlyPassed? <StatusIcon status={status}/> : <p></p>}
       </div>
       <p className="list_item_type">
       <span

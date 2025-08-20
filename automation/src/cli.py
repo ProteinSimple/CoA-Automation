@@ -50,8 +50,8 @@ def get_args():
         "ids", type=int, nargs="+", help="Id of the cartridge for file generation"
     )
     coa_sub.add_argument("--name", type=str, default="AA")
-    coa_sub.add_argument("--start", type=str, default=None)
-    coa_sub.add_argument("--end", type=str, default=None)
+    coa_sub.add_argument("--start", type=str, default=None, required=True)
+    coa_sub.add_argument("--end", type=str, default=None, required=True)
 
     fetch_sub.add_argument("start", type=str, help="Start of the range")
     fetch_sub.add_argument("end", type=str, help="End of the range")

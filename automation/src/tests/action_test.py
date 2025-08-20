@@ -40,7 +40,8 @@ class ActionTest(unittest.TestCase):
         for user, passkey, exp in cases:
             args.user = user
             args.passkey = passkey
-            action.action_check(args, config)
+            args.action = "check"
+            action.dispatch_action(args, config)
             self.assertEqual(
                 out.getvalue().strip()[0], exp
             )  # Only check if fail or success !
@@ -54,12 +55,13 @@ class ActionTest(unittest.TestCase):
         out = io.StringIO()
         sys.stdout = out
         sys.stderr = out
+        args.action = "fetch"
         args.user = os.getenv("API_USER")
         args.passkey = os.getenv("API_PASS")
-
         args.start = "2025-07-15"
         args.end = "2025-07-15"
-        action.action_fetch(args, config)
+
+        action.dispatch_action(args, config)
         self.assertEqual(out.getvalue().strip()[0], "1")
         data = out.getvalue()[1:].strip()
         parsed = json.loads(data)
@@ -138,9 +140,11 @@ class ActionTest(unittest.TestCase):
         out = io.StringIO()
         sys.stdout = out
         sys.stderr = out
+
+        args.action = "config"
         args.config_mode = "list"
 
-        action.action_config(args, config)
+        action.dispatch_action(args, config)
         self.assertEqual(out.getvalue().strip()[0], "1")
         try:
             data = out.getvalue()[1:].strip()
@@ -170,7 +174,8 @@ class ActionTest(unittest.TestCase):
         args.start = START
         args.end = END
         args.name = "TESTER"
-        action.action_coa(args, config)
+        args.action = "coa"
+        action.dispatch_action(args, config)
         res = out.getvalue().strip()
         self.assertEqual(res[0], "1")
 
