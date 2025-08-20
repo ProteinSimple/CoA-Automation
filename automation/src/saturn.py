@@ -258,7 +258,6 @@ def _saturn_get_qc_data(username, passkey,
     latest_date = None
 
     for id, data in info_set.items():
-        
         qc_dt = pd.to_datetime(
             pd.to_numeric(data["start_time"]),
             unit="s",
