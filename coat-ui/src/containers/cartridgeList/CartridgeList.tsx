@@ -15,7 +15,7 @@ function CartridgeList() {
       <div className="placeholder">
         Loading Cartridge Data<span className="dots"></span>
       </div>
-    );
+     );
   } else if (cartridgeList.length === 0) {
     content = <div className="placeholder">No cartridge data available.</div>;
   } else if (filteredList.length === 0) {
@@ -25,8 +25,8 @@ function CartridgeList() {
       <CartridgeListItem
         key={d.id}
         id={d.id}
-        prod_time={d.build_time}
-        prod_date={d.build_date}
+        analysis_date={d.qc_analysis_date}
+        analysis_time={d.qc_analysis_time}
         qc_date={d.qc_date}
         qc_time={d.qc_time}
         type={d.class_code}

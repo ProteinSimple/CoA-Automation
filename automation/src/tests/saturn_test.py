@@ -3,6 +3,7 @@ import unittest
 from datetime import datetime, timedelta
 from unittest.mock import Mock
 import saturn
+from .action_test import test_print
 
 
 class TestSaturn(unittest.TestCase):

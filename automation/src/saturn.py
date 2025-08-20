@@ -1,4 +1,5 @@
 from datetime import datetime, timedelta
+from zoneinfo import ZoneInfo
 from urllib.parse import urlencode
 import json
 import pandas as pd
@@ -6,6 +7,7 @@ import requests
 from requests.auth import HTTPBasicAuth
 from keyToken import add_token, load_token
 from log import get_logger
+
 logger = get_logger(__name__)
 BASE_URL = "https://saturn.proteinsimple.com/api/1/cartridges/"
 
@@ -18,38 +20,46 @@ class CartridgeData:
     def __init__(self, sat_data: pd.DataFrame = None):
         self.id: int = None
         self.build_date: str = None
+        self.build_date_dt = None
         self.build_time: str = None
         self.exp_date: str = None
+        self.exp_date_dt = None
         self.class_name: str = None
         self.class_code: int = None
         self.batch_num: int = None
         self.qc_status: bool = None
         self.qc_date: str = None
+        self.qc_date_dt = None
+        self.qc_analysis_date: str = None
+        self.qc_analysis_date_dt = None
+        self.qc_analysis_time: str = None
         self.qc_time: str = None
         self.qc_user: str = None
 
         if sat_data is not None:
             d = sat_data
             self.id = int(d["_id"])
+            self.build_date_dt = d["b_date"]
             self.build_date = "%s/%s/%s" % (
-                d["b_date"].month,
-                d["b_date"].day,
-                d["b_date"].year,
+                self.build_date_dt.month,
+                self.build_date_dt.day,
+                self.build_date_dt.year,
             )
             self.build_time = "%d:%02d" % (
-                d["b_date"].hour,
-                d["b_date"].minute,
+                self.build_date_dt.hour,
+                self.build_date_dt.minute,
             )
+            self.exp_date_dt = d["exp_date"]
             self.exp_date = "%s/%s/%s" % (
-                d["exp_date"].month,
-                d["exp_date"].day,
-                d["exp_date"].year,
+                self.exp_date_dt.month,
+                self.exp_date_dt.day,
+                self.exp_date_dt.year,
             )
             self.class_name = d["_cls"]
             self.class_code = int(d["cartridge_type"])
             if self.class_code == 1:
                 self.batch_num = d["membrane_lot"]
-            if self.class_code == 6:
+            if self.class_code in set([6, 9]):
                 self.batch_num = d["size_insert_lot"]
             if self.class_code == 8:
                 self.batch_num = d["pn702_0013_lot"]
@@ -59,21 +69,56 @@ class CartridgeData:
             self.qc_status = "P" if pass_fail == "pass" else "F" if pass_fail == "fail" else "NA"
             if pd.notna(d.get("qc_user")):
                 self.qc_user = d.get("qc_user")
-            qc_data = d.get("qc_results")
-            if pd.isna(qc_data) is not True:
-                data = qc_data[-1]
-                # QC time
-                qc_time_dt = data["analysis_timestamp"]
-                qc_timestampt = pd.to_datetime(qc_time_dt, unit="s")
+
+            # QC run time
+            if pd.notna(d.get("run_timestamp")):
+                self.qc_date_dt = pd.to_datetime(
+                    pd.to_numeric(d["run_timestamp"]),
+                    unit="s",
+                    utc=True
+                )
+                # if you want local timezone (e.g., system time)
+                self.qc_date_dt = self.qc_date_dt.tz_convert("America/New_York")
                 self.qc_date = "%s/%s/%s" % (
-                    qc_timestampt.month,
-                    qc_timestampt.day,
-                    qc_timestampt.year,
+                    self.qc_date_dt.month,
+                    self.qc_date_dt.day,
+                    self.qc_date_dt.year,
                 )
                 self.qc_time = "%d:%02d" % (
-                    qc_timestampt.hour,
-                    qc_timestampt.minute,
+                    self.qc_date_dt.hour,
+                    self.qc_date_dt.minute,
                 )
+
+            qc_results = d.get("qc_results")
+            qc_data = None
+            if qc_results is not None:
+                if isinstance(qc_results, (list, tuple)) and any(pd.notna(x) for x in qc_results):
+                    qc_data = qc_results[-1]
+                elif pd.notna(qc_results):
+                    qc_data = qc_results
+
+            if qc_data:
+                qc_data = qc_results[-1]
+                # QC analysis time
+                qc_analysis_time_dt = qc_data["analysis_timestamp"]
+
+                qc_analysis_date_dt = pd.to_datetime(qc_analysis_time_dt, unit="s")
+                qc_analysis_date_dt = qc_analysis_date_dt.tz_localize("America/New_York")
+                if self.qc_date_dt is not None and qc_analysis_date_dt >= self.qc_date_dt:
+                    self.qc_analysis_date_dt = qc_analysis_date_dt
+                    self.qc_analysis_date = "%s/%s/%s" % (
+                        qc_analysis_date_dt.month,
+                        qc_analysis_date_dt.day,
+                        qc_analysis_date_dt.year,
+                    )
+                    self.qc_analysis_time = "%d:%02d" % (
+                        qc_analysis_date_dt.hour,
+                        qc_analysis_date_dt.minute,
+                    )
+                else:
+                    logger.debug(" Data from mopho with early analysis date! ID=%s" % self.id)
+            else:
+                logger.debug(" Data from mopho with missing analysis date! ID=%s" % self.id)
 
     @staticmethod
     def load_code_map(path: str):
@@ -98,6 +143,8 @@ class CartridgeData:
             "batch_num": self.batch_num,
             "qc_date": self.qc_date,
             "qc_time": self.qc_time,
+            "qc_analysis_date": self.qc_analysis_date,
+            "qc_analysis_time": self.qc_analysis_time,
             "qc_status": self.qc_status,
             "qc_user": self.qc_user
         }
@@ -168,7 +215,7 @@ def saturn_check(username, passkey) -> bool:
 
 def _saturn_get_qc_results(start, end, user, passkey):
     end_dt = datetime.strptime(end, "%Y-%m-%d")
-    end_dt = end_dt + timedelta(days=1)
+    end_dt = end_dt + timedelta(days=2)
     end = end_dt.strftime("%Y-%m-%d")
     url = build_saturn_url(QC_RUN_URL, startdate=start, enddate=end)
     response = requests.get(url, auth=HTTPBasicAuth(user, passkey))
@@ -211,9 +258,21 @@ def _saturn_get_qc_data(username, passkey,
     latest_date = None
 
     for id, data in info_set.items():
+        
+        qc_dt = pd.to_datetime(
+            pd.to_numeric(data["start_time"]),
+            unit="s",
+            utc=True
+        ).tz_convert("America/New_York")
+        start_dt = datetime.strptime(start, "%Y-%m-%d").replace(tzinfo=ZoneInfo("America/New_York"))
+        end_dt = datetime.strptime(end, "%Y-%m-%d").replace(tzinfo=ZoneInfo("America/New_York"))
+        end_dt = end_dt.replace(hour=23, minute=59, second=59, microsecond=999999)
+        if not (start_dt <= qc_dt <= end_dt):
+            continue
         values.append({
             "_id": str(id),
-            "qc_user": data["analyst"].split("@")[0]
+            "qc_user": data["analyst"].split("@")[0],
+            "run_timestamp": data["start_time"]
         })
 
         extracted = _extract_info(id)
@@ -241,6 +300,7 @@ def saturn_bundle_data(username, passkey, start, end):
     prod_df["_id"] = prod_df["_id"].astype(str)
     qc_df["_id"] = qc_df["_id"].astype(str)
     joined = qc_df.join(prod_df.set_index("_id"), on="_id", how='inner')
+    # joined.to_csv("joined.csv")
     saturn_bundle_data.prod_start = prod_start
     saturn_bundle_data.prod_end = prod_end
     return [CartridgeData(d) for _, d in joined.iloc[::-1].iterrows()]
@@ -287,3 +347,24 @@ def auth(args):
         raise Exception(
             "Couldn't load saturn API key correctly: " + str(e)
         )
+
+
+def find_analysis_range(values: list[CartridgeData]):
+    bad_data = [
+        val for val in values
+        if (val.qc_analysis_date is None or val.qc_analysis_date_dt < val.qc_date_dt)
+    ]
+    if len(bad_data) != 0:
+        logger.warning(
+            "Bad data from Mopho!, Analysis time is not given or it is before the run time"
+        )
+        for val in bad_data:
+            logger.warning(
+                "Bad Entry: ID=%s, run date: %s, analysis date: %s"
+                % (val.id, val.qc_date, val.qc_analysis_date)
+            )
+    times = [val.qc_analysis_date_dt for val in values if val.qc_analysis_date_dt is not None]
+    start = min(times)
+    end = max(times)
+    return "%04d-%02d-%02d" % (start.year, start.month, start.day), \
+           "%04d-%02d-%02d" % (end.year, end.month, end.day)

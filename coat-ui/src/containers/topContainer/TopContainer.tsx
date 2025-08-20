@@ -81,7 +81,7 @@ function TopContainer() {
         className="row"
         onSubmit={handleSubmit}>  
         <MyDatePicker 
-          headline="QC Date"
+          headline="QC Run Date"
           dateRange={qcDateRange}
           onChange={handleQCRangeChange}/>
           
