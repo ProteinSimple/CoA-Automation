@@ -11,6 +11,8 @@ interface CartridgeInfo {
   qc_time: string;
   qc_user: string;
   color: string;
+  qc_analysis_date: string;
+  qc_analysis_time: string;
 }
 
 interface CartridgeContextType {
@@ -46,7 +48,7 @@ export const CartridgeProvider = ({ children }: CartridgeProviderProps) => {
   const [selectedCartridgeList, setSelectedCartridgeList] = useState<Set<number>>(new Set());  
 
   const {
-      prodDateRange, selectedTypes, selectedUsers,
+      analysisDateRange, selectedTypes, selectedUsers,
        showOnlyPassed, filterText
   } = useFilter()
 
@@ -56,16 +58,16 @@ export const CartridgeProvider = ({ children }: CartridgeProviderProps) => {
     const lowerFilterText = filterText.toLowerCase();
     
     return cartridgeList.filter((item) => {
-      const id_str = String(item.id)
-      const matchesFilter = id_str.toLowerCase().includes(lowerFilterText);
-      const matchesType = selectedTypes.length === 0 || selectedTypes.includes(Number(item.class_code));
-      const matchesUser = selectedUsers.length === 0 || selectedUsers.includes(item.qc_user);
-      const passedQc = !showOnlyPassed || item.qc_status === "P"
-      const buildDate = new Date(item.build_date);
-      const inProdRange = buildDate >= prodDateRange[0] && buildDate <= prodDateRange[1];
-      return matchesFilter && matchesType && matchesUser && passedQc && inProdRange;
+        const id_str = String(item.id)
+        const matchesFilter = id_str.toLowerCase().includes(lowerFilterText);
+        const matchesType = selectedTypes.length === 0 || selectedTypes.includes(Number(item.class_code));
+        const matchesUser = selectedUsers.length === 0 || selectedUsers.includes(item.qc_user);
+        const passedQc = !showOnlyPassed || item.qc_status === "P"
+        const analysisDate = new Date(item.qc_analysis_date);
+        const inAnalysisRange = analysisDate >= analysisDateRange[0] && analysisDate <= analysisDateRange[1];
+        return matchesFilter && matchesType && matchesUser && passedQc && inAnalysisRange;
     });
-  }, [cartridgeList, filterText, selectedTypes, showOnlyPassed, prodDateRange[0], prodDateRange[1], selectedUsers]);
+  }, [cartridgeList, filterText, selectedTypes, showOnlyPassed, analysisDateRange[0], analysisDateRange[1], selectedUsers]);
 
   
     

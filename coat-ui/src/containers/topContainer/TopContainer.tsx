@@ -11,7 +11,7 @@ import { MyDatePicker } from "../../components";
 
 function TopContainer() {
   
-  const { selectedCartridgeList } = useCartridge();
+  const { selectedCartridgeList, filteredList } = useCartridge();
   const [ isGenerating, setIsGenerating ] = useState(false)
   const { setError } = usePopUp()
   const [ name, setName ] = useState<string>("")
@@ -27,7 +27,20 @@ function TopContainer() {
     setIsGenerating(true);
 
     try {
-      const outputed_files = await pythonCoa([...selectedCartridgeList], name.trim(), prodDateRange[0], prodDateRange[1]);
+      // selectdCartridgeList
+      // filteredCartridgeList CartridgeInfo
+      const filteredIds = new Set(filteredList.map(c => c.id));
+      //
+      const targetSet = new Set(
+        [...selectedCartridgeList].filter(id => filteredIds.has(id))
+      );
+
+      if (targetSet.size === 0) {
+        alert("No cartridges are selected for generation!")
+        return
+      }
+        
+      const outputed_files = await pythonCoa([...targetSet], name.trim(), prodDateRange[0], prodDateRange[1]);
       let fileList: string[] = [];
 
       if (typeof outputed_files === "string") {
@@ -68,7 +81,7 @@ function TopContainer() {
         className="row"
         onSubmit={handleSubmit}>  
         <MyDatePicker 
-          headline="QC Date"
+          headline="QC Run Date"
           dateRange={qcDateRange}
           onChange={handleQCRangeChange}/>
           
@@ -86,7 +99,7 @@ function TopContainer() {
                 }} />
                       
         <button type="submit"
-                disabled={isGenerating || selectedCartridgeList.size == 0}
+                disabled={isGenerating}
                 style={{display: "flex", alignItems: "center", backgroundColor: "var(--color-button-primary)"}}>
             {isGenerating? (
               <DotLoader color="white" loading={isGenerating} size={20} />

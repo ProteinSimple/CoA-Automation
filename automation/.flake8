@@ -3,7 +3,8 @@ max-line-length = 100
 ignore = 
     E131,
     W503,
-    W504
+    W504,
+    E122
 per-file-ignores =
     src/tests/__init__.py: F401
     src/testRunner.py: F401, F403
