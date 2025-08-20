@@ -4,12 +4,14 @@ import { useState, useEffect, createContext, useContext, ReactNode } from 'react
 interface FilterContextType {
     showOnlyPassed: boolean;
     setShowOnlyPassed: (_: boolean) => void;
-    showProdTime: boolean;
-    setShowProdTime: (_: boolean) => void;
-    prodDateRange: [Date, Date];
-    setProdDateRange: (range: [Date, Date]) => void;
+    showRunTime: boolean;
+    setShowRunTime: (_: boolean) => void;
+    analysisDateRange: [Date, Date];
+    setAnalysisDateRange: (range: [Date, Date]) => void;
     qcDateRange: [Date, Date]
     setQCDateRange: (_: [Date, Date]) => void
+    prodDateRange: [Date, Date]
+    setProdDateRange: (_: [Date, Date]) => void
     selectedTypes: number[]
     setTypes: (_: number[]) => void
     validTypes: number[]
@@ -48,15 +50,15 @@ export const FilterProvider = ({ children }: FilterProviderProps) => {
     return d;
   });
 
+  const [analysisDateRange, setAnalysisDateRange] = useState<[Date, Date]>([qcStartDate, qcEndDate])
   const [prodDateRange, setProdDateRange] = useState<[Date, Date]>([qcStartDate, qcEndDate])
-
   const [selectedTypes, setTypes] = useState<number[]>([]);
   const [validTypes, setValidTypes] = useState<number[]>([]);
   const [selectedUsers, setSelectedUsers] = useState<string[]>([])
   const [validUsers, setValidUsers] = useState<string[]>([])
   const [colorMap, setColorMap] = useState<Record<number, string>>({});
   const [showOnlyPassed, setShowOnlyPassed] = useState<boolean>(true);
-  const [showProdTime, setShowProdTime] = useState<boolean>(false);
+  const [showRunTime, setShowRunTime] = useState<boolean>(false);
   const [filterText, setFilterText] = useState<string>("")
   
   
@@ -82,11 +84,13 @@ export const FilterProvider = ({ children }: FilterProviderProps) => {
       showOnlyPassed,
       setShowOnlyPassed,
       // Whether to show prod or QC time
-      showProdTime,
-      setShowProdTime,
+      showRunTime,
+      setShowRunTime,
       // Prod Date filter
+      analysisDateRange,
+      setAnalysisDateRange, 
       prodDateRange,
-      setProdDateRange, 
+      setProdDateRange,
       // QC Date filter
       qcDateRange: [qcStartDate, qcEndDate],
       setQCDateRange,

@@ -2,6 +2,7 @@ import {useState, createContext, useContext, ReactNode, useEffect, useRef, useCa
 import { pythonAuth, pythonCheck, pythonFetchRange } from '../services';
 import { useFilter } from './FilterContext';
 import { useCartridge } from './CartridgeContext';
+import dayjs from 'dayjs';
 
 interface ControlContextType {
     checkDone: boolean
@@ -24,6 +25,8 @@ interface CartridgeInfo {
   qc_time: string;
   qc_user: string;
   color: string;
+  qc_analysis_date: string;
+  qc_analysis_time: string;
 }
 
 
@@ -32,6 +35,8 @@ interface FetchInfo {
   values: CartridgeInfo[];
   prod_start: string;
   prod_end: string;
+  analysis_start: string;
+  analysis_end: string;
 }
 
 
@@ -59,7 +64,8 @@ export const ControlProvider = ({ children }: ControlProviderProps) => {
     const { setCartridgeList } = useCartridge()
     const {
         setValidUsers, setValidTypes, qcDateRange,
-        setProdDateRange, colorMap, setColorMap
+        setProdDateRange, colorMap, setColorMap,
+        setAnalysisDateRange
     } = useFilter()
     
     const fetchData = useCallback(async () => {
@@ -77,7 +83,8 @@ export const ControlProvider = ({ children }: ControlProviderProps) => {
             setValidUsers(uniqueUsers)
             setCartridgeList([]);
             setCartridgeList(values);
-            setProdDateRange([new Date(parsed.prod_start), new Date(parsed.prod_end)])
+            setProdDateRange([dayjs(parsed.prod_start).toDate(), dayjs(parsed.prod_end).toDate()])
+            setAnalysisDateRange([dayjs(parsed.analysis_start).toDate(), dayjs(parsed.analysis_end).toDate()])
             const updatedMap = { ...colorMap };
 
             for (const val of values) {
