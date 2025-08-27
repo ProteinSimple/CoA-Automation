@@ -1,5 +1,6 @@
 interface CloseButtonProps {
   onClick: () => void;
+  
 }
 
 function CloseButton({ onClick } : CloseButtonProps) {

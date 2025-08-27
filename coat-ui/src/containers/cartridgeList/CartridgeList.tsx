@@ -1,12 +1,15 @@
-import { CartridgeListItem } from "../../components";
+import { ListItem } from "../../components";
 import "./cartridgeList.css";
-import { useControl, useCartridge } from "../../contexts";
+import { useControl, useCartridge, useFilter } from "../../contexts";
 
 
 
 function CartridgeList() {
   const { checkDone, cartridgeLoading } = useControl();
-  const { cartridgeList, filteredList } = useCartridge();
+  const { cartridgeList, filteredList, selectedCartridgeList,
+          addSelectedCartridge, removeSelectedCartridge 
+  } = useCartridge();
+  const { showRunTime, showOnlyPassed } = useFilter()
 
   let content = null;
 
@@ -19,16 +22,21 @@ function CartridgeList() {
   } else if (cartridgeList.length === 0) {
     content = <div className="placeholder">No cartridge data available.</div>;
   } else if (filteredList.length === 0) {
-    content = <div className="placeholder">No cartridges match your current filters.</div>;
+    content = <div className="placeholder">No cartridge matches your current filters.</div>;
   } else {
     content = filteredList.map((d) => (
-      <CartridgeListItem
+      <ListItem
+        topContent={String(d.id)}
+        bottomContent={
+          showRunTime? d.qc_date + " " + d.qc_time
+          : d.qc_analysis_date + " " + d.qc_analysis_time
+        }
+        isChecked={() => selectedCartridgeList.has(d.id)}
+        onChecked={() => addSelectedCartridge(d.id)}
+        onUnchecked={() => removeSelectedCartridge(d.id)}
+        showMark={!showOnlyPassed}
         key={d.id}
         id={d.id}
-        analysis_date={d.qc_analysis_date}
-        analysis_time={d.qc_analysis_time}
-        qc_date={d.qc_date}
-        qc_time={d.qc_time}
         type={d.class_code}
         status={d.qc_status}
         color={d.color}

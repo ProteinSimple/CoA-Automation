@@ -5,6 +5,7 @@ BACKEND := automation
 
 test:
 	$(MAKE) -C $(BACKEND) test
+	cd $(FRONTEND) && npx vitest --run
 
 build:
 	@echo "Building python backend target and copying"
