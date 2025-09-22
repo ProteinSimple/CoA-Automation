@@ -12,7 +12,7 @@ from checks import run_checks
 from coa import exec_c, fill_template, get_coa_filename, get_mapping_name
 from log import get_logger
 from saturn import (auth, saturn_bundle_data, saturn_bundle_prod_data,
-                    find_analysis_range, CartridgeData)
+                    find_analysis_range, find_prod_range, CartridgeData)
 from util import (PathCorrection, encrypt_pdf, format_date, init_dates,
                   init_fields, init_fonts, save_config)
 import io
@@ -107,8 +107,14 @@ def action_coa(args, config):
         raise KeyError("Missing 'models' section in config")
 
     user, passkey = auth(args)
+    start = None
+    end = None
+    if args.start is None or args.end is None:
+        start, end = find_prod_range(args.ids)
+    else:
+        start, end = (args.start, args.end)
     logger.info("Fetching data for the given cartridges")
-    res = saturn_bundle_prod_data(user, passkey, args.start, args.end)
+    res = saturn_bundle_prod_data(user, passkey, start, end)
     datas = list(filter(lambda v: v.id in set(args.ids), res))
     pdf_outputs = []
     mapping_rows = []

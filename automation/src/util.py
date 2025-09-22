@@ -202,3 +202,5 @@ def init_fonts(fill_data: dict[str, str], default_fontsize: int, delta: int = 2)
         if "text" in f.lower():  # bad way to check for this but still better than nothing
             retVal[f] = default_fontsize - delta
     return dict(retVal)
+
+

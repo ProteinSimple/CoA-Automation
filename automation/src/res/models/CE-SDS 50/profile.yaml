@@ -20,3 +20,7 @@ fields:
   Serial Number: 'id'
   Text1: '@!TIME'
 template: Q51-0214_CofA_101-0069_Maurice CE-SDS 50 Cartridge_RevA.pdf
+
+color: "#B22222"
+font:
+  Text1: 8

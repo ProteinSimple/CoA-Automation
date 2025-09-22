@@ -59,10 +59,12 @@ class CartridgeData:
             self.class_code = int(d["cartridge_type"])
             if self.class_code == 1:
                 self.batch_num = d["membrane_lot"]
-            if self.class_code in set([6, 9]):
+            if self.class_code == 6:
                 self.batch_num = d["size_insert_lot"]
             if self.class_code == 8:
                 self.batch_num = d["pn702_0013_lot"]
+            if self.class_code == 9:
+                self.batch_num = d['pn050_319_LCLot']
             if self.class_code in set([2, 5]):
                 self.batch_num = d["center_cap_lot"]
             pass_fail = str(d.get("latest_assay_analysis_pass_fail", "")).strip().lower()
@@ -367,3 +369,17 @@ def find_analysis_range(values: list[CartridgeData]):
     end = max(times)
     return "%04d-%02d-%02d" % (start.year, start.month, start.day), \
            "%04d-%02d-%02d" % (end.year, end.month, end.day)
+           
+def find_prod_range(ids: list[str]) -> tuple[str | None]:
+    start = None
+    end = None
+    for id in ids:
+        info = _extract_info(id)
+        cur_date = info['build_date']
+        if (start == None or start > cur_date):
+            start = cur_date
+        if (end == None or end < cur_date):
+            end = cur_date
+    
+    return start, end
+            
