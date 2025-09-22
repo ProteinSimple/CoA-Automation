@@ -369,17 +369,17 @@ def find_analysis_range(values: list[CartridgeData]):
     end = max(times)
     return "%04d-%02d-%02d" % (start.year, start.month, start.day), \
            "%04d-%02d-%02d" % (end.year, end.month, end.day)
-           
+
+
 def find_prod_range(ids: list[str]) -> tuple[str | None]:
     start = None
     end = None
     for id in ids:
         info = _extract_info(id)
         cur_date = info['build_date']
-        if (start == None or start > cur_date):
+        if (start is None or start > cur_date):
             start = cur_date
-        if (end == None or end < cur_date):
+        if (end is None or end < cur_date):
             end = cur_date
-    
+
     return start, end
-            
